@@ -1,0 +1,37 @@
+# Amazon Product Selection Report
+
+- Source: `data/discovered_candidates.csv`
+- Generated: 2026-05-29 10:46
+- Candidates: 73
+
+## Ranked Shortlist
+
+| Rank | Product | Category | Score | Recommendation | Margin | Monthly Gross Profit | Flags |
+| ---: | --- | --- | ---: | --- | ---: | ---: | --- |
+| 1 | [Motipuns 36 Pcs CNA Week Appreciation Gifts Bulk Colorful Sticky Notes Dispenser End of School Year Gifts Office Team Work Sticky Notes OPP Bags Set for Nurse Teacher Coworker Staff CNA Week](https://www.amazon.com/dp/B0GF7L236Y) | ['Office Products', 'office-products'] | 45.0 | Reject | 23.7% | $4,131.37 | gross margin below 35%; unit profit below $8 |
+| 2 | [Fireproof Document Organizer with Lock, Rigid EVA File Box with 13-Pocket Accordion Folder for Important Documents & Tablets under 11', Lightweight Safe Storage for Home, Office & Travel (Small Size)](https://www.amazon.com/dp/B0GHYMYDD4) | ['Office Products', 'office-products'] | 45.0 | Reject | 27.8% | $8,450.14 | gross margin below 35% |
+| 3 | [Kopuncare Dog Poop Trash Can Outside, 5L/1.3Gal Metal Dog Waste Trash Can with Lid, Foot Pedal, Pet Waste Container with 40 Bags, Poop Bucket with Lid Soft Close for Pet, Black](https://www.amazon.com/dp/B0DNPTGDGX) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 21.8% | $9,179.39 | gross margin below 35%; unit profit below $8 |
+| 4 | [420D Riding Lawn Mower Cover, Waterproof Tractor Cover Heavy Duty Fits Decks up to 54',Universal fit for John Deere, EGO, Toro, Craftsman More -72'L x 54'W x 46'H-Black](https://www.amazon.com/dp/B0CM5YKV5D) | ['Patio, Lawn & Garden', 'lawn-garden'] | 45.0 | Reject | 30.6% | $7,182.93 | gross margin below 35%; review count above 600 |
+| 5 | [5/8“ X 178“ Deck Replacement Belt for Toro 133-7076 TimeCutter HD X5450, XS5450, X5450, ZX5400, 74865, 74867, 74876, 74888, 75202 and 75212 with 54“ Decks; Hustler 602744; Ferris 5103616 5103616YP](https://www.amazon.com/dp/B0DYZS8LNV) | ['Patio, Lawn & Garden', 'lawn-garden'] | 45.0 | Reject | 31.0% | $8,599.99 | gross margin below 35%; unit profit below $8 |
+| 6 | [139-2399 Mower Deck Belt, Traction Drive Cogged Belt Fit for Toro TimeCutter & Exmark Quest 74683 74685 74687 74690 74691QZE725GKC42200 QZE725GKC50200 Lawn Mowers](https://www.amazon.com/dp/B0FX961NFC) | ['Patio, Lawn & Garden', 'lawn-garden'] | 45.0 | Reject | 28.1% | $7,115.38 | gross margin below 35%; unit profit below $8 |
+| 7 | [954-05022A Mower Deck Belt for Cub Cadet XT1 LT46 XT2 LX46 954-05022 Craftsman T240 MTD Troy Bilt Super Bronco XP 46 490-501-C063 490-501-M063 / Aramid Cord / 108.3 inches](https://www.amazon.com/dp/B0FC6DDX3M) | ['Patio, Lawn & Garden', 'lawn-garden'] | 45.0 | Reject | 27.3% | $7,430.36 | gross margin below 35%; unit profit below $8 |
+| 8 | [Upgraded for GX20072 John Deere 42 Inch Deck Belt, D105 D110 D130 S100 L110 L100 L111 LA105 LA115 LA125 S110 S130 E100 E110 L108 Lawn Mower, GY20570 V-Belt, Zero-Stretch, Extra Long Life /104 Inch](https://www.amazon.com/dp/B0D9QZBYTV) | ['Patio, Lawn & Garden', 'lawn-garden'] | 45.0 | Reject | 28.7% | $5,797.38 | gross margin below 35%; unit profit below $8 |
+| 9 | [POSEAGLE 2 Pack 490-900-M061 Deck Wash Kit Replaces 490-900-0025 Including 921-04041 Lawn Mower Deck Wash Adapter Nozzle, 737-04003D Deck Wash Nozzle(Stainless Steel), 731-07487 Deck Wash Nozzle](https://www.amazon.com/dp/B0DWTD2X46) | ['Patio, Lawn & Garden', 'lawn-garden'] | 45.0 | Reject | 30.5% | $4,026.99 | gross margin below 35%; unit profit below $8 |
+| 10 | [Motipuns 36 Pcs End of Year Teacher Gift Sticky Note Holder Thank You Gift Sticky Note Pad Holder OPP Bags for Graduation Coworker Nurse Teacher Employee Appreciation Gifts (Pastel Color)](https://www.amazon.com/dp/B0GFD8R98T) | ['Office Products', 'office-products'] | 44.8 | Reject | 26.8% | $2,649.96 | gross margin below 35%; unit profit below $8 |
+| 11 | [Pupzle Small Dog Poop Trash Can Outside, 1.3 Gal Metal Dog Waste Trash Can, Small Poop Bucket Outdoor with Lid, Poo Container Bin Waterproof Backyard Odor Control, 30 Bags (Black)](https://www.amazon.com/dp/B0CYPT1MBK) | ['Home & Kitchen', 'home-garden'] | 43.7 | Reject | 24.0% | $7,814.99 | gross margin below 35% |
+| 12 | [Wood Pellet Storage Container 20-25lbs, Airtight Bin with Locking Lid & Clear Window, Collapsible Pellet Bucket with Wheels, Scoop & Labels, Gray](https://www.amazon.com/dp/B0FP1CQL5Q) | ['Patio, Lawn & Garden', 'lawn-garden'] | 43.3 | Reject | 19.3% | $2,227.78 | gross margin below 35%; unit profit below $8 |
+| 13 | [Exmark/Toro 30“ Genuine OEM PTO Belt Part# 121-5765](https://www.amazon.com/dp/B07M9ZMWF4) | ['Patio, Lawn & Garden', 'lawn-garden'] | 41.9 | Reject | 30.3% | $6,981.75 | gross margin below 35%; unit profit below $8; review count above 600 |
+| 14 | [Smores Sticks For Fire Pit \[All-Stainless Steel Set Of 6\] -Marshmallow Roasting Sticks For Campfire, Telescoping S‘mores Forks -Long Hot Dog Sticks \[Dishwasher-Safe\] - SUMPRI Campfire Skewers](https://www.amazon.com/dp/B0FL9F43KH) | ['Patio, Lawn & Garden', 'lawn-garden'] | 41.7 | Reject | 23.3% | $1,956.93 | gross margin below 35%; unit profit below $8 |
+| 15 | [Zettum Riding Lawn Mower Cover - Lawn Tractor Covers Waterproof & Heavy Duty, 600D Outdoor Mower Cover Universal fit with Storage Bag for John Deere, EGO, Toro, Craftsman, Husqvarna, Honda and More](https://www.amazon.com/dp/B0B8S2W455) | ['Patio, Lawn & Garden', 'lawn-garden'] | 41.7 | Reject | 27.8% | $34,394.19 | gross margin below 35%; review count above 600 |
+| 16 | [XT1 Oil Change Kit Air Filter for Cub Cadet KH-32-883-09-S1 XT2 XT1 LT46 LT50 ZT1-54 ZT1-42 Kohler 7000 Series KT715-KT745 725CC Engines Replace 32-083-09-S](https://www.amazon.com/dp/B07MLPJ3NH) | ['Patio, Lawn & Garden', 'lawn-garden'] | 41.4 | Reject | 29.0% | $12,615.55 | gross margin below 35%; review count above 600 |
+| 17 | [Outdoor Zero-Turn Mower Cover Waterproof,Durable 210D Tearproof Anti-UV Zero Turn Covers,Dustproof Riding Lawn Tractor Covers Up to 60“ Decks,Secure Straps,79“Lx46“Wx55“H-Essential](https://www.amazon.com/dp/B0CPF5BT6J) | ['Patio, Lawn & Garden', 'lawn-garden'] | 41.1 | Reject | 28.4% | $4,452.39 | gross margin below 35%; unit profit below $8; review count above 600 |
+| 18 | [(2) Transmission Filters/Hydraulic Filters/Oil Filters for Bad Boy 063-1050-00 Hydro Gear 2800 3100 3200](https://www.amazon.com/dp/B0D1P79YX8) | ['Patio, Lawn & Garden', 'lawn-garden'] | 40.6 | Reject | 25.7% | $2,397.92 | gross margin below 35%; unit profit below $8 |
+| 19 | [John Deere Original Original Equipment Oil Filter - AM125424 (2)](https://www.amazon.com/dp/B07JJD5N6X) | ['Patio, Lawn & Garden', 'lawn-garden'] | 40.0 | Reject | 29.2% | $2,488.45 | gross margin below 35%; unit profit below $8 |
+| 20 | [Cesun 1.2 Gallons Small Brown Trash Can, Bathroom Garbage Can with Lid and Foot Pedal, Mini Round Wastebasket for Bathroom, Bedroom, Office, 4.5 Liters / 1.2 Gallons, Brown](https://www.amazon.com/dp/B0FM79B5SN) | ['Home & Kitchen', 'home-garden'] | 39.7 | Reject | 16.6% | $14,413.23 | gross margin below 35%; unit profit below $8; review count above 600 |
+
+## Next Actions
+
+1. Keep only products marked `Go to supplier validation` or `Watch or collect more data`.
+2. For each kept product, collect 10-20 competitor ASINs and supplier quotes.
+3. Replace estimated costs with real landed costs before sampling.
+4. Run compliance checks before moving to material and listing automation.

@@ -1,0 +1,33 @@
+{
+  "Code": 0,
+  "Data": {
+    "categories": [
+      {
+        "category_id": "office-root",
+        "name": "Office Products",
+        "children": [
+          {
+            "category_id": "office-storage",
+            "name": "Office Storage & Organization",
+            "children": [
+              {
+                "category_id": "desk-org",
+                "name": "Desk Accessories & Workspace Organizers"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category_id": "health-root",
+        "name": "Health & Household",
+        "children": [
+          {
+            "category_id": "vitamins",
+            "name": "Vitamins & Supplements"
+          }
+        ]
+      }
+    ]
+  }
+}

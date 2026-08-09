@@ -1,0 +1,121 @@
+{
+  "domain": "1",
+  "target_asin": "B0FS1YH17C",
+  "keywords_per_product": 20,
+  "competitor_candidate_pool_size": 100,
+  "competitors_to_analyze": 100,
+  "product_detail_batch_size": 10,
+  "category_products": {
+    "enabled": true,
+    "method": "CategoryProducts",
+    "pages": 3,
+    "products_per_page": 30,
+    "payload_template": {
+      "nodeId": "{node_id}",
+      "page": "{page}"
+    }
+  },
+  "keyword_lookup": {
+    "method": "ASINRequestKeywordv2",
+    "payload_template": {
+      "asin": "{asin}",
+      "pageIndex": 1,
+      "pageSize": 20
+    }
+  },
+  "product_detail": {
+    "method": "ProductRequest",
+    "payload_template": {
+      "asin": "{asin_list}",
+      "trend": 2
+    }
+  },
+  "review_lookup": {
+    "enabled": true,
+    "method": "ProductReviewsQuery",
+    "max_asins": 10,
+    "pages": 1,
+    "payload_template": {
+      "asin": "{asin}",
+      "pageIndex": "{page}"
+    }
+  },
+  "image_analysis": {
+    "enabled": true,
+    "top_n": 40,
+    "tile_size": 220,
+    "columns": 4
+  },
+  "classification": {
+    "direct_threshold": 58,
+    "keyword_threshold": 32,
+    "min_shared_terms_for_direct": 3,
+    "min_direct_competitors_for_direct_market": 3
+  },
+  "opportunity_thresholds": {
+    "low_supply_count": 4,
+    "high_sales": 500,
+    "low_reviews": 300,
+    "rating_gap": 4.3,
+    "min_margin": 0.3
+  },
+  "pain_point_terms": {
+    "freshness_or_drying": [
+      "dry",
+      "dried",
+      "stale",
+      "fresh",
+      "hard",
+      "crust",
+      "airtight"
+    ],
+    "moisture_or_mold": [
+      "mold",
+      "mould",
+      "moist",
+      "moisture",
+      "sweat",
+      "condensation"
+    ],
+    "smell_or_wax": [
+      "smell",
+      "odor",
+      "wax",
+      "beeswax",
+      "scent"
+    ],
+    "cleaning": [
+      "wash",
+      "washing",
+      "clean",
+      "stain",
+      "crumb"
+    ],
+    "size_fit": [
+      "small",
+      "large",
+      "size",
+      "fit",
+      "loaf",
+      "sourdough",
+      "baguette"
+    ],
+    "durability": [
+      "rip",
+      "tear",
+      "stitch",
+      "zipper",
+      "zip",
+      "broken",
+      "durable"
+    ],
+    "value_or_quantity": [
+      "pack",
+      "set",
+      "price",
+      "value",
+      "expensive",
+      "quantity"
+    ]
+  }
+}

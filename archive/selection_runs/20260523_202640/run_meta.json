@@ -1,0 +1,9 @@
+{
+  "run_id": "20260523_202640",
+  "generated_at": "2026-05-23T20:26:40",
+  "input": "data/discovered_candidates.csv",
+  "output_csv": "reports/selection_ranked.csv",
+  "output_md": "reports/selection_report.md",
+  "candidate_count": 88,
+  "archived_candidate_count": 3
+}

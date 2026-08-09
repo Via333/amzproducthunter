@@ -1,0 +1,4 @@
+name,method,domain,payload,limit,category
+desk_cable_keyword,KeywordSearchResults,1,"{""keyword"":""desk cable management tray"",""pageIndex"":1,""pageSize"":20}",20,Office
+kitchen_gap_cover_keyword,KeywordSearchResults,1,"{""keyword"":""silicone stove gap cover"",""pageIndex"":1,""pageSize"":20}",20,Kitchen
+office_category,CategoryProducts,1,"{""nodeId"":""replace_with_sorftime_node_id"",""page"":1}",20,Office

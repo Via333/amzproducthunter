@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.multica.amz-selection.weekly</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/y33/Documents/Codex/2026-05-06/amz-listing/automation/run_weekly_category_scan.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/y33/Documents/Codex/2026-05-06/amz-listing</string>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key>
+    <integer>1</integer>
+    <key>Hour</key>
+    <integer>8</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/y33/.npm-global/bin:/Users/y33/.local/bin</string>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/y33/Documents/Codex/2026-05-06/amz-listing/logs/launchd.weekly_category_scan.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/y33/Documents/Codex/2026-05-06/amz-listing/logs/launchd.weekly_category_scan.err.log</string>
+</dict>
+</plist>

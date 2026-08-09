@@ -1,0 +1,26 @@
+{
+  "Code": 0,
+  "Data": {
+    "products": [
+      {
+        "asin": "B0EXAMPLE01",
+        "title": "Under Desk Cable Management Tray",
+        "price": 21.99,
+        "sales": 920,
+        "review_count": 310,
+        "rating": 4.2,
+        "brand": "ExampleBrand"
+      },
+      {
+        "asin": "B0EXAMPLE02",
+        "title": "No Drill Cable Organizer Tray",
+        "price": 24.99,
+        "sales": 640,
+        "review_count": 180,
+        "rating": 4.0,
+        "brand": "ExampleBrand"
+      }
+    ]
+  },
+  "RequestLeft": 9999
+}

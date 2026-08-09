@@ -1,0 +1,6 @@
+product_name,category,marketplace,target_price,cost,shipping,fba_fee,referral_fee_rate,est_monthly_sales,avg_review_count,avg_rating,top10_review_share,keyword_search_volume,keyword_cpc,seasonality_score,differentiation_score,compliance_risk,fragile_risk,oversize_risk,notes
+Silicone Stove Gap Cover,Kitchen,US,16.99,3.2,1.1,4.35,0.15,980,620,4.2,0.52,18500,0.75,18,72,20,10,12,Simple product with clear pain point and low certification burden.
+Adjustable Laptop Stand,Office,US,39.99,12.5,3.8,8.2,0.15,1250,1850,4.5,0.68,42000,1.85,12,58,18,8,25,Good demand but crowded category.
+Rechargeable Hand Warmer,Sports Outdoors,US,24.99,8.1,2.6,5.9,0.15,2100,950,4.1,0.58,51000,1.15,82,65,55,12,18,"Seasonal product, battery compliance needs review."
+Glass Food Storage Container Set,Kitchen,US,32.99,10.8,5.5,9.1,0.15,740,1420,4.4,0.62,27500,1.05,20,46,15,78,42,"Fragile and heavy, fulfillment risk is high."
+Desk Cable Management Tray,Office,US,22.99,5.2,2.0,5.75,0.15,860,340,4.0,0.36,22800,0.62,10,80,12,8,15,Lower review wall and strong differentiation angle.

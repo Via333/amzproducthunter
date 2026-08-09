@@ -1,0 +1,18 @@
+{
+  "marketplace": "US",
+  "category": "Unknown",
+  "limit": 20,
+  "cost_rate": 0.28,
+  "shipping_rate": 0.08,
+  "fba_fee_rate": 0.18,
+  "min_fba_fee": 3.5,
+  "referral_fee_rate": 0.15,
+  "top10_review_share": 0.55,
+  "keyword_search_volume": 10000,
+  "keyword_cpc": 1.0,
+  "seasonality_score": 20,
+  "differentiation_score": 50,
+  "compliance_risk": 25,
+  "fragile_risk": 20,
+  "oversize_risk": 20
+}

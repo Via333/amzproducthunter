@@ -1,0 +1,211 @@
+{
+  "weights": {
+    "demand": 0.15,
+    "competition": 0.3,
+    "profitability": 0.35,
+    "differentiation": 0.1,
+    "risk_control": 0.1
+  },
+  "demand": {
+    "est_monthly_sales": {
+      "min": 50,
+      "max": 500,
+      "weight": 0.75
+    },
+    "keyword_search_volume": {
+      "min": 300,
+      "max": 20000,
+      "weight": 0.25
+    }
+  },
+  "competition": {
+    "avg_review_count": {
+      "good": 20,
+      "bad": 800,
+      "weight": 0.5,
+      "tiers": [
+        {
+          "max": 20,
+          "score": 100
+        },
+        {
+          "max": 50,
+          "score": 90
+        },
+        {
+          "max": 100,
+          "score": 80
+        },
+        {
+          "max": 200,
+          "score": 65
+        },
+        {
+          "max": 400,
+          "score": 45
+        },
+        {
+          "max": 800,
+          "score": 20
+        },
+        {
+          "max": 999999,
+          "score": 0
+        }
+      ]
+    },
+    "top10_review_share": {
+      "good": 0.2,
+      "bad": 0.65,
+      "weight": 0.25
+    },
+    "keyword_cpc": {
+      "good": 0.3,
+      "bad": 1.5,
+      "weight": 0.15
+    },
+    "rating_improvement": {
+      "weight": 0.1
+    }
+  },
+  "profitability": {
+    "gross_margin": {
+      "min": 0.25,
+      "max": 0.55,
+      "weight": 0.4
+    },
+    "gross_profit_per_unit": {
+      "min": 5,
+      "max": 25,
+      "weight": 0.4
+    },
+    "monthly_gross_profit": {
+      "min": 1000,
+      "max": 8000,
+      "weight": 0.2
+    }
+  },
+  "risk": {
+    "compliance_risk": 0.4,
+    "fragile_risk": 0.2,
+    "oversize_risk": 0.2,
+    "seasonality_score": 0.2
+  },
+  "defaults": {
+    "referral_fee_rate": 0.15
+  },
+  "recommendation_thresholds": {
+    "go_score": 70,
+    "watch_score": 52,
+    "min_gross_margin_for_go": 0.35,
+    "min_gross_profit_per_unit_for_go": 8,
+    "min_gross_margin_for_watch": 0.3,
+    "min_gross_profit_per_unit_for_watch": 8,
+    "max_avg_review_count_for_watch": 600,
+    "max_oversize_risk_for_watch": 60,
+    "max_compliance_risk_for_go": 40,
+    "hard_stop_compliance_risk": 80,
+    "hard_stop_oversize_risk": 65,
+    "hard_stop_fragile_risk": 80,
+    "hard_stop_seasonality_score": 80,
+    "hard_stop_score_cap": 35,
+    "reject_score_cap": 45
+  },
+  "hard_exclusions": {
+    "title_contains": [
+      "air mover",
+      "blower fan",
+      "ventilator",
+      "exhaust fan",
+      "flexible duct",
+      "steam cleaner",
+      "steam mop",
+      "handheld steam",
+      "portable steamer",
+      "vacuum",
+      "solar pathway lights",
+      "solar lights",
+      "solar powered",
+      "electric bike pump",
+      "bike air pump",
+      "portable electric bike air pump",
+      "garage light",
+      "garage lights",
+      "hand rail",
+      "railing",
+      "computer desk",
+      "office desk",
+      "area rug",
+      "patio rug",
+      "deck box",
+      "laundry basket",
+      "pet couch cover",
+      "dog grass pad",
+      "memory foam pillow",
+      "bed pillows",
+      "queen pillow",
+      "hunting",
+      "decoy",
+      "turkey hunting",
+      "scoot n shoot"
+    ],
+    "category_contains": [
+      "industrial",
+      "vacuums",
+      "floor care",
+      "steam cleaners",
+      "steam mops",
+      "handheld steamers",
+      "hunting",
+      "shooting",
+      "furniture",
+      "rugs",
+      "patio furniture"
+    ],
+    "brand_contains": [
+      "Amazon Basics",
+      "MOJO Outdoors",
+      "VEVOR",
+      "Beckham Hotel Collection",
+      "Whole Foods Market"
+    ]
+  },
+  "brand_moat": {
+    "enabled": true,
+    "score_cap": 45,
+    "exclude_brands": [
+      "Apple",
+      "Anker",
+      "BaubleBar",
+      "Belkin",
+      "Bosch",
+      "Breville",
+      "Brita",
+      "Cuisinart",
+      "DeWalt",
+      "Dyson",
+      "Hydro Flask",
+      "KitchenAid",
+      "Le Creuset",
+      "Lodge",
+      "Makita",
+      "Made In",
+      "Milwaukee",
+      "Ninja",
+      "OXO",
+      "Philips",
+      "Pyrex",
+      "Ring",
+      "Rubbermaid",
+      "Samsung",
+      "Shark",
+      "Simplehuman",
+      "Sony",
+      "Stanley",
+      "Thermos",
+      "Tupperware",
+      "Vitamix",
+      "YETI"
+    ]
+  }
+}

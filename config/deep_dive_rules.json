@@ -1,0 +1,46 @@
+{
+  "domain": "1",
+  "input": "reports/selection_ranked.csv",
+  "limit": 5,
+  "competitor_candidate_pool_size": 20,
+  "competitors_per_product": 10,
+  "keywords_per_product": 20,
+  "candidate_filters": {
+    "recommendation_contains": "Watch",
+    "exclude_key_flags_contains": [
+      "compliance review needed",
+      "high seasonality",
+      "oversize risk"
+    ]
+  },
+  "competitor_detail": {
+    "method": "ProductRequest",
+    "batch_size": 10,
+    "payload_template": {
+      "asin": "{asin_list}",
+      "trend": 2
+    }
+  },
+  "keyword_lookup": {
+    "method": "ASINRequestKeywordv2",
+    "payload_template": {
+      "asin": "{asin}",
+      "pageIndex": 1,
+      "pageSize": 20
+    }
+  },
+  "thresholds": {
+    "low_review": 300,
+    "high_sales": 500,
+    "review_wall": 1000,
+    "brand_concentration": 0.35,
+    "cn_seller_share": 0.5,
+    "min_margin": 0.3
+  },
+  "classification": {
+    "direct_threshold": 58,
+    "keyword_threshold": 32,
+    "min_shared_terms_for_direct": 3,
+    "min_direct_competitors_for_direct_market": 3
+  }
+}

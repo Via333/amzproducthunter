@@ -1,0 +1,451 @@
+#!/usr/bin/env python3
+"""Build weekly scan metrics, health checks, and optional Multica issue comments."""
+
+from __future__ import annotations
+
+import csv
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from collections import Counter
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+
+REPORT_JSON = "weekly_scan_report.json"
+REPORT_MD = "weekly_scan_report.md"
+
+SECRET_PATTERNS = [
+    re.compile(r"(account[-_\s]*sk\s*[:=]\s*)\S+", re.IGNORECASE),
+    re.compile(r"(api[-_\s]*key\s*[:=]\s*)\S+", re.IGNORECASE),
+    re.compile(r"(token\s*[:=]\s*)\S+", re.IGNORECASE),
+    re.compile(r"(cookie\s*[:=]\s*)\S+", re.IGNORECASE),
+    re.compile(r"(bearer\s+)[A-Za-z0-9._\-]+", re.IGNORECASE),
+    re.compile(r"\bsk-[A-Za-z0-9_\-]{12,}\b"),
+]
+
+
+def now_iso() -> str:
+    return datetime.now().isoformat(timespec="seconds")
+
+
+def sanitize(value: Any) -> str:
+    text = str(value or "")
+    for pattern in SECRET_PATTERNS:
+        text = pattern.sub(lambda match: f"{match.group(1)}[REDACTED]" if match.groups() else "[REDACTED]", text)
+    return text
+
+
+def read_csv_rows(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def csv_count(path: Path) -> int:
+    return len(read_csv_rows(path))
+
+
+def count_matching(path: Path, key: str, value: str) -> int:
+    return sum(1 for row in read_csv_rows(path) if row.get(key) == value)
+
+
+def count_in(path: Path, key: str, values: set[str]) -> int:
+    return sum(1 for row in read_csv_rows(path) if row.get(key) in values)
+
+
+def latest_child_dir(path: Path) -> Path | None:
+    if not path.exists():
+        return None
+    children = [child for child in path.iterdir() if child.is_dir()]
+    return sorted(children)[-1] if children else None
+
+
+def file_mtime(path: Path) -> str:
+    if not path.exists():
+        return ""
+    return datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds")
+
+
+def file_age_days(path: Path) -> float | None:
+    if not path.exists():
+        return None
+    age_seconds = datetime.now().timestamp() - path.stat().st_mtime
+    return round(max(0.0, age_seconds / 86400), 2)
+
+
+def top_reject_reasons(path: Path, recommendation_key: str, reject_value: str, flags_key: str) -> str:
+    counter: Counter[str] = Counter()
+    for row in read_csv_rows(path):
+        if row.get(recommendation_key) != reject_value:
+            continue
+        flags = str(row.get(flags_key) or "")
+        counter.update(part.strip() for part in flags.split(";") if part.strip())
+    return ", ".join(f"{reason}:{count}" for reason, count in counter.most_common(5)) or "none"
+
+
+def latest_selection_run_id(root: Path) -> str:
+    latest = latest_child_dir(root / "archive" / "selection_runs")
+    if not latest:
+        return ""
+    meta_path = latest / "run_meta.json"
+    if meta_path.exists():
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            return str(meta.get("run_id") or latest.name)
+        except json.JSONDecodeError:
+            return latest.name
+    return latest.name
+
+
+def latest_success_log(root: Path) -> Path | None:
+    candidates = []
+    for path in (root / "logs").glob("weekly_category_scan*.log"):
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if "Weekly category scan completed successfully." in text:
+            candidates.append(path)
+    return max(candidates, key=lambda item: item.stat().st_mtime) if candidates else None
+
+
+def latest_daily_shape_counts(root: Path) -> list[dict[str, Any]]:
+    runs_root = root / "archive" / "category_shape_runs"
+    by_day: dict[str, Path] = {}
+    if runs_root.exists():
+        for run_dir in sorted(child for child in runs_root.iterdir() if child.is_dir()):
+            day = run_dir.name.split("_", 1)[0]
+            by_day[day] = run_dir
+    daily = []
+    for day, run_dir in sorted(by_day.items()):
+        validation_path = run_dir / "category_shape_validation.csv"
+        daily.append(
+            {
+                "day": day,
+                "run_id": run_dir.name,
+                "shape_opportunities": count_matching(validation_path, "shape_recommendation", "Shape opportunity"),
+            }
+        )
+    return daily
+
+
+def consecutive_zero_shape_days(root: Path, threshold: int) -> tuple[int, list[dict[str, Any]]]:
+    daily = latest_daily_shape_counts(root)
+    streak = 0
+    for item in reversed(daily):
+        if item["shape_opportunities"] == 0:
+            streak += 1
+        else:
+            break
+    return streak, daily[-threshold:]
+
+
+def health_checks(
+    root: Path,
+    zero_pool_weeks: int,
+    stale_days: int,
+    log_path: Path | None,
+    current_status: str = "",
+) -> list[dict[str, str]]:
+    checks: list[dict[str, str]] = []
+    dashboard = root / "web" / "index.html"
+    dashboard_age = file_age_days(dashboard)
+    if dashboard_age is None:
+        checks.append({"name": "dashboard_exists", "status": "critical", "message": "web/index.html is missing"})
+    elif dashboard_age > stale_days:
+        checks.append(
+            {
+                "name": "dashboard_freshness",
+                "status": "critical",
+                "message": f"web/index.html is {dashboard_age} days old, above {stale_days} day threshold",
+            }
+        )
+    else:
+        checks.append(
+            {
+                "name": "dashboard_freshness",
+                "status": "ok",
+                "message": f"web/index.html age is {dashboard_age} days",
+            }
+        )
+
+    zero_streak, recent_days = consecutive_zero_shape_days(root, zero_pool_weeks)
+    if zero_streak >= zero_pool_weeks:
+        checks.append(
+            {
+                "name": "consecutive_zero_pool",
+                "status": "critical",
+                "message": f"{zero_streak} latest scan days have 0 Shape opportunity rows",
+            }
+        )
+    elif zero_streak:
+        checks.append(
+            {
+                "name": "consecutive_zero_pool",
+                "status": "warning",
+                "message": f"{zero_streak} latest scan day(s) have 0 Shape opportunity rows",
+            }
+        )
+    else:
+        checks.append(
+            {
+                "name": "consecutive_zero_pool",
+                "status": "ok",
+                "message": f"Recent shape opportunity counts: {recent_days}",
+            }
+        )
+
+    success_log = latest_success_log(root)
+    success_age = file_age_days(success_log) if success_log else None
+    if current_status == "success":
+        checks.append(
+            {
+                "name": "weekly_success_log",
+                "status": "ok",
+                "message": "Current workflow reached success; launch wrapper appends the completion marker after report writing",
+            }
+        )
+    elif success_log is None:
+        checks.append(
+            {
+                "name": "weekly_success_log",
+                "status": "critical",
+                "message": "No weekly_category_scan*.log contains a successful completion marker",
+            }
+        )
+    elif success_age is not None and success_age > stale_days:
+        checks.append(
+            {
+                "name": "weekly_success_log",
+                "status": "critical",
+                "message": f"Latest successful weekly log is {success_age} days old: {success_log}",
+            }
+        )
+    else:
+        checks.append(
+            {
+                "name": "weekly_success_log",
+                "status": "ok",
+                "message": f"Latest successful weekly log: {success_log}",
+            }
+        )
+
+    if log_path:
+        if log_path.exists():
+            checks.append({"name": "current_log", "status": "ok", "message": f"Current log path: {log_path}"})
+        else:
+            checks.append({"name": "current_log", "status": "warning", "message": f"Current log path not found yet: {log_path}"})
+
+    return checks
+
+
+def collect_metrics(root: Path) -> dict[str, Any]:
+    validation_path = root / "data" / "category_shape_validation.csv"
+    selection_path = root / "reports" / "selection_ranked.csv"
+    shape_library_path = root / "archive" / "shape_opportunity_library.csv"
+    opportunity_library_path = root / "archive" / "opportunity_library.csv"
+    latest_seed_run = latest_selection_run_id(root)
+
+    opportunity_rows = read_csv_rows(opportunity_library_path)
+    new_archived_candidates = sum(
+        1
+        for row in opportunity_rows
+        if row.get("archive_last_run_id") == latest_seed_run and str(row.get("archive_seen_count") or "") == "1"
+    )
+
+    return {
+        "scanned_categories": csv_count(root / "reports" / "discovered_categories.csv"),
+        "ranked_candidates": csv_count(selection_path),
+        "new_archived_candidates": new_archived_candidates,
+        "selection_watch_or_go": count_in(
+            selection_path,
+            "recommendation",
+            {"Go to supplier validation", "Watch or collect more data"},
+        ),
+        "validation_rows": csv_count(validation_path),
+        "shape_opportunities_latest_validation": count_matching(
+            validation_path,
+            "shape_recommendation",
+            "Shape opportunity",
+        ),
+        "watch_shapes": count_matching(validation_path, "shape_recommendation", "Watch shape"),
+        "needs_category_top100": count_matching(validation_path, "shape_recommendation", "Needs category Top100"),
+        "manual_review_rows": count_in(
+            validation_path,
+            "shape_recommendation",
+            {"Watch shape", "Needs category Top100"},
+        ),
+        "active_validated_pool_rows": count_matching(shape_library_path, "archive_status", "active_in_latest_run"),
+        "total_validated_pool_rows": csv_count(shape_library_path),
+        "seed_reject_reasons": top_reject_reasons(selection_path, "recommendation", "Reject", "key_flags"),
+        "shape_reject_reasons": top_reject_reasons(
+            validation_path,
+            "shape_recommendation",
+            "Reject category/form",
+            "validation_flags",
+        ),
+    }
+
+
+def build_report(
+    *,
+    root: Path,
+    run_id: str,
+    status: str,
+    started_at: str,
+    finished_at: str | None = None,
+    log_path: Path | None = None,
+    failed_step: str = "",
+    error_summary: str = "",
+    zero_pool_weeks: int = 3,
+    stale_days: int = 8,
+) -> dict[str, Any]:
+    latest_seed = latest_child_dir(root / "archive" / "selection_runs")
+    latest_shape = latest_child_dir(root / "archive" / "category_shape_runs")
+    finished_at = finished_at or now_iso()
+    checks = health_checks(root, zero_pool_weeks, stale_days, log_path, status)
+    if status == "failure":
+        checks.insert(
+            0,
+            {
+                "name": "workflow_failure",
+                "status": "critical",
+                "message": f"{failed_step or 'weekly workflow'} failed: {sanitize(error_summary)[:500]}",
+            },
+        )
+
+    return {
+        "run_id": run_id,
+        "status": status,
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "failed_step": failed_step,
+        "error_summary": sanitize(error_summary)[:1000],
+        "metrics": collect_metrics(root),
+        "paths": {
+            "latest_seed_snapshot": str(latest_seed or ""),
+            "latest_category_shape_snapshot": str(latest_shape or ""),
+            "dashboard": str(root / "web" / "index.html"),
+            "dashboard_mtime": file_mtime(root / "web" / "index.html"),
+            "log_path": str(log_path or ""),
+            "latest_report_json": str(root / "reports" / REPORT_JSON),
+            "latest_report_md": str(root / "reports" / REPORT_MD),
+        },
+        "health_checks": checks,
+    }
+
+
+def report_markdown(report: dict[str, Any]) -> str:
+    metrics = report["metrics"]
+    paths = report["paths"]
+    alert_checks = [check for check in report["health_checks"] if check["status"] != "ok"]
+    lines = [
+        "# 每周选品扫描汇报",
+        "",
+        f"- 状态：{report['status']}",
+        f"- Run ID：`{report['run_id']}`",
+        f"- 时间：{report['started_at']} -> {report['finished_at']}",
+        f"- 扫描类目数：{metrics['scanned_categories']}",
+        f"- 候选产品数：{metrics['ranked_candidates']}",
+        f"- 新增候选入档数：{metrics['new_archived_candidates']}",
+        f"- 通过验证进入机会池：{metrics['active_validated_pool_rows']}",
+        f"- 本次验证 Shape opportunity：{metrics['shape_opportunities_latest_validation']}",
+        f"- 人工复核/补数据：{metrics['manual_review_rows']}（Watch shape {metrics['watch_shapes']}，Needs Top100 {metrics['needs_category_top100']}）",
+        f"- 初筛淘汰主要原因：{metrics['seed_reject_reasons']}",
+        f"- 形态淘汰主要原因：{metrics['shape_reject_reasons']}",
+        f"- 最新初筛快照：`{paths['latest_seed_snapshot'] or 'none'}`",
+        f"- 最新类目/形态快照：`{paths['latest_category_shape_snapshot'] or 'none'}`",
+        f"- Dashboard：`{paths['dashboard']}`（mtime {paths['dashboard_mtime'] or 'missing'}）",
+        f"- 日志：`{paths['log_path'] or 'none'}`",
+    ]
+    if report.get("failed_step"):
+        lines.extend(["", "## 失败摘要", "", f"- 失败步骤：{report['failed_step']}", f"- 错误：{report.get('error_summary') or 'unknown'}"])
+    lines.extend(["", "## 健康检查", ""])
+    if alert_checks:
+        for check in alert_checks:
+            lines.append(f"- {check['status']}: {check['message']}")
+    else:
+        lines.append("- ok: 未发现需要告警的健康检查项")
+    return "\n".join(lines).strip() + "\n"
+
+
+def issue_comment(report: dict[str, Any]) -> str:
+    metrics = report["metrics"]
+    alerts = [check for check in report["health_checks"] if check["status"] != "ok"]
+    lines = [
+        f"每周选品扫描：{report['status']}（Run `{report['run_id']}`）",
+        "",
+        f"- 扫描类目：{metrics['scanned_categories']}",
+        f"- 候选产品：{metrics['ranked_candidates']}（新增入档 {metrics['new_archived_candidates']}）",
+        f"- 入机会池：{metrics['active_validated_pool_rows']}（本次 Shape opportunity {metrics['shape_opportunities_latest_validation']}）",
+        f"- 人工复核/补数据：{metrics['manual_review_rows']}",
+        f"- 淘汰主因：{metrics['seed_reject_reasons']}",
+        f"- Dashboard mtime：{report['paths']['dashboard_mtime'] or 'missing'}",
+        f"- 最新快照：{report['paths']['latest_seed_snapshot'] or 'none'} / {report['paths']['latest_category_shape_snapshot'] or 'none'}",
+        f"- 日志：{report['paths']['log_path'] or 'none'}",
+    ]
+    if report.get("failed_step"):
+        lines.extend(["", f"失败步骤：{report['failed_step']}", f"错误摘要：{report.get('error_summary') or 'unknown'}"])
+    lines.append("")
+    if alerts:
+        lines.append("健康检查告警：")
+        lines.extend(f"- {check['status']}: {check['message']}" for check in alerts)
+    else:
+        lines.append("健康检查：未发现告警。")
+    return "\n".join(lines).strip() + "\n"
+
+
+def write_report_files(root: Path, report: dict[str, Any]) -> tuple[Path, Path, Path]:
+    reports_dir = root / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    json_path = reports_dir / REPORT_JSON
+    md_path = reports_dir / REPORT_MD
+    markdown = report_markdown(report)
+    json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    md_path.write_text(markdown, encoding="utf-8")
+
+    archive_dir = root / "archive" / "weekly_scan_reports" / str(report["run_id"])
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    archive_json = archive_dir / REPORT_JSON
+    archive_md = archive_dir / REPORT_MD
+    shutil.copyfile(json_path, archive_json)
+    shutil.copyfile(md_path, archive_md)
+    return json_path, md_path, archive_dir
+
+
+def post_issue_comment(issue_id: str, content: str) -> None:
+    command = ["multica", "issue", "comment", "add", issue_id, "--content-stdin"]
+    completed = subprocess.run(command, input=content, text=True, capture_output=True)
+    if completed.returncode != 0:
+        stderr = sanitize(completed.stderr.strip() or completed.stdout.strip())
+        raise RuntimeError(f"multica issue comment add failed: {stderr}")
+
+
+def maybe_post_issue_comment(issue_id: str, report: dict[str, Any]) -> bool:
+    issue_id = str(issue_id or "").strip()
+    if not issue_id:
+        return False
+    try:
+        post_issue_comment(issue_id, issue_comment(report))
+        return True
+    except Exception as exc:  # noqa: BLE001 - reporting must not hide the scan result.
+        print(f"Warning: {sanitize(exc)}", file=sys.stderr)
+        return False
+
+
+def env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
