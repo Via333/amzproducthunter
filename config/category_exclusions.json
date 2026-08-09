@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "category_ids": [],
+  "path_contains": [
+    {
+      "term": "furniture",
+      "type": "大件",
+      "reason": "仓储、头程和退货成本高，不适合个人卖家"
+    },
+    {
+      "term": "mattresses",
+      "type": "大件",
+      "reason": "体积大、退货和售后成本高"
+    },
+    {
+      "term": "rugs",
+      "type": "大件",
+      "reason": "体积和退货成本高，花色变体库存压力大"
+    },
+    {
+      "term": "gazebos",
+      "type": "大件",
+      "reason": "超大件，安装和售后风险高"
+    },
+    {
+      "term": "pergolas",
+      "type": "大件",
+      "reason": "超大件，安装和售后风险高"
+    },
+    {
+      "term": "storage sheds",
+      "type": "大件",
+      "reason": "超大件，运输破损和退货风险高"
+    },
+    {
+      "term": "garden houses",
+      "type": "大件",
+      "reason": "超大件，运输、安装和退货风险高"
+    },
+    {
+      "term": "deck boxes",
+      "type": "大件",
+      "reason": "体积大，头程、仓储和退货成本高"
+    },
+    {
+      "term": "carports",
+      "type": "大件",
+      "reason": "超大件，安装和责任风险高"
+    },
+    {
+      "term": "trampolines",
+      "type": "高门槛",
+      "reason": "大件且存在儿童使用和产品责任风险"
+    },
+    {
+      "term": "swing sets",
+      "type": "高门槛",
+      "reason": "大件、安装复杂且产品责任风险高"
+    },
+    {
+      "term": "above ground pools",
+      "type": "高门槛",
+      "reason": "大件、强季节性、售后和安全责任高"
+    },
+    {
+      "term": "large appliances",
+      "type": "大件",
+      "reason": "物流、安装、保修和售后门槛高"
+    },
+    {
+      "term": "outdoor kitchen appliances",
+      "type": "大件/安装",
+      "reason": "体积、安装、保修和售后门槛高"
+    },
+    {
+      "term": "lawn mower replacement parts",
+      "type": "专利/适配",
+      "reason": "型号适配复杂，品牌投诉、退货和专利风险高"
+    },
+    {
+      "term": "fan shop",
+      "type": "授权/IP",
+      "reason": "球队、赛事和角色授权壁垒明显，不适合无授权卖家"
+    },
+    {
+      "term": "circuit breakers",
+      "type": "强品牌/责任",
+      "reason": "品牌适配集中，电气安全责任和认证门槛高"
+    },
+    {
+      "term": "electrical panels",
+      "type": "高门槛",
+      "reason": "电气安全、认证和安装责任高"
+    },
+    {
+      "term": "gas appliances",
+      "type": "高门槛",
+      "reason": "安全认证、安装和产品责任风险高"
+    },
+    {
+      "term": "fire extinguishers",
+      "type": "高门槛",
+      "reason": "强认证、危险品运输和产品责任风险高"
+    },
+    {
+      "term": "smoke detectors",
+      "type": "高门槛",
+      "reason": "强认证和生命安全责任风险高"
+    },
+    {
+      "term": "respirators",
+      "type": "高门槛",
+      "reason": "防护声明、认证和产品责任风险高"
+    },
+    {
+      "term": "pesticides",
+      "type": "强合规",
+      "reason": "EPA 等合规和危险品要求高"
+    },
+    {
+      "term": "ink cartridges",
+      "type": "专利/品牌垄断",
+      "reason": "兼容专利、品牌投诉和价格竞争风险高"
+    },
+    {
+      "term": "toner cartridges",
+      "type": "专利/品牌垄断",
+      "reason": "兼容专利、品牌投诉和价格竞争风险高"
+    },
+    {
+      "term": "collectible trading cards",
+      "type": "品牌垄断",
+      "reason": "IP、授权、真伪和头部品牌壁垒明显"
+    }
+  ]
+}

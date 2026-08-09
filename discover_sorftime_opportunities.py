@@ -2,6 +2,7 @@
 import argparse
 import csv
 import json
+from datetime import datetime
 from pathlib import Path
 
 from import_sorftime_candidates import (
@@ -49,6 +50,35 @@ CHILDREN_ALIASES = [
     "sub_categories",
 ]
 
+CATEGORY_STATE_FIELDS = [
+    "category_id",
+    "name",
+    "path",
+    "first_scanned_at",
+    "last_scanned_at",
+    "scan_count",
+    "last_products_examined",
+    "last_candidate_count",
+    "lifetime_products_examined",
+    "lifetime_candidate_count",
+    "status",
+]
+
+CATEGORY_REPORT_FIELDS = [
+    "category_id",
+    "name",
+    "path",
+    "depth",
+    "is_leaf",
+    "selection_score",
+    "rotation_bucket",
+    "previous_last_scanned_at",
+    "previous_scan_count",
+    "products_examined",
+    "candidate_count",
+    "scan_completed_at",
+]
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Discover Amazon product opportunities from Sorftime categories.")
@@ -56,6 +86,12 @@ def parse_args():
     parser.add_argument("--defaults", default="config/import_defaults.json", help="Candidate import defaults JSON.")
     parser.add_argument("--output", default="data/discovered_candidates.csv", help="Output candidates CSV.")
     parser.add_argument("--category-report", default="reports/discovered_categories.csv", help="Scanned category report.")
+    parser.add_argument("--scan-state", default="archive/category_scan_state.csv", help="Persistent category rotation state.")
+    parser.add_argument(
+        "--category-exclusions",
+        default="config/category_exclusions.json",
+        help="Permanent category exclusion rules and reasons.",
+    )
     parser.add_argument("--domain", help="Override Sorftime domain id.")
     parser.add_argument("--strategy", choices=["search", "category"], help="Discovery strategy.")
     parser.add_argument("--category-tree-json", help="Use a saved category tree JSON instead of calling Sorftime.")
@@ -128,9 +164,6 @@ def flatten_categories(nodes, parent_path="", depth=0):
 
 def category_preference_score(category, filters):
     name = category["path"].lower()
-    excluded = filters.get("exclude_name_contains", [])
-    if any(term.lower() in name for term in excluded):
-        return None
     min_depth = int(filters.get("min_depth", 0))
     max_depth = int(filters.get("max_depth", 99))
     if category["depth"] < min_depth or category["depth"] > max_depth:
@@ -148,7 +181,92 @@ def category_preference_score(category, filters):
     return score
 
 
-def select_categories(category_tree, rules):
+def read_category_scan_state(path):
+    path = Path(path)
+    if not path.exists():
+        return {}
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        return {row["category_id"]: row for row in csv.DictReader(handle) if row.get("category_id")}
+
+
+def write_category_scan_state(scan_state, path):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rows = sorted(scan_state.values(), key=lambda row: (row.get("path", ""), row.get("category_id", "")))
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=CATEGORY_STATE_FIELDS, extrasaction="ignore", lineterminator="\n")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({field: row.get(field, "") for field in CATEGORY_STATE_FIELDS})
+
+
+def as_int(value, default=0):
+    try:
+        return int(float(str(value or default).replace(",", "")))
+    except (TypeError, ValueError):
+        return default
+
+
+def load_category_exclusions(path):
+    path = Path(path)
+    if not path.exists():
+        return {}
+    return load_json(path)
+
+
+def category_exclusion_reason(category, filters, exclusions):
+    path = category["path"].lower()
+    for term in filters.get("exclude_name_contains", []):
+        if str(term).lower() in path:
+            return f"基础排除：路径包含 {term}"
+
+    category_id = str(category["category_id"])
+    for item in exclusions.get("category_ids", []):
+        item = {"category_id": item, "reason": "手动排除"} if isinstance(item, str) else item
+        if str(item.get("category_id", "")) == category_id:
+            return str(item.get("reason") or "手动排除")
+
+    for item in exclusions.get("path_contains", []):
+        item = {"term": item, "reason": "永久排除"} if isinstance(item, str) else item
+        term = str(item.get("term", "")).strip().lower()
+        if term and term in path:
+            reason = str(item.get("reason") or "永久排除")
+            category_type = str(item.get("type") or "规则")
+            return f"{category_type}：{reason}（匹配 {item.get('term')}）"
+    return ""
+
+
+def bootstrap_scan_state(scan_state, category_report_path):
+    if scan_state:
+        return scan_state
+    report_path = Path(category_report_path)
+    if not report_path.exists():
+        return scan_state
+    scanned_at = datetime.fromtimestamp(report_path.stat().st_mtime).isoformat(timespec="seconds")
+    with report_path.open("r", encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            category_id = str(row.get("category_id", "")).strip()
+            if not category_id:
+                continue
+            scan_state[category_id] = {
+                "category_id": category_id,
+                "name": row.get("name", ""),
+                "path": row.get("path", ""),
+                "first_scanned_at": row.get("scan_completed_at") or scanned_at,
+                "last_scanned_at": row.get("scan_completed_at") or scanned_at,
+                "scan_count": max(1, as_int(row.get("previous_scan_count"), 0) + 1),
+                "last_products_examined": row.get("products_examined", ""),
+                "last_candidate_count": row.get("candidate_count", ""),
+                "lifetime_products_examined": row.get("products_examined", ""),
+                "lifetime_candidate_count": row.get("candidate_count", ""),
+                "status": "scanned",
+            }
+    return scan_state
+
+
+def select_categories(category_tree, rules, scan_state=None, exclusions=None):
+    scan_state = scan_state or {}
+    exclusions = exclusions or {}
     seeds = rules.get("category_seeds", [])
     if seeds:
         return [
@@ -159,20 +277,47 @@ def select_categories(category_tree, rules):
                 "depth": int(seed.get("depth", 0)),
                 "is_leaf": True,
                 "selection_score": 100,
+                "rotation_bucket": "manual_seed",
+                "previous_last_scanned_at": scan_state.get(str(seed["category_id"]), {}).get("last_scanned_at", ""),
+                "previous_scan_count": as_int(scan_state.get(str(seed["category_id"]), {}).get("scan_count")),
             }
             for seed in seeds
         ][: int(rules["max_categories"])]
 
     roots = find_category_roots(category_tree)
     categories = flatten_categories_from_any_shape(roots)
-    selected = []
+    selected_by_id = {}
     filters = rules["category_filters"]
     for category in categories:
+        if category_exclusion_reason(category, filters, exclusions):
+            continue
         score = category_preference_score(category, filters)
         if score is None:
             continue
-        selected.append({**category, "selection_score": score})
-    selected.sort(key=lambda item: item["selection_score"], reverse=True)
+        previous = scan_state.get(category["category_id"], {})
+        previous_scan_count = as_int(previous.get("scan_count"))
+        candidate = {
+            **category,
+            "selection_score": score,
+            "rotation_bucket": "never_scanned" if previous_scan_count == 0 else "oldest_rescan",
+            "previous_last_scanned_at": previous.get("last_scanned_at", ""),
+            "previous_scan_count": previous_scan_count,
+        }
+        existing = selected_by_id.get(category["category_id"])
+        if existing is None or (candidate["selection_score"], candidate["depth"]) > (
+            existing["selection_score"],
+            existing["depth"],
+        ):
+            selected_by_id[category["category_id"]] = candidate
+    selected = list(selected_by_id.values())
+    selected.sort(
+        key=lambda item: (
+            0 if item["previous_scan_count"] == 0 else 1,
+            item["previous_last_scanned_at"] or "",
+            -item["selection_score"],
+            item["path"],
+        )
+    )
     return selected[: int(rules["max_categories"])]
 
 
@@ -326,29 +471,54 @@ def collect_products_by_search(rules, defaults, domain):
 def collect_products_for_category(category, rules, defaults, domain):
     product_cfg = rules["category_products"]
     products = []
+    examined = 0
+    max_products = int(rules["products_per_category"])
     pages = int(product_cfg.get("pages", 1))
     for page in range(1, pages + 1):
         payload = replace_placeholders(product_cfg["payload_template"], category, page)
         response = call_sorftime(product_cfg["method"], json.dumps(payload, ensure_ascii=False), domain)
         records = find_product_records(response)
-        for item in records[: int(rules["products_per_category"])]:
+        remaining = max_products - examined
+        if remaining <= 0:
+            break
+        page_records = records[:remaining]
+        examined += len(page_records)
+        for item in page_records:
             product_category = pick(item, "category", category["path"])
             candidate = build_candidate(item, defaults, product_category)
             candidate["source_strategy"] = f"category:{category['name']}"
             if product_passes_filters(candidate, rules["product_filters"]):
                 products.append(candidate)
-    return products
+        if not page_records:
+            break
+    return products, examined
 
 
 def write_category_report(categories, output_path):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    fields = ["category_id", "name", "path", "depth", "is_leaf", "selection_score"]
     with output_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer = csv.DictWriter(handle, fieldnames=CATEGORY_REPORT_FIELDS, extrasaction="ignore", lineterminator="\n")
         writer.writeheader()
         for category in categories:
-            writer.writerow({field: category.get(field, "") for field in fields})
+            writer.writerow({field: category.get(field, "") for field in CATEGORY_REPORT_FIELDS})
+
+
+def mark_category_scanned(scan_state, category, products_examined, candidate_count, scanned_at):
+    existing = scan_state.get(category["category_id"], {})
+    scan_state[category["category_id"]] = {
+        "category_id": category["category_id"],
+        "name": category["name"],
+        "path": category["path"],
+        "first_scanned_at": existing.get("first_scanned_at") or scanned_at,
+        "last_scanned_at": scanned_at,
+        "scan_count": as_int(existing.get("scan_count")) + 1,
+        "last_products_examined": products_examined,
+        "last_candidate_count": candidate_count,
+        "lifetime_products_examined": as_int(existing.get("lifetime_products_examined")) + products_examined,
+        "lifetime_candidate_count": as_int(existing.get("lifetime_candidate_count")) + candidate_count,
+        "status": "scanned",
+    }
 
 
 def main():
@@ -372,13 +542,16 @@ def main():
             return
         candidates = collect_products_by_search(rules, defaults, domain)
     else:
+        scan_state = read_category_scan_state(args.scan_state)
+        scan_state = bootstrap_scan_state(scan_state, args.category_report)
+        exclusions = load_category_exclusions(args.category_exclusions)
         if args.category_tree_json:
             category_tree = load_json(args.category_tree_json)
         else:
             tree_cfg = rules["category_tree"]
             category_tree = call_sorftime(tree_cfg["method"], json.dumps(tree_cfg["payload"], ensure_ascii=False), domain)
 
-        categories = select_categories(category_tree, rules)
+        categories = select_categories(category_tree, rules, scan_state, exclusions)
         write_category_report(categories, args.category_report)
         print(f"Selected {len(categories)} categories. Category report: {args.category_report}")
 
@@ -386,9 +559,17 @@ def main():
             return
 
         for category in categories:
-            category_candidates = collect_products_for_category(category, rules, defaults, domain)
+            category_candidates, products_examined = collect_products_for_category(category, rules, defaults, domain)
             candidates.extend(category_candidates)
-            print(f"{category['path']}: {len(category_candidates)} candidates")
+            scanned_at = datetime.now().isoformat(timespec="seconds")
+            category["products_examined"] = products_examined
+            category["candidate_count"] = len(category_candidates)
+            category["scan_completed_at"] = scanned_at
+            mark_category_scanned(scan_state, category, products_examined, len(category_candidates), scanned_at)
+            write_category_scan_state(scan_state, args.scan_state)
+            print(f"{category['path']}: examined {products_examined}, {len(category_candidates)} candidates")
+        write_category_report(categories, args.category_report)
+        print(f"Category rotation state: {args.scan_state} ({len(scan_state)} scanned categories)")
 
     candidates = dedupe_candidates(candidates)[: int(rules["max_candidates"])]
     if not candidates:

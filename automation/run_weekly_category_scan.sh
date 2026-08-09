@@ -1,7 +1,8 @@
 #!/bin/zsh
 set -euo pipefail
 
-ROOT="/Users/y33/Documents/Codex/2026-05-06/amz-listing"
+SCRIPT_DIR="${0:A:h}"
+ROOT="${SCRIPT_DIR:h}"
 LOG_DIR="$ROOT/logs"
 RUN_ID="${AMZ_WEEKLY_RUN_ID:-$(date '+%Y%m%d_%H%M%S')}"
 RUN_DATE="${AMZ_WEEKLY_RUN_DATE:-${RUN_ID%%_*}}"
@@ -9,11 +10,9 @@ LOG_FILE="$LOG_DIR/weekly_category_scan_${RUN_ID}.log"
 LATEST_LOG="$LOG_DIR/weekly_category_scan.latest.log"
 LOCK_FILE="$LOG_DIR/weekly_category_scan.lock"
 FORCE="${AMZ_WEEKLY_FORCE:-0}"
-REPORT_ISSUE_ID="${AMZ_WEEKLY_REPORT_ISSUE_ID-d19cd6d5-7283-4c88-ad60-55a56c42f603}"
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.npm-global/bin:$HOME/.local/bin"
 export AMZ_WEEKLY_LOG_FILE="$LOG_FILE"
-export AMZ_WEEKLY_REPORT_ISSUE_ID="$REPORT_ISSUE_ID"
 
 mkdir -p "$LOG_DIR"
 
@@ -111,7 +110,7 @@ if [[ "$FORCE" != "1" ]]; then
     log "Existing seed snapshot: $completed_seed_snapshot"
     log "Existing category/form snapshot: $completed_shape_snapshot"
     log "Dashboard: $ROOT/web/index.html"
-    log "Use --force or AMZ_WEEKLY_FORCE=1 only after recording the rerun reason in a Multica Issue."
+    log "Use --force or AMZ_WEEKLY_FORCE=1 only after recording the rerun reason."
     exit 0
   fi
 else
@@ -121,12 +120,13 @@ fi
 log "Starting weekly category scan."
 log "Project: $ROOT"
 
-python3 refresh_selection_workflow.py >> "$LOG_FILE" 2>&1
+python3 refresh_selection_workflow.py --no-issue-comment >> "$LOG_FILE" 2>&1
 
 required_outputs=(
   "web/index.html"
   "reports/discovered_categories.csv"
   "reports/selection_ranked.csv"
+  "archive/category_scan_state.csv"
   "data/category_shape_validation.csv"
   "archive/shape_opportunity_library.csv"
 )

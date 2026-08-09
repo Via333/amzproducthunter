@@ -75,6 +75,7 @@ def required_outputs() -> list[Path]:
         ROOT / "web" / "index.html",
         ROOT / "reports" / "discovered_categories.csv",
         ROOT / "reports" / "selection_ranked.csv",
+        ROOT / "archive" / "category_scan_state.csv",
         ROOT / "data" / "category_shape_validation.csv",
         ROOT / "archive" / "shape_opportunity_library.csv",
     ]

@@ -36,6 +36,12 @@ python3 refresh_selection_workflow.py
 python3 refresh_product_research.py --asin B0FS1YH17C
 ```
 
+指定关键词做一次独立选品搜索：
+
+```bash
+python3 keyword_opportunity_search.py --keyword "bread storage bag"
+```
+
 只刷新网页工作台：
 
 ```bash
@@ -57,6 +63,9 @@ archive/opportunity_library.csv      初筛候选长期档案
 archive/shape_opportunity_library.csv 通过验证的形态机会池
 archive/product_research_runs/       单品研究历史快照
 archive/product_research_index.csv   单品研究索引
+archive/category_scan_state.csv      类目轮换状态，记录上次扫描和累计次数
+archive/keyword_search_runs/         每次关键词搜索完整快照
+archive/keyword_search_index.csv     关键词搜索历史索引
 research/ASIN/                       最新单品研究数据
 web/index.html                       本地网页工作台
 web/research/ASIN.html               单品研究页面
@@ -69,7 +78,7 @@ logs/                                定时任务运行日志
 本机定时任务配置在：
 
 ```text
-automation/com.multica.amz-selection.weekly.plist
+automation/com.amz-selection.weekly.plist
 automation/run_weekly_category_scan.sh
 ```
 
@@ -120,19 +129,21 @@ data/sorftime_response.example.json
 python3 discover_sorftime_opportunities.py --score
 ```
 
-它会做四步：
+它会做五步：
 
 ```text
 1. 调 Sorftime `CategoryTree`，拿 US 站类目树
-2. 按 config/autodiscovery_rules.json 筛掉高合规、高物流风险类目
-3. 对保留下来的类目调 `CategoryProducts`，抓候选产品
-4. 生成 data/discovered_candidates.csv，并进入 product_selection.py 自动评分
+2. 按 config/autodiscovery_rules.json 和 config/category_exclusions.json 永久跳过高合规、高物流、强专利/品牌垄断类目
+3. 优先扫描从未扫描的最小类目；全部覆盖后按最久未扫描轮换
+4. 对保留下来的类目调 `CategoryProducts`，每类目最多查看 100 个 Top 产品
+5. 抓取候选并生成评分和网页
 ```
 
 输出：
 
 ```text
 reports/discovered_categories.csv
+archive/category_scan_state.csv
 data/discovered_candidates.csv
 reports/selection_ranked.csv
 reports/selection_report.md
@@ -287,7 +298,15 @@ sorftime api ProductRequest '{"asin":"B0CVM8TXHP","trend":2}' --domain 1
 
 只有这个测试命令返回 JSON 且 `code` 为 `0` 后，自动发现脚本才能继续跑。
 
-安装和配置好以后，可以这样导入关键词搜索结果：
+安装和配置好以后，使用独立关键词选品入口：
+
+```bash
+python3 keyword_opportunity_search.py --keyword "desk cable management tray"
+```
+
+它会拉取最多 100 个相关产品、应用当前个人卖家过滤和统一评分、保存每次搜索档案，并刷新网页。关键词初筛结果仍需做最小类目/形态验证，不能直接进入正式机会池。
+
+底层也可以这样直接导入关键词搜索结果：
 
 ```bash
 python3 import_sorftime_candidates.py \
@@ -351,7 +370,7 @@ Sorftime 能给我们价格、销量、review、评分、关键词等市场数�
 类目树 -> 过滤高风险市场 -> 类目产品池 -> 产品评分 -> 供应商验证
 ```
 
-也就是说，关键词是第二阶段工具，不是第一阶段入口。
+也就是说，系统保留两条入口：不知道做什么时用每周类目轮换；已有方向时用关键词入口验证。两条入口最后都必须经过类目/形态验证。
 
 ## 网页版工作台
 

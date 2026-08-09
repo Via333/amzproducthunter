@@ -1,0 +1,9 @@
+{
+  "domain": "1",
+  "marketplace": "US",
+  "method": "KeywordSearchResults",
+  "pages": 5,
+  "page_size": 20,
+  "max_results": 100,
+  "top_n": 30
+}

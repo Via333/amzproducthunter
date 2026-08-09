@@ -25,6 +25,18 @@ def read_csv(relative_path: str) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+def read_csv_reference(path_text: str) -> list[dict[str, str]]:
+    if not path_text:
+        return []
+    path = Path(path_text)
+    if not path.is_absolute():
+        path = ROOT / path
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
 def read_text(relative_path: str) -> str:
     path = ROOT / relative_path
     if not path.exists():
@@ -122,6 +134,101 @@ def normalize_selection(rows: list[dict[str, str]]) -> list[dict[str, object]]:
                 "listing_url": normalize_url(row, "listing_url"),
             }
         )
+    return normalized
+
+
+def normalize_category_scan_state(rows: list[dict[str, str]]) -> list[dict[str, object]]:
+    normalized = [
+        {
+            "category_id": row.get("category_id", ""),
+            "name": row.get("name", ""),
+            "path": row.get("path", ""),
+            "first_scanned_at": row.get("first_scanned_at", ""),
+            "last_scanned_at": row.get("last_scanned_at", ""),
+            "scan_count": to_float(row.get("scan_count")),
+            "last_products_examined": to_float(row.get("last_products_examined")),
+            "last_candidate_count": to_float(row.get("last_candidate_count")),
+            "lifetime_products_examined": to_float(row.get("lifetime_products_examined")),
+            "lifetime_candidate_count": to_float(row.get("lifetime_candidate_count")),
+            "status": row.get("status", ""),
+        }
+        for row in rows
+    ]
+    normalized.sort(key=lambda row: row["last_scanned_at"], reverse=True)
+    return normalized
+
+
+def normalize_category_report(rows: list[dict[str, str]]) -> list[dict[str, object]]:
+    return [
+        {
+            "category_id": row.get("category_id", ""),
+            "name": row.get("name", ""),
+            "path": row.get("path", ""),
+            "rotation_bucket": row.get("rotation_bucket", ""),
+            "previous_last_scanned_at": row.get("previous_last_scanned_at", ""),
+            "previous_scan_count": to_float(row.get("previous_scan_count")),
+            "products_examined": to_float(row.get("products_examined")),
+            "candidate_count": to_float(row.get("candidate_count")),
+            "scan_completed_at": row.get("scan_completed_at", ""),
+        }
+        for row in rows
+    ]
+
+
+def normalize_exclusion_rules(discovery_cfg: dict, exclusion_cfg: dict) -> list[dict[str, str]]:
+    rows = []
+    seen = set()
+    for term in discovery_cfg.get("category_filters", {}).get("exclude_name_contains", []):
+        key = str(term).strip().lower()
+        if key and key not in seen:
+            rows.append({"term": str(term), "type": "基础排除", "reason": "不进入个人卖家类目扫描队列"})
+            seen.add(key)
+    for item in exclusion_cfg.get("path_contains", []):
+        item = {"term": item, "type": "永久排除", "reason": "手动排除"} if isinstance(item, str) else item
+        key = str(item.get("term", "")).strip().lower()
+        if key and key not in seen:
+            rows.append(
+                {
+                    "term": str(item.get("term", "")),
+                    "type": str(item.get("type") or "永久排除"),
+                    "reason": str(item.get("reason") or "手动排除"),
+                }
+            )
+            seen.add(key)
+    for item in exclusion_cfg.get("category_ids", []):
+        item = {"category_id": item, "reason": "手动排除"} if isinstance(item, str) else item
+        category_id = str(item.get("category_id", "")).strip()
+        if category_id:
+            rows.append(
+                {
+                    "term": f"Category ID {category_id}",
+                    "type": str(item.get("type") or "指定类目"),
+                    "reason": str(item.get("reason") or "手动排除"),
+                }
+            )
+    return rows
+
+
+def normalize_keyword_search_index(rows: list[dict[str, str]]) -> list[dict[str, object]]:
+    normalized = [
+        {
+            "run_id": row.get("run_id", ""),
+            "keyword": row.get("keyword", ""),
+            "searched_at": row.get("searched_at", ""),
+            "raw_result_count": to_float(row.get("raw_result_count")),
+            "eligible_candidate_count": to_float(row.get("eligible_candidate_count")),
+            "go_count": to_float(row.get("go_count")),
+            "watch_count": to_float(row.get("watch_count")),
+            "reject_count": to_float(row.get("reject_count")),
+            "top_score": to_float(row.get("top_score")),
+            "top_asin": row.get("top_asin", ""),
+            "top_title": row.get("top_title", ""),
+            "report_md": web_path(row.get("report_md", "")),
+            "ranked_csv": web_path(row.get("ranked_csv", "")),
+        }
+        for row in rows
+    ]
+    normalized.sort(key=lambda row: row["searched_at"], reverse=True)
     return normalized
 
 
@@ -1221,7 +1328,18 @@ def render_options(values: list[str], all_label: str) -> str:
 def build_html() -> str:
     scoring_cfg = read_json("config/scoring_rules.json")
     discovery_cfg = read_json("config/autodiscovery_rules.json")
+    exclusion_cfg = read_json("config/category_exclusions.json")
     selection_rows = normalize_selection(read_csv("reports/selection_ranked.csv"))
+    category_scan_rows = normalize_category_scan_state(read_csv("archive/category_scan_state.csv"))
+    current_category_rows = normalize_category_report(read_csv("reports/discovered_categories.csv"))
+    exclusion_rows = normalize_exclusion_rules(discovery_cfg, exclusion_cfg)
+    keyword_search_rows = normalize_keyword_search_index(read_csv("archive/keyword_search_index.csv"))
+    latest_keyword_ranked_rows = []
+    if keyword_search_rows:
+        latest_index_row = read_csv("archive/keyword_search_index.csv")
+        latest_index_row.sort(key=lambda row: row.get("searched_at", ""), reverse=True)
+        if latest_index_row:
+            latest_keyword_ranked_rows = normalize_selection(read_csv_reference(latest_index_row[0].get("ranked_csv", "")))
     seed_archive_rows = normalize_archive(read_csv("archive/opportunity_library.csv"))
     shape_validation_rows = normalize_shape_validation(read_csv("data/category_shape_validation.csv"))
     primary_validation_rows = primary_shape_rows(shape_validation_rows)
@@ -1254,7 +1372,17 @@ def build_html() -> str:
     shape_opportunity_count = sum(1 for row in primary_validation_rows if row.get("shape_recommendation") == "Shape opportunity")
     needs_category_count = sum(1 for row in primary_validation_rows if row.get("shape_recommendation") == "Needs category Top100")
     weekly_category_target = int(to_float(discovery_cfg.get("max_categories"), 100) or 100)
-    weekly_products_per_category = int(to_float(discovery_cfg.get("products_per_category"), 20) or 20)
+    weekly_products_per_category = int(to_float(discovery_cfg.get("products_per_category"), 100) or 100)
+    current_products_examined = int(sum(to_float(row.get("products_examined")) for row in current_category_rows))
+    current_new_category_count = sum(1 for row in current_category_rows if row.get("rotation_bucket") == "never_scanned")
+    current_rescan_count = sum(1 for row in current_category_rows if row.get("rotation_bucket") == "oldest_rescan")
+    category_report_has_metrics = any(row.get("scan_completed_at") for row in current_category_rows)
+    current_products_examined_label = f"{current_products_examined:,}" if category_report_has_metrics else "未记录"
+    current_products_examined_note = (
+        f"每类目最多 {weekly_products_per_category} 个 Top 产品"
+        if category_report_has_metrics
+        else "历史结果作为轮换基线；下一轮开始记录实际查看数"
+    )
     visual_label_count = sum(1 for row in visual_rows if row.get("visual_product_form", "").strip())
     top_selection_score = max((float(row.get("score", 0)) for row in selection_rows), default=0)
 
@@ -1288,6 +1416,11 @@ def build_html() -> str:
 
     dashboard_data = {
         "selection": selection_rows,
+        "categoryScanState": category_scan_rows,
+        "currentCategoryScan": current_category_rows,
+        "categoryExclusions": exclusion_rows,
+        "keywordSearchHistory": keyword_search_rows,
+        "latestKeywordResults": latest_keyword_ranked_rows,
         "seedArchive": seed_archive_rows,
         "shapeValidation": shape_validation_rows,
         "archive": shape_archive_rows,
@@ -1309,6 +1442,14 @@ def build_html() -> str:
 
     data_json = json.dumps(dashboard_data, ensure_ascii=False)
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M")
+    exclusion_table_rows = "\n".join(
+        "<tr><td><strong>{term}</strong></td><td><span class=\"pill gray\">{kind}</span></td><td>{reason}</td></tr>".format(
+            term=escape(row["term"]),
+            kind=escape(row["type"]),
+            reason=escape(row["reason"]),
+        )
+        for row in exclusion_rows
+    )
 
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -1400,6 +1541,7 @@ def build_html() -> str:
       padding: 24px;
       max-width: 1500px;
       width: 100%;
+      min-width: 0;
     }}
 
     .topbar {{
@@ -1471,6 +1613,21 @@ def build_html() -> str:
       font-size: 12px;
     }}
 
+    .metric-summary strong {{
+      display: block;
+      margin-top: 8px;
+      font-size: 26px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }}
+
+    .metric-summary span {{
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }}
+
     section {{
       background: var(--panel);
       border: 1px solid var(--line);
@@ -1478,6 +1635,7 @@ def build_html() -> str:
       padding: 18px;
       margin-bottom: 18px;
       box-shadow: var(--shadow);
+      min-width: 0;
     }}
 
     .section-head {{
@@ -1548,6 +1706,7 @@ def build_html() -> str:
 
     .table-wrap {{
       overflow: auto;
+      max-width: 100%;
       border: 1px solid var(--line);
       border-radius: var(--radius);
     }}
@@ -2320,6 +2479,8 @@ def build_html() -> str:
       border: 1px dashed var(--line);
       border-radius: var(--radius);
       background: #fff;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }}
 
     @media (max-width: 1100px) {{
@@ -2409,6 +2570,8 @@ def build_html() -> str:
       <nav class="nav">
         <a href="#overview">总览</a>
         <a href="#discovery">种子发现</a>
+        <a href="#category-coverage">扫描覆盖</a>
+        <a href="#keyword-search">关键词选品</a>
         <a href="#shape-validation">候选验证</a>
         <a href="#archive">机会池</a>
         <a href="#research-archive">单品研究档案</a>
@@ -2490,6 +2653,71 @@ def build_html() -> str:
               </tr>
             </thead>
             <tbody id="selectionBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="category-coverage">
+        <div class="section-head">
+          <div>
+            <h2>类目扫描覆盖</h2>
+            <p>每周优先选择从未扫描的最小类目；全部覆盖后，再按最久未扫描排序复查。明确属于大件、强合规、强专利/品牌垄断或高责任风险的类目永久跳过，不占每周配额。</p>
+          </div>
+        </div>
+        <div class="next-grid">
+          <div class="next-block">
+            <h3>累计已扫描</h3>
+            <div class="metric-summary"><strong>{len(category_scan_rows)}</strong><span>按 Category ID 去重并长期保留状态</span></div>
+          </div>
+          <div class="next-block">
+            <h3>当前轮次</h3>
+            <div class="metric-summary"><strong>{len(current_category_rows)}</strong><span>新类目 {current_new_category_count} · 到期复扫 {current_rescan_count}</span></div>
+          </div>
+          <div class="next-block">
+            <h3>本轮查看产品</h3>
+            <div class="metric-summary"><strong>{current_products_examined_label}</strong><span>{current_products_examined_note}</span></div>
+          </div>
+        </div>
+        <h3 style="margin-top: 18px;">当前轮次类目</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>最小类目</th><th>轮换原因</th><th class="num">查看产品</th><th class="num">初筛候选</th><th>上次扫描</th></tr></thead>
+            <tbody id="currentCategoryScanBody"></tbody>
+          </table>
+        </div>
+        <h3 style="margin-top: 18px;">永久排除规则</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>类目路径匹配</th><th>风险类型</th><th>不再重复扫描的原因</th></tr></thead>
+            <tbody>{exclusion_table_rows or '<tr><td colspan="3"><div class="empty">还没有永久排除规则。</div></td></tr>'}</tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="keyword-search">
+        <div class="section-head">
+          <div>
+            <h2>关键词选品</h2>
+            <p>输入你关心的关键词后，通过 Sorftime 搜索最多 100 个相关产品并按同一套个人卖家标准初筛。关键词结果只是候选入口，仍需通过最小类目和产品形态验证后才能进入正式机会池。</p>
+          </div>
+        </div>
+        <div class="controls">
+          <input id="keywordSearchInput" type="search" placeholder="输入关键词，例如 bread storage bag">
+          <button id="keywordSearchCommand" type="button">生成搜索命令</button>
+        </div>
+        <div id="keywordSearchHint" class="empty" style="display: none; margin-bottom: 12px;"></div>
+        <h3>搜索档案</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>关键词</th><th>搜索时间</th><th class="num">相关产品</th><th class="num">通过基础过滤</th><th class="num">Go / Watch</th><th class="num">最高分</th><th>档案</th></tr></thead>
+            <tbody id="keywordSearchHistoryBody"></tbody>
+          </table>
+        </div>
+        <h3 style="margin-top: 18px;">最近一次关键词结果</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>产品</th><th class="num">分数</th><th>结论</th><th class="num">月销</th><th class="num">评论</th><th class="num">售价</th><th>风险</th></tr></thead>
+            <tbody id="keywordResultBody"></tbody>
           </table>
         </div>
       </section>
@@ -3030,6 +3258,59 @@ def build_html() -> str:
       `).join("") || `<tr><td colspan="10"><div class="empty">没有匹配结果</div></td></tr>`;
     }}
 
+    function renderCurrentCategoryScan() {{
+      const rows = DATA.currentCategoryScan || [];
+      document.getElementById("currentCategoryScanBody").innerHTML = rows.map(row => `
+        <tr>
+          <td class="title-cell">${{esc(row.name || "-")}}<span class="muted-small">${{esc(row.path || row.category_id || "-")}}</span></td>
+          <td><span class="pill ${{row.rotation_bucket === "never_scanned" ? "green" : "gray"}}">${{row.rotation_bucket === "never_scanned" ? "首次扫描" : row.rotation_bucket === "oldest_rescan" ? "最久未扫" : row.rotation_bucket === "manual_seed" ? "手动指定" : "历史基线"}}</span></td>
+          <td class="num">${{fmtInt(row.products_examined)}}</td>
+          <td class="num">${{fmtInt(row.candidate_count)}}</td>
+          <td>${{esc(row.previous_last_scanned_at || (row.rotation_bucket ? "从未扫描" : "迁移前已扫描"))}}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5"><div class="empty">还没有类目轮换记录；下次周更后自动生成。</div></td></tr>`;
+    }}
+
+    function renderKeywordSearchHistory() {{
+      const q = String(document.getElementById("keywordSearchInput").value || "").trim().toLowerCase();
+      const rows = (DATA.keywordSearchHistory || []).filter(row => !q || String(row.keyword || "").toLowerCase().includes(q));
+      document.getElementById("keywordSearchHistoryBody").innerHTML = rows.map(row => `
+        <tr>
+          <td class="title-cell">${{esc(row.keyword || "-")}}<span class="muted-small">${{esc(row.top_title || row.top_asin || "尚无通过候选")}}</span></td>
+          <td>${{esc(row.searched_at || "-")}}</td>
+          <td class="num">${{fmtInt(row.raw_result_count)}}</td>
+          <td class="num">${{fmtInt(row.eligible_candidate_count)}}</td>
+          <td class="num">${{fmtInt(row.go_count)}} / ${{fmtInt(row.watch_count)}}</td>
+          <td class="num">${{fmtOne(row.top_score)}}</td>
+          <td><a class="pill green" href="${{esc(row.report_md)}}" target="_blank" rel="noreferrer">报告</a> <a class="pill gray" href="${{esc(row.ranked_csv)}}" target="_blank" rel="noreferrer">数据</a></td>
+        </tr>
+      `).join("") || `<tr><td colspan="7"><div class="empty">还没有匹配的关键词搜索档案。</div></td></tr>`;
+    }}
+
+    function renderLatestKeywordResults() {{
+      const rows = DATA.latestKeywordResults || [];
+      document.getElementById("keywordResultBody").innerHTML = rows.slice(0, 30).map(row => `
+        <tr>
+          <td class="title-cell"><a href="${{esc(row.listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.title_short || row.title || "-")}}</a><span class="muted-small">${{esc(row.asin || "-")}} · ${{esc(row.category || "-")}}</span></td>
+          <td class="num">${{scoreBar(row.score)}}</td>
+          <td><span class="pill ${{pillClass(row.recommendation)}}">${{esc(row.recommendation || "-")}}</span></td>
+          <td class="num">${{fmtInt(row.monthly_sales)}}</td>
+          <td class="num">${{fmtInt(row.reviews)}}</td>
+          <td class="num">${{fmtMoney(row.price)}}</td>
+          <td>${{esc(row.flags || "待复核")}}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="7"><div class="empty">还没有关键词评分结果。输入关键词后生成搜索命令。</div></td></tr>`;
+    }}
+
+    function showKeywordSearchCommand() {{
+      const keyword = String(document.getElementById("keywordSearchInput").value || "").trim();
+      const value = keyword || "KEYWORD";
+      const command = `python3 keyword_opportunity_search.py --keyword ${{JSON.stringify(value)}}`;
+      const hint = document.getElementById("keywordSearchHint");
+      hint.style.display = "block";
+      hint.textContent = `关键词搜索命令：${{command}}。运行后会自动归档结果并刷新本网页。你也可以直接把关键词发给 Codex，由 Codex 执行。`;
+    }}
+
     function validationGroups() {{
       const grouped = new Map();
       (DATA.shapeValidation || []).forEach(row => {{
@@ -3350,6 +3631,9 @@ def build_html() -> str:
     }}
 
     renderSelection();
+    renderCurrentCategoryScan();
+    renderKeywordSearchHistory();
+    renderLatestKeywordResults();
     renderShapeValidation();
     renderArchive();
     renderProductResearchArchive();
@@ -3378,6 +3662,8 @@ def build_html() -> str:
       bind(id, "input", renderSelection);
       bind(id, "change", renderSelection);
     }});
+    bind("keywordSearchInput", "input", renderKeywordSearchHistory);
+    bind("keywordSearchCommand", "click", showKeywordSearchCommand);
     ["shapeSearch", "shapeRecommendation"].forEach(id => {{
       bind(id, "input", renderShapeValidation);
       bind(id, "change", renderShapeValidation);

@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.multica.amz-selection.weekly</string>
+  <string>com.amz-selection.weekly</string>
 
   <key>ProgramArguments</key>
   <array>

@@ -3,7 +3,7 @@
   "marketplace": "US",
   "strategy": "category",
   "max_categories": 100,
-  "products_per_category": 20,
+  "products_per_category": 100,
   "max_candidates": 200,
   "product_search": {
     "method": "ProductSearch",
@@ -133,9 +133,10 @@
   },
   "category_products": {
     "method": "CategoryProducts",
+    "pages": 5,
     "payload_template": {
       "nodeId": "{category_id}",
-      "page": 1
+      "page": "{page}"
     }
   },
   "category_seeds": [],
