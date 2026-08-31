@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import csv
+import json
 from html import escape
 from pathlib import Path
 
@@ -18,6 +19,15 @@ def read_csv(path: Path) -> list[dict[str, str]]:
         return []
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         return list(csv.DictReader(handle))
+
+
+def read_json(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
 
 
 def to_float(value: object, default: float = 0.0) -> float:
@@ -67,7 +77,8 @@ def render_forms(forms: list[dict[str, str]]) -> str:
               <td class="num">{count}</td>
               <td class="num">{direct}/{keyword}</td>
               <td class="num">{price}</td>
-              <td class="num">{sales}</td>
+              <td class="num">{total_sales}<span>中位 {median_sales}</span></td>
+              <td class="num">{sales_share}</td>
               <td class="num">{reviews}</td>
               <td>{materials}<span>{packs}</span></td>
             </tr>
@@ -78,13 +89,51 @@ def render_forms(forms: list[dict[str, str]]) -> str:
                 direct=fmt_int(row.get("direct_count")),
                 keyword=fmt_int(row.get("keyword_count")),
                 price=fmt_money(row.get("avg_price")),
-                sales=fmt_int(row.get("avg_monthly_sales")),
+                total_sales=fmt_int(row.get("total_monthly_sales") or row.get("avg_monthly_sales")),
+                median_sales=fmt_int(row.get("median_monthly_sales") or row.get("avg_monthly_sales")),
+                sales_share=f"{to_float(row.get('sales_share')) * 100:.1f}%" if row.get("sales_share") else "-",
                 reviews=fmt_int(row.get("median_reviews")),
                 materials=escape(row.get("top_materials", "") or "-"),
                 packs=escape(row.get("top_pack_counts", "")),
             )
         )
     return "\n".join(rows)
+
+
+def render_price_bands(rows: list[dict[str, str]]) -> str:
+    return "\n".join(
+        "<tr><td>{band}</td><td class=\"num\">{count}</td><td class=\"num\">{sales}</td><td class=\"num\">{share:.1f}%</td><td class=\"num\">{reviews}</td></tr>".format(
+            band=escape(row.get("price_band", "")),
+            count=fmt_int(row.get("listing_count")),
+            sales=fmt_int(row.get("monthly_sales")),
+            share=to_float(row.get("sales_share")) * 100,
+            reviews=fmt_int(row.get("median_reviews")),
+        )
+        for row in rows
+    )
+
+
+def render_demand(rows: list[dict[str, str]]) -> str:
+    return "\n".join(
+        """
+        <tr>
+          <td><b>{form}</b><span>{dtype} · {sentiment}</span></td>
+          <td>{theme}</td><td class="num">{count}</td><td>{profiles}</td><td>{scenes}</td>
+          <td>{excerpt}<span>{asins}</span></td>
+        </tr>
+        """.format(
+            form=escape(row.get("product_form", "")),
+            dtype=escape(row.get("demand_type", "")),
+            sentiment=escape(row.get("sentiment", "")),
+            theme=escape(row.get("theme", "")),
+            count=fmt_int(row.get("mention_count")),
+            profiles=escape(row.get("user_profiles", "") or "-"),
+            scenes=escape(row.get("use_scenes", "") or "-"),
+            excerpt=escape(short(row.get("evidence_excerpt", ""), 120)),
+            asins=escape(row.get("example_asins", "")),
+        )
+        for row in rows[:30]
+    )
 
 
 def render_review_targets(rows: list[dict[str, str]]) -> str:
@@ -146,6 +195,10 @@ def build_page(index_row: dict[str, str]) -> str:
     products = read_csv(research_dir / "top_products.csv")
     reviews = read_csv(research_dir / "reviews.csv")
     targets = read_csv(research_dir / "review_targets.csv")
+    demand = read_csv(research_dir / "demand_analysis.csv")
+    price_bands = read_csv(research_dir / "price_bands.csv")
+    market = read_json(research_dir / "market_structure.json")
+    business = read_json(research_dir / "business_feasibility.json")
     seed = next((row for row in products if row.get("competitor_type") == "seed"), products[0] if products else {})
     title = index_row.get("title") or seed.get("title") or asin
     listing_url = index_row.get("listing_url") or seed.get("listing_url") or f"https://www.amazon.com/dp/{asin}"
@@ -154,6 +207,26 @@ def build_page(index_row: dict[str, str]) -> str:
     low_reviews = sum(1 for row in reviews if 0 < to_float(row.get("rating")) <= 3)
     high_reviews = sum(1 for row in reviews if to_float(row.get("rating")) >= 4)
     generated = index_row.get("last_researched", "")
+    top10_share = to_float(market.get("top10_sales_share")) * 100
+    new_share = to_float(market.get("new_listing_share_12m")) * 100
+    contribution_margin = to_float(business.get("contribution_margin")) * 100
+    break_even_acos = to_float(business.get("break_even_acos")) * 100
+    archive_status = index_row.get("status", "")
+    archive_notes = index_row.get("notes", "")
+    if archive_status == "rejected":
+        decision_html = (
+            '<section class="decision rejected"><strong>当前结论：已淘汰</strong>'
+            f'<span>{escape(archive_notes or "未通过当前风险规则")}</span></section>'
+        )
+    else:
+        decision_html = (
+            '<section class="decision"><strong>档案状态：已研究，待结合当前机会池复核</strong>'
+            f'<span>{escape(archive_notes)}</span></section>'
+        )
+    if "Listing 有效性需复核" in archive_notes:
+        listing_action = '<span class="pill disabled">Listing 不可用/待复核</span>'
+    else:
+        listing_action = f'<a class="pill" href="{escape(listing_url)}" target="_blank" rel="noreferrer">打开 Listing</a>'
 
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -161,6 +234,7 @@ def build_page(index_row: dict[str, str]) -> str:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{escape(asin)} 单品研究</title>
+  <link rel="icon" href="data:,">
   <style>
     body {{ margin: 0; background: #f6f7f9; color: #172033; font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
     main {{ max-width: 1320px; margin: 0 auto; padding: 24px; }}
@@ -173,6 +247,7 @@ def build_page(index_row: dict[str, str]) -> str:
     .subtle, td span, .tile p {{ color: #657184; }}
     .actions {{ display: flex; gap: 8px; flex-wrap: wrap; }}
     .pill {{ display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 9px; background: #e8f6ef; color: #147d54; font-weight: 700; }}
+    .pill.disabled {{ background: #edf0f4; color: #657184; cursor: default; }}
     .kpis {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }}
     .kpi {{ border: 1px solid #d9dee8; border-radius: 8px; padding: 12px; background: #f9fafb; }}
     .kpi span {{ display: block; color: #657184; font-size: 12px; }}
@@ -192,6 +267,12 @@ def build_page(index_row: dict[str, str]) -> str:
     .tile b, .tile span {{ display: block; }}
     .tile span {{ color: #657184; font-size: 12px; margin-top: 3px; }}
     .contact {{ width: 100%; max-height: 760px; object-fit: contain; border: 1px solid #d9dee8; border-radius: 8px; background: #fff; }}
+    .status {{ font-weight: 750; color: #147d54; }}
+    .decision {{ display: flex; align-items: baseline; gap: 12px; border-left: 4px solid #d99a18; }}
+    .decision strong {{ font-size: 17px; }}
+    .decision span {{ color: #657184; }}
+    .decision.rejected {{ border-left-color: #c83d3d; background: #fff8f7; }}
+    .decision.rejected strong {{ color: #a62828; }}
     @media (max-width: 900px) {{ .top {{ display: block; }} .kpis, .gallery {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }} }}
   </style>
 </head>
@@ -204,10 +285,12 @@ def build_page(index_row: dict[str, str]) -> str:
       </div>
       <div class="actions">
         <a class="pill" href="../index.html#research-archive">返回工作台</a>
-        <a class="pill" href="{escape(listing_url)}" target="_blank" rel="noreferrer">打开 Listing</a>
+        {listing_action}
         <a class="pill" href="{escape(report_link)}" target="_blank" rel="noreferrer">打开 Markdown 报告</a>
       </div>
     </div>
+
+    {decision_html}
 
     <section>
       <div class="kpis">
@@ -219,13 +302,51 @@ def build_page(index_row: dict[str, str]) -> str:
     </section>
 
     <section>
+      <h2>市场结构</h2>
+      <div class="kpis">
+        <div class="kpi"><span>Top10 销量占比</span><strong>{top10_share:.1f}%</strong></div>
+        <div class="kpi"><span>价格中间 50%</span><strong>{fmt_money(market.get('price_p25'))}-{fmt_money(market.get('price_p75'))}</strong></div>
+        <div class="kpi"><span>近一年新品占比</span><strong>{new_share:.1f}%</strong></div>
+        <div class="kpi"><span>评论/销量相关</span><strong>{to_float(market.get('review_sales_spearman')):.2f}</strong></div>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>价格带</th><th class="num">Listing</th><th class="num">月销</th><th class="num">销量占比</th><th class="num">评论中位</th></tr></thead>
+          <tbody>{render_price_bands(price_bands)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
       <h2>产品形态拆分</h2>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>形态</th><th class="num">数量</th><th class="num">直接/关键词</th><th class="num">均价</th><th class="num">月销均值</th><th class="num">评论中位</th><th>材质 / 套装</th></tr></thead>
+          <thead><tr><th>形态</th><th class="num">数量</th><th class="num">直接/关键词</th><th class="num">均价</th><th class="num">形态月销</th><th class="num">销量份额</th><th class="num">评论中位</th><th>材质 / 套装</th></tr></thead>
           <tbody>{render_forms(forms)}</tbody>
         </table>
       </div>
+    </section>
+
+    <section>
+      <h2>用户需求与评论证据</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>形态 / 需求类型</th><th>主题</th><th class="num">提及</th><th>用户</th><th>场景</th><th>证据</th></tr></thead>
+          <tbody>{render_demand(demand)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>商业可行性</h2>
+      <p class="status">{escape(business.get('status', 'needs_supplier_quote'))} · {escape(business.get('data_source', 'system_estimate'))}</p>
+      <div class="kpis">
+        <div class="kpi"><span>贡献利润/件</span><strong>{fmt_money(business.get('contribution_profit'))}</strong></div>
+        <div class="kpi"><span>贡献毛利率</span><strong>{contribution_margin:.1f}%</strong></div>
+        <div class="kpi"><span>盈亏平衡 ACoS</span><strong>{break_even_acos:.1f}%</strong></div>
+        <div class="kpi"><span>首批资金 / 现金周期</span><strong>{fmt_money(business.get('initial_inventory_cash'))} / {fmt_int(business.get('cash_cycle_days'))}天</strong></div>
+      </div>
+      <p class="subtle">缺少证据：{escape(', '.join(business.get('missing_evidence', [])) or '无')}。系统估算只能用于初筛，供应商报价确认前不得视为真实利润。</p>
     </section>
 
     <section>

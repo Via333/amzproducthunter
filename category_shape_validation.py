@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import re
 import shutil
 from collections import Counter, defaultdict
@@ -31,6 +32,14 @@ OUTPUT_FIELDS = [
     "shape_recommendation",
     "category_sample_count",
     "category_total_sales",
+    "category_top10_sales_share",
+    "category_top20_sales_share",
+    "category_top50_sales_share",
+    "category_review_sales_spearman",
+    "category_new_listing_share_12m",
+    "category_price_p25",
+    "category_price_median",
+    "category_price_p75",
     "category_median_reviews",
     "category_top10_median_reviews",
     "category_top_brand",
@@ -43,6 +52,10 @@ OUTPUT_FIELDS = [
     "form_keyword_count",
     "form_avg_price",
     "form_avg_sales",
+    "form_median_sales",
+    "form_total_sales",
+    "form_sales_share",
+    "form_top3_sales_share",
     "form_median_reviews",
     "form_avg_rating",
     "form_low_review_high_sales_count",
@@ -231,6 +244,20 @@ def build_rows_from_research(seed, research_dir, rules):
     top_products = read_csv(research_dir / "top_products.csv")
     form_rows = read_csv(research_dir / "product_forms.csv")
     metrics = category_metrics(top_products)
+    market_path = research_dir / "market_structure.json"
+    market = load_json(market_path) if market_path.exists() else {}
+    metrics.update(
+        {
+            "category_top10_sales_share": market.get("top10_sales_share", 0),
+            "category_top20_sales_share": market.get("top20_sales_share", 0),
+            "category_top50_sales_share": market.get("top50_sales_share", 0),
+            "category_review_sales_spearman": market.get("review_sales_spearman", 0),
+            "category_new_listing_share_12m": market.get("new_listing_share_12m", 0),
+            "category_price_p25": market.get("price_p25", 0),
+            "category_price_median": market.get("price_median", 0),
+            "category_price_p75": market.get("price_p75", 0),
+        }
+    )
     seed_asin = seed.get("source_asin", "")
     seed_product = next((row for row in top_products if row.get("asin") == seed_asin or row.get("source") == "seed"), {})
     seed_form = seed_product.get("visual_product_form") or seed_product.get("product_form") or product_form_from_title(seed.get("product_name", ""))
@@ -249,6 +276,11 @@ def build_rows_from_research(seed, research_dir, rules):
             "form_keyword_count": form.get("keyword_count", 0),
             "form_avg_price": form.get("avg_price", 0),
             "form_avg_sales": form.get("avg_monthly_sales", 0),
+            "form_median_sales": form.get("median_monthly_sales") or form.get("avg_monthly_sales", 0),
+            "form_total_sales": form.get("total_monthly_sales")
+            or to_float(form.get("avg_monthly_sales"), 0) * max(1, to_float(form.get("count"), 1)),
+            "form_sales_share": form.get("sales_share", 0),
+            "form_top3_sales_share": form.get("top3_sales_share", 0),
             "form_median_reviews": form.get("median_reviews", 0),
             "form_avg_rating": form.get("avg_rating", 0),
             "form_low_review_high_sales_count": form.get("low_review_high_sales_count", 0),
@@ -331,12 +363,17 @@ def evaluate_shape_row(row, rules):
     thresholds = rules["thresholds"]
     data_quality = row.get("data_quality", "")
     form_avg_sales = to_float(row.get("form_avg_sales"), 0)
+    form_median_sales = to_float(row.get("form_median_sales"), form_avg_sales)
+    form_total_sales = to_float(row.get("form_total_sales"), form_avg_sales * max(1, to_float(row.get("form_count"), 1)))
     form_median_reviews = to_float(row.get("form_median_reviews"), 0)
     form_low_gap = to_float(row.get("form_low_review_high_sales_count"), 0)
     form_count = to_float(row.get("form_count"), 0)
     top_brand_share = to_float(row.get("category_top_brand_share"), 0)
     category_top10_reviews = to_float(row.get("category_top10_median_reviews"), 0)
     category_median_reviews = to_float(row.get("category_median_reviews"), 0)
+    top10_sales_share = to_float(row.get("category_top10_sales_share"), 0)
+    form_top3_sales_share = to_float(row.get("form_top3_sales_share"), 0)
+    category_sample_count = to_float(row.get("category_sample_count"), 0)
 
     flags = [part.strip() for part in str(row.get("validation_flags", "")).split(";") if part.strip()]
     if data_quality == "seed_only":
@@ -349,14 +386,27 @@ def evaluate_shape_row(row, rules):
         flags.append("top10 review wall")
     if top_brand_share >= thresholds["category_top_brand_share"]:
         flags.append("brand concentration")
+    if (
+        category_sample_count >= thresholds.get("category_concentration_min_count", 20)
+        and top10_sales_share >= thresholds.get("category_top10_sales_share", 1.1)
+    ):
+        flags.append("sales concentration")
     if form_count and form_count < thresholds["form_min_count"]:
         flags.append("thin form sample")
-    if form_avg_sales < thresholds["form_min_avg_sales"]:
+    if form_avg_sales < thresholds["form_min_avg_sales"] and form_total_sales < thresholds.get("form_min_total_sales", 0):
         flags.append("weak form demand")
+    if (
+        form_count >= thresholds.get("form_concentration_min_count", 6)
+        and form_top3_sales_share >= thresholds.get("form_top3_sales_share", 1.1)
+    ):
+        flags.append("form sales concentrated")
     if form_median_reviews > thresholds["form_max_median_reviews"] and form_low_gap < thresholds["form_min_low_review_high_sales"]:
         flags.append("form review wall")
 
-    demand_score = min(100, form_avg_sales / 1500 * 100)
+    demand_score = (
+        min(100, form_total_sales / thresholds.get("form_full_total_sales", 3000) * 100) * 0.55
+        + min(100, form_median_sales / thresholds.get("form_full_median_sales", 500) * 100) * 0.45
+    )
     access_score = max(0, 100 - form_median_reviews / 1000 * 100)
     gap_score = min(100, form_low_gap * 20)
     concentration_score = max(0, 100 - top_brand_share * 100)
@@ -375,6 +425,8 @@ def evaluate_shape_row(row, rules):
         "category review wall",
         "top10 review wall",
         "brand concentration",
+        "sales concentration",
+        "form sales concentrated",
         "form review wall",
         "no low-review high-sales gap",
     }
@@ -409,7 +461,8 @@ def opportunity_thesis(row):
     if rec == "Shape opportunity":
         return (
             f"{form} 形态已通过类目 Top100 验证：月销均值 {row.get('form_avg_sales')}，"
-            f"评论中位数 {row.get('form_median_reviews')}，低评高销样本 {row.get('form_low_review_high_sales_count')} 个。"
+            f"形态总月销 {row.get('form_total_sales')}，评论中位数 {row.get('form_median_reviews')}，"
+            f"低评高销样本 {row.get('form_low_review_high_sales_count')} 个。"
         )
     if rec == "Watch shape":
         return f"{form} 有部分需求信号，但仍需确认评论墙、品牌集中或供应链差异化。"
@@ -518,7 +571,7 @@ def update_shape_archive(rows, archive_dir, run_id):
 
 
 def archive_run(rows, input_path, output_csv_path, report_path, archive_dir):
-    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_id = os.environ.get("AMZ_WEEKLY_RUN_ID") or datetime.now().strftime("%Y%m%d_%H%M%S")
     run_dir = archive_dir / "category_shape_runs" / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     write_csv(run_dir / "category_shape_validation.csv", rows, OUTPUT_FIELDS)

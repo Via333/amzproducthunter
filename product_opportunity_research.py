@@ -8,6 +8,11 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from statistics import mean, median
 
+from market_structure import analyze_market, percentile
+from product_taxonomy import classify_product_form
+from demand_analysis import DEMAND_FIELDS, analyze_demand
+from business_feasibility import write_business_feasibility
+
 from competitor_deep_dive import (
     amazon_listing_url,
     classify_competitor,
@@ -49,6 +54,7 @@ PRODUCT_FIELDS = [
     "seller_address",
     "is_fba",
     "variation_count",
+    "listing_date",
     "bsr_category",
     "main_image_url",
     "image_file",
@@ -69,12 +75,19 @@ FORM_FIELDS = [
     "avg_price",
     "median_price",
     "avg_monthly_sales",
+    "median_monthly_sales",
+    "total_monthly_sales",
+    "sales_share",
+    "top3_sales_share",
     "median_reviews",
     "avg_rating",
     "low_review_high_sales_count",
     "top_materials",
     "top_pack_counts",
     "top_styles",
+    "price_p25",
+    "price_p75",
+    "new_listing_share_12m",
     "opportunity_note",
 ]
 
@@ -342,24 +355,9 @@ def material_with_evidence(title, details):
     return material_label, "; ".join(evidence[material_label][:6]), detail_label, "; ".join(evidence.get(detail_label, [])[:6])
 
 
-def product_form(title):
-    rules = [
-        ("4-way hose splitter", ["4 way hose splitter", "4-way hose splitter", "four way hose splitter"]),
-        ("3-way hose splitter", ["3 way hose splitter", "3-way hose splitter", "3 way garden hose splitter", "3-way garden hose splitter"]),
-        ("2-way hose splitter", ["2 way hose splitter", "2-way hose splitter", "garden y hose splitter", "y hose splitter"]),
-        ("hose splitter manifold", ["hose manifold", "water hose manifold", "outlet manifold"]),
-        ("garden hose splitter", ["hose splitter", "spigot splitter", "faucet splitter", "water hose splitter", "hose bib splitter"]),
-        ("hose connector/adapter", ["hose connector", "hose adapter", "garden hose adapter", "hose quick connect"]),
-        ("beeswax bread bag", ["beeswax bread bag", "beeswax linen", "beeswax sourdough"]),
-        ("disposable bakery bread bag", ["clear window", "bakery paper", "paper packaging", "paper bags", "stickers"]),
-        ("linen/cotton bread bag", ["linen bread bag", "cotton bread bag", "sourdough bag", "bread bag"]),
-        ("plastic bread bag", ["plastic bread bag", "poly bread bag", "clear bread bag"]),
-        ("bread box", ["bread box", "breadboxes"]),
-        ("banneton/proofing", ["banneton", "proofing basket", "proofing baskets"]),
-        ("beeswax wrap", ["beeswax wrap", "food wrap"]),
-        ("bread storage adjacent", ["bread storage", "bread keeper", "bread container"]),
-    ]
-    return first_matching_label(title, rules)
+def product_form(title, category="", product_type="", rules=None):
+    taxonomy_path = (rules or {}).get("product_taxonomy", "config/product_taxonomy.json")
+    return classify_product_form(title, category, product_type, taxonomy_path)
 
 
 def closure(title):
@@ -422,6 +420,7 @@ def raw_product_to_row(seed_asin, source, item, candidate_context=None, rules=No
     monthly_sales = pick(item, "sales")
     if monthly_sales in (None, ""):
         monthly_sales = item.get("AsinSalesCount")
+    category_text = bsr_category_text(item) or pick(item, "category", "")
     row = {
         "source_asin": seed_asin,
         "source": source,
@@ -429,7 +428,7 @@ def raw_product_to_row(seed_asin, source, item, candidate_context=None, rules=No
         "product_type": item.get("ProductType", ""),
         "relevance_score": 100 if asin == seed_asin else 0,
         "competitor_type": "seed" if asin == seed_asin else "",
-        "product_form": product_form(title),
+        "product_form": product_form(title, category_text, item.get("ProductType", ""), rules),
         "material": material_label,
         "material_evidence": material_evidence,
         "detail_material": detail_material,
@@ -450,7 +449,15 @@ def raw_product_to_row(seed_asin, source, item, candidate_context=None, rules=No
         "seller_address": item.get("BuyboxSellerAddress") or "",
         "is_fba": bool(item.get("IsFBA")),
         "variation_count": round(to_float(item.get("VariationASINCount"), 0), 0),
-        "bsr_category": bsr_category_text(item),
+        "listing_date": next(
+            (
+                str(item.get(key))
+                for key in ("ShelfTime", "ListingDate", "LaunchDate", "DateFirstAvailable", "FirstAvailableDate")
+                if item.get(key) not in (None, "")
+            ),
+            "",
+        ),
+        "bsr_category": category_text,
         "main_image_url": product_photo(item),
         "image_file": "",
         "visual_product_form": "",
@@ -478,10 +485,10 @@ def build_product_rows(seed_product, competitor_records, evidence_by_asin, rules
         "target_price": to_money(pick(seed_product, "price"), 0),
         "category": pick(seed_product, "category", ""),
     }
-    rows = [raw_product_to_row(seed_asin, "seed", seed_product)]
+    rows = [raw_product_to_row(seed_asin, "seed", seed_product, rules=rules)]
     for item in competitor_records:
         asin = pick(item, "asin", "")
-        row = raw_product_to_row(seed_asin, "keyword/category", item)
+        row = raw_product_to_row(seed_asin, "keyword/category", item, rules=rules)
         comp_row = product_to_competitor(candidate_context, item)
         enrich_competitor_evidence(comp_row, evidence_by_asin)
         classify_competitor(candidate_context, comp_row, rules)
@@ -515,11 +522,15 @@ def build_form_rows(product_rows, rules):
         by_form[row["product_form"]].append(row)
 
     rows = []
+    relevant_total_sales = sum(to_float(row.get("monthly_sales"), 0) for row in relevant)
     for form, items in by_form.items():
         prices = [to_float(item["price"], 0) for item in items if to_float(item["price"], 0) > 0]
         sales = [to_float(item["monthly_sales"], 0) for item in items]
         reviews = [to_float(item["reviews"], 0) for item in items]
         ratings = [to_float(item["rating"], 0) for item in items if to_float(item["rating"], 0) > 0]
+        total_sales = sum(sales)
+        sorted_sales = sorted(sales, reverse=True)
+        market = analyze_market(items)
         low_review_high_sales = [
             item
             for item in items
@@ -534,12 +545,19 @@ def build_form_rows(product_rows, rules):
             "avg_price": round(avg(prices), 2),
             "median_price": round(med(prices), 2),
             "avg_monthly_sales": round(avg(sales), 0),
+            "median_monthly_sales": round(med(sales), 0),
+            "total_monthly_sales": round(total_sales, 0),
+            "sales_share": round(total_sales / relevant_total_sales, 4) if relevant_total_sales else 0,
+            "top3_sales_share": round(sum(sorted_sales[:3]) / total_sales, 4) if total_sales else 0,
             "median_reviews": round(med(reviews), 0),
             "avg_rating": round(avg(ratings), 1),
             "low_review_high_sales_count": len(low_review_high_sales),
             "top_materials": top_counts(item["material"] for item in items),
             "top_pack_counts": top_counts(str(item["pack_count"]) for item in items),
             "top_styles": top_counts(item["style"] for item in items),
+            "price_p25": round(percentile(prices, 0.25), 2),
+            "price_p75": round(percentile(prices, 0.75), 2),
+            "new_listing_share_12m": market["new_listing_share_12m"],
             "opportunity_note": opportunity_note(form, items, thresholds),
         }
         rows.append(row)
@@ -554,6 +572,20 @@ def build_form_rows(product_rows, rules):
         )
     )
     return rows
+
+
+def apply_visual_labels(product_rows):
+    for row in product_rows:
+        if row.get("visual_product_form"):
+            row["product_form"] = row["visual_product_form"]
+        if row.get("visual_material_signal"):
+            row["material"] = row["visual_material_signal"]
+        if to_float(row.get("visual_pack_count"), 0) > 0:
+            row["pack_count"] = int(to_float(row["visual_pack_count"], 1))
+        if row.get("visual_closure"):
+            row["closure"] = row["visual_closure"]
+        if row.get("visual_style"):
+            row["style"] = row["visual_style"]
 
 
 def opportunity_note(form, items, thresholds):
@@ -1075,15 +1107,17 @@ def main():
 
     competitor_records = fetch_product_details(asin_pool, rules, domain)
     product_rows = build_product_rows(seed_product, competitor_records, evidence_by_asin, rules)
+    image_rows, contact_sheet = prepare_image_assets(product_rows, output_dir, rules)
+    apply_visual_labels(product_rows)
     form_rows = build_form_rows(product_rows, rules)
+    market_structure = analyze_market(product_rows)
     max_review_asins = int(rules.get("review_lookup", {}).get("max_asins", 10))
     review_targets = build_review_targets(product_rows, max_review_asins)
     review_asins = [row["asin"] for row in review_targets]
     review_rows = collect_reviews(review_asins, rules, domain)
     attach_review_counts(review_targets, review_rows)
+    demand_rows = analyze_demand(review_rows, product_rows, Path(rules["demand_taxonomy"]))
     recommendations = build_recommendations(seed_product, form_rows, product_rows, review_rows, rules)
-
-    image_rows, contact_sheet = prepare_image_assets(product_rows, output_dir, rules)
 
     write_csv(output_dir / "top_products.csv", product_rows, PRODUCT_FIELDS)
     write_csv(output_dir / "product_forms.csv", form_rows, FORM_FIELDS)
@@ -1092,6 +1126,16 @@ def main():
     write_csv(output_dir / "review_targets.csv", review_targets, REVIEW_TARGET_FIELDS)
     write_csv(output_dir / "image_review_queue.csv", image_rows, IMAGE_FIELDS)
     write_csv(output_dir / "visual_labels.csv", image_rows, IMAGE_FIELDS)
+    write_csv(output_dir / "demand_analysis.csv", demand_rows, DEMAND_FIELDS)
+    (output_dir / "market_structure.json").write_text(
+        json.dumps(market_structure, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    write_csv(
+        output_dir / "price_bands.csv",
+        market_structure["price_bands"],
+        ["price_band", "listing_count", "monthly_sales", "sales_share", "median_reviews"],
+    )
+    business_feasibility = write_business_feasibility(output_dir, Path(rules["business_feasibility_rules"]))
     write_report(
         report_path,
         seed_product,
@@ -1112,6 +1156,9 @@ def main():
     print(f"Review targets: {output_dir / 'review_targets.csv'}")
     print(f"Image queue: {output_dir / 'image_review_queue.csv'}")
     print(f"Visual labels: {output_dir / 'visual_labels.csv'}")
+    print(f"Market structure: {output_dir / 'market_structure.json'}")
+    print(f"Demand analysis: {output_dir / 'demand_analysis.csv'}")
+    print(f"Business feasibility: {output_dir / 'business_feasibility.json'} ({business_feasibility['status']})")
     if contact_sheet:
         print(f"Contact sheet: {contact_sheet}")
     print(f"Report: {report_path}")

@@ -247,22 +247,45 @@ def health_checks(
     return checks
 
 
-def collect_metrics(root: Path) -> dict[str, Any]:
-    validation_path = root / "data" / "category_shape_validation.csv"
-    selection_path = root / "reports" / "selection_ranked.csv"
+def collect_metrics(root: Path, run_id: str) -> dict[str, Any]:
+    discovery_dir = root / "archive" / "discovery_runs" / run_id
+    selection_dir = root / "archive" / "selection_runs" / run_id
+    shape_dir = root / "archive" / "category_shape_runs" / run_id
+    discovery_manifest_path = discovery_dir / "run_manifest.json"
+    selection_path = selection_dir / "selection_ranked.csv"
+    validation_path = shape_dir / "category_shape_validation.csv"
     shape_library_path = root / "archive" / "shape_opportunity_library.csv"
     opportunity_library_path = root / "archive" / "opportunity_library.csv"
-    latest_seed_run = latest_selection_run_id(root)
+    discovery_manifest = {}
+    if discovery_manifest_path.exists():
+        try:
+            discovery_manifest = json.loads(discovery_manifest_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            discovery_manifest = {}
 
     opportunity_rows = read_csv_rows(opportunity_library_path)
     new_archived_candidates = sum(
         1
         for row in opportunity_rows
-        if row.get("archive_last_run_id") == latest_seed_run and str(row.get("archive_seen_count") or "") == "1"
+        if row.get("archive_last_run_id") == run_id and str(row.get("archive_seen_count") or "") == "1"
     )
 
+    shape_opportunities = count_matching(validation_path, "shape_recommendation", "Shape opportunity")
+
     return {
-        "scanned_categories": csv_count(root / "reports" / "discovered_categories.csv"),
+        "metrics_source": "current_run",
+        "discovery_status": discovery_manifest.get("status", "not_started"),
+        "selected_categories": int(discovery_manifest.get("selected_categories") or 0),
+        "scanned_categories": int(discovery_manifest.get("successful_categories") or 0),
+        "failed_categories": int(discovery_manifest.get("failed_categories") or 0),
+        "products_examined": int(discovery_manifest.get("products_examined") or 0),
+        "eligible_candidates_before_dedupe": int(
+            discovery_manifest.get("eligible_candidates_before_dedupe") or 0
+        ),
+        "eligible_candidates_after_dedupe": int(
+            discovery_manifest.get("eligible_candidates_after_dedupe") or 0
+        ),
+        "represented_candidate_categories": int(discovery_manifest.get("represented_categories") or 0),
         "ranked_candidates": csv_count(selection_path),
         "new_archived_candidates": new_archived_candidates,
         "selection_watch_or_go": count_in(
@@ -271,11 +294,7 @@ def collect_metrics(root: Path) -> dict[str, Any]:
             {"Go to supplier validation", "Watch or collect more data"},
         ),
         "validation_rows": csv_count(validation_path),
-        "shape_opportunities_latest_validation": count_matching(
-            validation_path,
-            "shape_recommendation",
-            "Shape opportunity",
-        ),
+        "shape_opportunities_latest_validation": shape_opportunities,
         "watch_shapes": count_matching(validation_path, "shape_recommendation", "Watch shape"),
         "needs_category_top100": count_matching(validation_path, "shape_recommendation", "Needs category Top100"),
         "manual_review_rows": count_in(
@@ -283,7 +302,7 @@ def collect_metrics(root: Path) -> dict[str, Any]:
             "shape_recommendation",
             {"Watch shape", "Needs category Top100"},
         ),
-        "active_validated_pool_rows": count_matching(shape_library_path, "archive_status", "active_in_latest_run"),
+        "active_validated_pool_rows": shape_opportunities,
         "total_validated_pool_rows": csv_count(shape_library_path),
         "seed_reject_reasons": top_reject_reasons(selection_path, "recommendation", "Reject", "key_flags"),
         "shape_reject_reasons": top_reject_reasons(
@@ -308,8 +327,11 @@ def build_report(
     zero_pool_weeks: int = 3,
     stale_days: int = 8,
 ) -> dict[str, Any]:
-    latest_seed = latest_child_dir(root / "archive" / "selection_runs")
-    latest_shape = latest_child_dir(root / "archive" / "category_shape_runs")
+    current_seed = root / "archive" / "selection_runs" / run_id
+    current_shape = root / "archive" / "category_shape_runs" / run_id
+    current_discovery = root / "archive" / "discovery_runs" / run_id
+    latest_seed = current_seed if current_seed.exists() else None
+    latest_shape = current_shape if current_shape.exists() else None
     finished_at = finished_at or now_iso()
     checks = health_checks(root, zero_pool_weeks, stale_days, log_path, status)
     if status == "failure":
@@ -329,8 +351,9 @@ def build_report(
         "finished_at": finished_at,
         "failed_step": failed_step,
         "error_summary": sanitize(error_summary)[:1000],
-        "metrics": collect_metrics(root),
+        "metrics": collect_metrics(root, run_id),
         "paths": {
+            "current_discovery_run": str(current_discovery if current_discovery.exists() else ""),
             "latest_seed_snapshot": str(latest_seed or ""),
             "latest_category_shape_snapshot": str(latest_shape or ""),
             "dashboard": str(root / "web" / "index.html"),
@@ -353,8 +376,11 @@ def report_markdown(report: dict[str, Any]) -> str:
         f"- 状态：{report['status']}",
         f"- Run ID：`{report['run_id']}`",
         f"- 时间：{report['started_at']} -> {report['finished_at']}",
-        f"- 扫描类目数：{metrics['scanned_categories']}",
-        f"- 候选产品数：{metrics['ranked_candidates']}",
+        f"- 数据口径：本次运行，不混用历史输出",
+        f"- 计划/成功/失败类目：{metrics['selected_categories']}/{metrics['scanned_categories']}/{metrics['failed_categories']}",
+        f"- 本次查看产品数：{metrics['products_examined']}",
+        f"- 合格候选（去重前/后）：{metrics['eligible_candidates_before_dedupe']}/{metrics['eligible_candidates_after_dedupe']}",
+        f"- 进入评分候选：{metrics['ranked_candidates']}（覆盖 {metrics['represented_candidate_categories']} 个类目）",
         f"- 新增候选入档数：{metrics['new_archived_candidates']}",
         f"- 通过验证进入机会池：{metrics['active_validated_pool_rows']}",
         f"- 本次验证 Shape opportunity：{metrics['shape_opportunities_latest_validation']}",
@@ -383,8 +409,8 @@ def issue_comment(report: dict[str, Any]) -> str:
     lines = [
         f"每周选品扫描：{report['status']}（Run `{report['run_id']}`）",
         "",
-        f"- 扫描类目：{metrics['scanned_categories']}",
-        f"- 候选产品：{metrics['ranked_candidates']}（新增入档 {metrics['new_archived_candidates']}）",
+        f"- 计划/成功/失败类目：{metrics['selected_categories']}/{metrics['scanned_categories']}/{metrics['failed_categories']}",
+        f"- 候选产品：{metrics['ranked_candidates']}，覆盖 {metrics['represented_candidate_categories']} 个类目（新增入档 {metrics['new_archived_candidates']}）",
         f"- 入机会池：{metrics['active_validated_pool_rows']}（本次 Shape opportunity {metrics['shape_opportunities_latest_validation']}）",
         f"- 人工复核/补数据：{metrics['manual_review_rows']}",
         f"- 淘汰主因：{metrics['seed_reject_reasons']}",

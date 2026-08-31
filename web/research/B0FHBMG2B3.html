@@ -17,6 +17,7 @@
     .subtle, td span, .tile p { color: #657184; }
     .actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 9px; background: #e8f6ef; color: #147d54; font-weight: 700; }
+    .pill.disabled { background: #edf0f4; color: #657184; cursor: default; }
     .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
     .kpi { border: 1px solid #d9dee8; border-radius: 8px; padding: 12px; background: #f9fafb; }
     .kpi span { display: block; color: #657184; font-size: 12px; }
@@ -37,6 +38,11 @@
     .tile span { color: #657184; font-size: 12px; margin-top: 3px; }
     .contact { width: 100%; max-height: 760px; object-fit: contain; border: 1px solid #d9dee8; border-radius: 8px; background: #fff; }
     .status { font-weight: 750; color: #147d54; }
+    .decision { display: flex; align-items: baseline; gap: 12px; border-left: 4px solid #d99a18; }
+    .decision strong { font-size: 17px; }
+    .decision span { color: #657184; }
+    .decision.rejected { border-left-color: #c83d3d; background: #fff8f7; }
+    .decision.rejected strong { color: #a62828; }
     @media (max-width: 900px) { .top { display: block; } .kpis, .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   </style>
 </head>
@@ -53,6 +59,8 @@
         <a class="pill" href="../assets/reports/product_opportunity_research_B0FHBMG2B3.md" target="_blank" rel="noreferrer">打开 Markdown 报告</a>
       </div>
     </div>
+
+    <section class="decision"><strong>档案状态：已研究，待结合当前机会池复核</strong><span></span></section>
 
     <section>
       <div class="kpis">

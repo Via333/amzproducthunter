@@ -11,6 +11,8 @@ from datetime import datetime
 from html import escape
 from pathlib import Path
 
+from product_risk import has_valid_category, infer_compliance_risk, infer_fragile_risk, infer_oversize_risk
+
 
 ROOT = Path(__file__).resolve().parent
 WEB_DIR = ROOT / "web"
@@ -130,7 +132,12 @@ def normalize_selection(rows: list[dict[str, str]]) -> list[dict[str, object]]:
                 "monthly_sales": to_float(row.get("est_monthly_sales")),
                 "reviews": to_float(row.get("avg_review_count")),
                 "rating": to_float(row.get("avg_rating")),
+                "evidence_confidence": to_float(row.get("evidence_confidence")),
+                "evidence_grade": row.get("evidence_grade", ""),
+                "profit_estimate_status": row.get("profit_estimate_status", ""),
+                "data_source_summary": row.get("data_source_summary", ""),
                 "flags": row.get("key_flags", ""),
+                "hard_stop_reason": row.get("hard_stop_reason", ""),
                 "listing_url": normalize_url(row, "listing_url"),
             }
         )
@@ -170,6 +177,8 @@ def normalize_category_report(rows: list[dict[str, str]]) -> list[dict[str, obje
             "products_examined": to_float(row.get("products_examined")),
             "candidate_count": to_float(row.get("candidate_count")),
             "scan_completed_at": row.get("scan_completed_at", ""),
+            "scan_status": row.get("scan_status", ""),
+            "scan_error": row.get("scan_error", ""),
         }
         for row in rows
     ]
@@ -368,20 +377,51 @@ def normalize_shape_archive(rows: list[dict[str, str]]) -> list[dict[str, object
     return normalized
 
 
-def normalize_product_research_archive(rows: list[dict[str, str]]) -> list[dict[str, object]]:
+def normalize_product_research_archive(
+    rows: list[dict[str, str]], selection_lookup: dict[str, dict[str, object]] | None = None
+) -> list[dict[str, object]]:
+    selection_lookup = selection_lookup or {}
     normalized: list[dict[str, object]] = []
     for row in rows:
+        asin = row.get("asin", "")
+        selection = selection_lookup.get(asin, {})
+        title = row.get("title", "")
+        category = selection.get("category", "")
+        compliance_risk = infer_compliance_risk(title, category)
+        fragile_risk = infer_fragile_risk(title, category)
+        oversize_risk = infer_oversize_risk(title, category)
+        recommendation = str(selection.get("recommendation") or "")
+        reason = str(selection.get("hard_stop_reason") or selection.get("flags") or "").strip()
+        if oversize_risk >= 65:
+            decision, reason = "已淘汰", "大件/物流风险"
+        elif compliance_risk >= 80:
+            decision, reason = "已淘汰", "食品接触/合规资质风险"
+        elif fragile_risk >= 80:
+            decision, reason = "已淘汰", "易碎/高破损风险"
+        elif selection and not has_valid_category(category):
+            decision, reason = "已淘汰", "类目数据缺失，Listing 需复核"
+        elif recommendation == "Reject" or row.get("status") == "rejected":
+            decision, reason = "已淘汰", reason or "未通过当前筛选规则"
+        elif recommendation == "Go to supplier validation":
+            decision, reason = "可继续", "本轮粗筛通过，待供应商验证"
+        elif recommendation == "Watch or collect more data":
+            decision, reason = "待复核", reason or "需补证据后再判断"
+        else:
+            decision, reason = "历史研究", "未纳入本轮筛选，需重新验证"
         web_page = row.get("web_page", "")
         if web_page.startswith("web/"):
             web_page = web_page[4:]
-        report_path = row.get("report_path", "")
+        web_page_available = bool(web_page and (WEB_DIR / web_page).is_file())
+        raw_report_path = row.get("report_path", "")
+        report_available = bool(raw_report_path and (ROOT / raw_report_path).is_file())
+        report_path = raw_report_path
         if report_path and not report_path.startswith("../"):
             report_path = f"../{report_path}"
         normalized.append(
             {
-                "asin": row.get("asin", ""),
-                "title": row.get("title", ""),
-                "title_short": short_title(row.get("title", ""), 100),
+                "asin": asin,
+                "title": title,
+                "title_short": short_title(title, 100),
                 "listing_url": row.get("listing_url", ""),
                 "first_researched": row.get("first_researched", ""),
                 "last_researched": row.get("last_researched", ""),
@@ -389,6 +429,8 @@ def normalize_product_research_archive(rows: list[dict[str, str]]) -> list[dict[
                 "research_dir": row.get("research_dir", ""),
                 "report_path": report_path,
                 "web_page": web_page,
+                "web_page_available": web_page_available,
+                "report_available": report_available,
                 "products_count": to_float(row.get("products_count")),
                 "forms_count": to_float(row.get("forms_count")),
                 "reviews_count": to_float(row.get("reviews_count")),
@@ -396,6 +438,8 @@ def normalize_product_research_archive(rows: list[dict[str, str]]) -> list[dict[
                 "top_form": row.get("top_form", ""),
                 "status": row.get("status", ""),
                 "notes": row.get("notes", ""),
+                "decision": decision,
+                "decision_reason": reason,
             }
         )
     return normalized
@@ -1344,7 +1388,10 @@ def build_html() -> str:
     shape_validation_rows = normalize_shape_validation(read_csv("data/category_shape_validation.csv"))
     primary_validation_rows = primary_shape_rows(shape_validation_rows)
     shape_archive_rows = normalize_shape_archive(read_csv("archive/shape_opportunity_library.csv"))
-    product_research_archive = normalize_product_research_archive(read_csv("archive/product_research_index.csv"))
+    selection_lookup = {str(row.get("asin", "")): row for row in selection_rows if row.get("asin")}
+    product_research_archive = normalize_product_research_archive(
+        read_csv("archive/product_research_index.csv"), selection_lookup
+    )
     form_rows = normalize_forms(read_csv("research/B0FS1YH17C/product_forms.csv"))
     research_keyword_rows = normalize_keywords(read_csv("research/B0FS1YH17C/keywords.csv"))
     top_product_rows = normalize_top_products(read_csv("research/B0FS1YH17C/top_products.csv"))
@@ -1356,6 +1403,7 @@ def build_html() -> str:
     selection_strategies = tag_list(
         [{"source_strategy": str(row.get("strategy", ""))} for row in selection_rows], "source_strategy"
     )
+    selection_category_count = len(selection_strategies)
     selection_recommendations = tag_list(
         [{"recommendation": str(row.get("recommendation", ""))} for row in selection_rows], "recommendation"
     )
@@ -1377,6 +1425,11 @@ def build_html() -> str:
     current_new_category_count = sum(1 for row in current_category_rows if row.get("rotation_bucket") == "never_scanned")
     current_rescan_count = sum(1 for row in current_category_rows if row.get("rotation_bucket") == "oldest_rescan")
     category_report_has_metrics = any(row.get("scan_completed_at") for row in current_category_rows)
+    current_scanned_category_count = sum(
+        1 for row in current_category_rows if str(row.get("scan_status", "")).lower() == "success"
+    )
+    if category_report_has_metrics and current_scanned_category_count == 0:
+        current_scanned_category_count = len(current_category_rows)
     current_products_examined_label = f"{current_products_examined:,}" if category_report_has_metrics else "未记录"
     current_products_examined_note = (
         f"每类目最多 {weekly_products_per_category} 个 Top 产品"
@@ -1450,6 +1503,14 @@ def build_html() -> str:
         )
         for row in exclusion_rows
     )
+    coverage_warning_html = ""
+    if current_scanned_category_count >= 20 and selection_category_count < min(20, current_scanned_category_count):
+        coverage_warning_html = f"""
+      <div class="audit-warning">
+        <strong>本轮候选覆盖不足，不能据此判断市场没有机会。</strong>
+        扫描记录包含 {current_scanned_category_count} 个类目，但进入评分的候选只覆盖
+        {selection_category_count} 个类目；需要按类目均衡抽样后重新扫描和验证。
+      </div>"""
 
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -1457,6 +1518,7 @@ def build_html() -> str:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AMZ 选品自动化仪表盘</title>
+  <link rel="icon" href="data:,">
   <style>
     :root {{
       --bg: #f6f7f9;
@@ -1577,6 +1639,17 @@ def build_html() -> str:
       color: var(--muted);
       white-space: nowrap;
       padding-top: 5px;
+    }}
+
+    .audit-warning {{
+      margin: 0 0 18px;
+      padding: 12px 14px;
+      border: 1px solid #f0b35a;
+      border-left: 4px solid #c87800;
+      border-radius: 6px;
+      background: #fff8e8;
+      color: #6d4300;
+      line-height: 1.6;
     }}
 
     .kpi-grid {{
@@ -2526,6 +2599,23 @@ def build_html() -> str:
 
     @media (max-width: 700px) {{
       .main {{ padding: 14px; }}
+      .sidebar {{ padding: 12px 14px 10px; }}
+      .brand {{ margin-bottom: 8px; }}
+      .brand strong {{ font-size: 16px; }}
+      .brand span {{ display: none; }}
+      .nav {{
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: thin;
+      }}
+      .nav a {{
+        flex: 0 0 auto;
+        padding: 7px 9px;
+        font-size: 13px;
+        white-space: nowrap;
+      }}
       .topbar,
       .section-head {{
         display: block;
@@ -2535,8 +2625,7 @@ def build_html() -> str:
       .card-grid,
       .gallery,
       .count-grid,
-      .review-strip,
-      .nav {{
+      .review-strip {{
         grid-template-columns: 1fr;
       }}
       .formula-grid {{
@@ -2591,6 +2680,8 @@ def build_html() -> str:
         <div class="timestamp">生成时间：{escape(generated_at)}</div>
       </div>
 
+      {coverage_warning_html}
+
       <div class="kpi-grid">
         <div class="kpi">
           <div class="label">扫描种子</div>
@@ -2598,9 +2689,9 @@ def build_html() -> str:
           <div class="note">只作为类目/形态入口，不直接等于机会</div>
         </div>
         <div class="kpi">
-          <div class="label">最高种子分</div>
-          <div class="value">{top_selection_score:.1f}</div>
-          <div class="note">进入类目验证前的粗筛分</div>
+          <div class="label">候选覆盖类目</div>
+          <div class="value">{selection_category_count}</div>
+          <div class="note">本轮扫描 {current_scanned_category_count} 类目；最高种子分 {top_selection_score:.1f}</div>
         </div>
         <div class="kpi">
           <div class="label">待补 Top100</div>
@@ -2623,7 +2714,7 @@ def build_html() -> str:
         <div class="section-head">
           <div>
             <h2>种子发现</h2>
-            <p>这里是第一层粗筛，共 {len(selection_rows)} 个种子；种子只负责提供切入口，不能直接进入机会档案。必须经过最小类目 Top100 和形态验证后，才算真正机会。</p>
+            <p>这里是第一层粗筛，共 {len(selection_rows)} 个种子，覆盖 {selection_category_count} 个来源类目；种子只负责提供切入口，不能直接进入机会档案。必须经过最小类目 Top100 和形态验证后，才算真正机会。</p>
           </div>
         </div>
         <div class="controls">
@@ -2644,6 +2735,7 @@ def build_html() -> str:
                 <th>产品</th>
                 <th>策略</th>
                 <th class="num">分数</th>
+                <th class="num">证据</th>
                 <th class="num">售价</th>
                 <th class="num">单件毛利</th>
                 <th class="num">毛利率</th>
@@ -2758,7 +2850,7 @@ def build_html() -> str:
         <div class="section-head">
           <div>
             <h2>单品研究入口和档案</h2>
-            <p>指定 ASIN 后用单品研究入口生成研究；已经研究过的 ASIN 会长期保存在这里，并生成独立网页，后续可以直接打开，不受选品初筛更新影响。</p>
+            <p>这里保留所有做过的研究，包括已淘汰产品；它是历史档案，不等于当前推荐。请先看“结论”和原因，再决定是否打开研究页。</p>
           </div>
         </div>
         <div class="controls">
@@ -2773,6 +2865,7 @@ def build_html() -> str:
               <tr>
                 <th>研究产品</th>
                 <th>主形态</th>
+                <th>结论</th>
                 <th class="num">产品池</th>
                 <th class="num">形态</th>
                 <th class="num">评论</th>
@@ -2788,8 +2881,8 @@ def build_html() -> str:
       <section id="research">
         <div class="section-head">
           <div>
-            <h2>单品机会研究：Beeswax Bread Bags</h2>
-            <p>这是通过“类目/形态验证”后的第三层研究。B0FS1YH17C 不是因为单个 listing 分高才进入这里，而是它代表的 beeswax bread bag 形态在最小类目 Top 产品里仍然通过：评论门槛低、形态需求稳定，并且存在低评高销样本。</p>
+            <h2>历史单品研究：Beeswax Bread Bags</h2>
+            <p><strong>当前结论：已淘汰。</strong> 该产品直接接触食品，对个人卖家存在额外材料安全、迁移测试和合规资质风险。以下内容仅作历史研究证据，不代表当前机会推荐。</p>
             <p>后续你可以指定任意 ASIN 开同样的研究页；系统会优先补它所在最小类目 Top100，再把形态、材质、套装、图片、评论痛点和切入方向一起存档。</p>
           </div>
           <a class="pill green" href="https://www.amazon.com/dp/B0FS1YH17C" target="_blank" rel="noreferrer">打开目标 Listing</a>
@@ -3248,24 +3341,25 @@ def build_html() -> str:
           </td>
           <td><span class="pill gray">${{esc(row.strategy || "-")}}</span></td>
           <td class="num">${{scoreBar(row.score)}}</td>
+          <td class="num"><span class="pill ${{row.evidence_confidence >= 60 ? "green" : row.evidence_confidence >= 40 ? "orange" : "gray"}}">${{esc(row.evidence_grade || "-")}} · ${{fmtOne(row.evidence_confidence)}}%</span></td>
           <td class="num">${{fmtMoney(row.price)}}</td>
           <td class="num">${{fmtMoney(row.unit_profit)}}</td>
           <td class="num">${{fmtPct(row.margin)}}</td>
           <td class="num">${{fmtMoney(row.monthly_profit)}}</td>
           <td class="num">${{fmtInt(row.monthly_sales)}}</td>
-          <td><span class="pill ${{pillClass(row.flags)}}">${{esc(row.flags || "待复核")}}</span></td>
+          <td><span class="pill ${{pillClass(row.flags)}}">${{esc(row.flags || "待复核")}}</span><span class="muted-small">${{esc(row.profit_estimate_status || "")}}</span></td>
         </tr>
-      `).join("") || `<tr><td colspan="10"><div class="empty">没有匹配结果</div></td></tr>`;
+      `).join("") || `<tr><td colspan="11"><div class="empty">没有匹配结果</div></td></tr>`;
     }}
 
     function renderCurrentCategoryScan() {{
       const rows = DATA.currentCategoryScan || [];
       document.getElementById("currentCategoryScanBody").innerHTML = rows.map(row => `
         <tr>
-          <td class="title-cell">${{esc(row.name || "-")}}<span class="muted-small">${{esc(row.path || row.category_id || "-")}}</span></td>
+          <td class="title-cell">${{esc(row.name || "-")}}<span class="muted-small">${{esc(row.path || row.category_id || "-")}}${{row.scan_error ? " · " + esc(row.scan_error) : ""}}</span></td>
           <td><span class="pill ${{row.rotation_bucket === "never_scanned" ? "green" : "gray"}}">${{row.rotation_bucket === "never_scanned" ? "首次扫描" : row.rotation_bucket === "oldest_rescan" ? "最久未扫" : row.rotation_bucket === "manual_seed" ? "手动指定" : "历史基线"}}</span></td>
           <td class="num">${{fmtInt(row.products_examined)}}</td>
-          <td class="num">${{fmtInt(row.candidate_count)}}</td>
+          <td class="num">${{fmtInt(row.candidate_count)}}${{row.scan_status === "failed" ? '<span class="pill red">失败</span>' : ''}}</td>
           <td>${{esc(row.previous_last_scanned_at || (row.rotation_bucket ? "从未扫描" : "迁移前已扫描"))}}</td>
         </tr>
       `).join("") || `<tr><td colspan="5"><div class="empty">还没有类目轮换记录；下次周更后自动生成。</div></td></tr>`;
@@ -3491,20 +3585,21 @@ def build_html() -> str:
       document.getElementById("productResearchArchiveBody").innerHTML = rows.map(row => `
         <tr>
           <td class="title-cell">
-            <a href="${{esc(row.web_page)}}" target="_blank" rel="noreferrer">${{esc(row.title_short || row.asin)}}</a>
+            ${{row.web_page_available ? `<a href="${{esc(row.web_page)}}" target="_blank" rel="noreferrer">${{esc(row.title_short || row.asin)}}</a>` : `<strong>${{esc(row.title_short || row.asin)}}</strong>`}}
             <span class="muted-small">${{esc(row.asin)}} · 首次 ${{esc(row.first_researched || "-")}} · 研究 ${{fmtInt(row.research_count)}} 次</span>
           </td>
           <td>${{esc(row.top_form || "-")}}</td>
+          <td><span class="pill ${{row.decision === "可继续" ? "green" : row.decision === "待复核" ? "orange" : "gray"}}">${{esc(row.decision)}}</span><span class="muted-small">${{esc(row.decision_reason)}}</span></td>
           <td class="num">${{fmtInt(row.products_count)}}</td>
           <td class="num">${{fmtInt(row.forms_count)}}</td>
           <td class="num">${{fmtInt(row.reviews_count)}}</td>
           <td>${{esc(row.last_researched || "-")}}</td>
           <td>
-            <a class="pill green" href="${{esc(row.web_page)}}" target="_blank" rel="noreferrer">研究页</a>
-            <a class="pill gray" href="${{esc(row.report_path)}}" target="_blank" rel="noreferrer">报告</a>
+            ${{row.web_page_available ? `<a class="pill green" href="${{esc(row.web_page)}}" target="_blank" rel="noreferrer">研究页</a>` : `<span class="pill gray">页面未生成</span>`}}
+            ${{row.report_available ? `<a class="pill gray" href="${{esc(row.report_path)}}" target="_blank" rel="noreferrer">报告</a>` : ""}}
           </td>
         </tr>
-      `).join("") || `<tr><td colspan="7"><div class="empty">还没有单品研究档案。用上方输入 ASIN 后生成研究命令。</div></td></tr>`;
+      `).join("") || `<tr><td colspan="8"><div class="empty">还没有单品研究档案。用上方输入 ASIN 后生成研究命令。</div></td></tr>`;
     }}
 
     function findResearchByAsin(asin) {{
@@ -3521,7 +3616,7 @@ def build_html() -> str:
     function openExistingResearch() {{
       const asin = document.getElementById("productResearchAsin").value;
       const row = findResearchByAsin(asin);
-      if (row && row.web_page) {{
+      if (row && row.web_page && row.web_page_available) {{
         window.open(row.web_page, "_blank", "noreferrer");
         return;
       }}

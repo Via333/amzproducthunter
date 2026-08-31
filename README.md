@@ -26,8 +26,9 @@ python3 refresh_selection_workflow.py
 
 ```text
 1. discover_sorftime_opportunities.py --strategy category --score
-2. category_shape_validation.py
-3. build_dashboard.py
+2. auto_research_shortlist.py（最多 4 个高优先候选，自动补最小类目 Top100）
+3. category_shape_validation.py
+4. build_dashboard.py
 ```
 
 单品深度研究使用：
@@ -91,11 +92,11 @@ automation/run_weekly_category_scan.sh
 初筛评分由 `product_selection.py` 和 `config/scoring_rules.json` 控制：
 
 ```text
-机会分 = 需求分 * 25%
-      + 竞争分 * 20%
-      + 利润分 * 25%
-      + 差异化分 * 15%
-      + 风险控制分 * 15%
+机会分 = 需求分 * 15%
+      + 竞争分 * 30%
+      + 利润分 * 35%
+      + 差异化分 * 10%
+      + 风险控制分 * 10%
 ```
 
 初筛推荐值：
@@ -105,6 +106,8 @@ automation/run_weekly_category_scan.sh
 - `Reject`: 利润、竞争、风险或硬排除规则不达标。
 
 类目/形态验证由 `category_shape_validation.py` 和 `config/category_shape_validation_rules.json` 控制。只有验证结果为 `Shape opportunity` 或值得继续观察的形态，才会进入 `archive/shape_opportunity_library.csv`，并在网页的机会池中展示。
+
+评分同时输出 `evidence_confidence` 和 `evidence_grade`。采购成本、头程或 FBA 费仍为默认估算时，页面必须显示 `estimated`；估算利润只用于排序，不能替代供应商报价。
 
 ## 从 Sorftime 自动导入
 
@@ -201,6 +204,14 @@ python3 refresh_product_research.py --asin B0FS1YH17C
 ```
 
 已经研究过的单品不会因为选品初筛更新而丢失。网页里的「单品研究入口和档案」会列出所有研究过的 ASIN，并提供独立研究页入口。
+
+单品研究同时输出四类证据：市场机会、产品切入口、经济可行性和证据置信度。市场结构包括销量集中度、价格带、新品渗透和评论/销量关系；商业可行性包括贡献利润、盈亏平衡 ACoS、MOQ、首批资金和现金周期。
+
+已有研究不重新调用 Sorftime，只重建派生分析：
+
+```bash
+python3 refresh_research_analytics.py
+```
 
 如果只是把已有研究注册进档案，不重新调用 Sorftime：
 

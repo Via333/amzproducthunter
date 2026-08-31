@@ -2,6 +2,8 @@
 import argparse
 import csv
 import json
+import os
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -16,6 +18,7 @@ from import_sorftime_candidates import (
     write_candidates,
     run_scoring,
 )
+from product_risk import has_valid_category
 
 
 CATEGORY_ID_ALIASES = [
@@ -77,6 +80,8 @@ CATEGORY_REPORT_FIELDS = [
     "products_examined",
     "candidate_count",
     "scan_completed_at",
+    "scan_status",
+    "scan_error",
 ]
 
 
@@ -95,7 +100,21 @@ def parse_args():
     parser.add_argument("--domain", help="Override Sorftime domain id.")
     parser.add_argument("--strategy", choices=["search", "category"], help="Discovery strategy.")
     parser.add_argument("--category-tree-json", help="Use a saved category tree JSON instead of calling Sorftime.")
+    parser.add_argument(
+        "--category-tree-cache",
+        default="archive/cache/category_tree_us.json",
+        help="Cached Sorftime category tree. A stale cache is used when the live request fails.",
+    )
+    parser.add_argument(
+        "--category-tree-cache-hours",
+        type=int,
+        default=24 * 30,
+        help="Refresh the category tree after this many hours.",
+    )
+    parser.add_argument("--force-category-tree-refresh", action="store_true")
     parser.add_argument("--products-json", help="Use one saved products JSON for offline mapping tests.")
+    parser.add_argument("--run-id", default=os.environ.get("AMZ_WEEKLY_RUN_ID", ""))
+    parser.add_argument("--run-dir", help="Directory for discovery checkpoints and run manifest.")
     parser.add_argument("--score", action="store_true", help="Run product_selection.py after discovery.")
     parser.add_argument("--dry-run", action="store_true", help="List categories that would be scanned, without products.")
     return parser.parse_args()
@@ -401,6 +420,11 @@ def product_passes_filters(candidate, product_filters):
     sales = to_float(candidate["est_monthly_sales"])
     reviews = to_float(candidate["avg_review_count"])
     rating = to_float(candidate["avg_rating"])
+    fragile_risk = to_float(candidate.get("fragile_risk", 0))
+    compliance_risk = to_float(candidate.get("compliance_risk", 0))
+    oversize_risk = to_float(candidate.get("oversize_risk", 0))
+    if product_filters.get("require_valid_category", False) and not has_valid_category(candidate.get("category", "")):
+        return False
     if price < product_filters["min_price"] or price > product_filters["max_price"]:
         return False
     if sales < product_filters["min_monthly_sales"] or sales > product_filters["max_monthly_sales"]:
@@ -409,7 +433,49 @@ def product_passes_filters(candidate, product_filters):
         return False
     if rating and (rating < product_filters["min_rating"] or rating > product_filters["max_rating"]):
         return False
+    if fragile_risk > product_filters.get("max_fragile_risk", 100):
+        return False
+    if compliance_risk > product_filters.get("max_compliance_risk", 100):
+        return False
+    if oversize_risk > product_filters.get("max_oversize_risk", 100):
+        return False
     return True
+
+
+def balanced_candidate_sample(candidates, limit):
+    """Select candidates round-robin across source categories.
+
+    Category scans append products in scan order. A plain ``[:limit]`` therefore
+    lets the first few productive categories consume the entire shortlist. Keep
+    the API order within each category, but give every represented category one
+    slot before taking a second product from any category.
+    """
+
+    unique = dedupe_candidates(candidates)
+    limit = int(limit or 0)
+    if limit <= 0 or len(unique) <= limit:
+        return unique
+
+    grouped = {}
+    for candidate in unique:
+        group = str(candidate.get("source_strategy") or candidate.get("category") or "ungrouped")
+        grouped.setdefault(group, []).append(candidate)
+
+    selected = []
+    position = 0
+    while len(selected) < limit:
+        added = False
+        for rows in grouped.values():
+            if position >= len(rows):
+                continue
+            selected.append(rows[position])
+            added = True
+            if len(selected) >= limit:
+                break
+        if not added:
+            break
+        position += 1
+    return selected
 
 
 def candidate_brand(candidate):
@@ -449,6 +515,7 @@ def iter_search_strategies(rules):
 
 def collect_products_by_search(rules, defaults, domain):
     candidates = []
+    categories = []
     for search_cfg in iter_search_strategies(rules):
         strategy_name = search_cfg["name"]
         product_filters = merge_product_filters(rules["product_filters"], search_cfg.get("product_filters"))
@@ -504,6 +571,80 @@ def write_category_report(categories, output_path):
             writer.writerow({field: category.get(field, "") for field in CATEGORY_REPORT_FIELDS})
 
 
+def write_json_atomic(path, value):
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = output_path.with_suffix(output_path.suffix + ".tmp")
+    temporary_path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    temporary_path.replace(output_path)
+
+
+def category_tree_cache_is_fresh(path, ttl_hours):
+    cache_path = Path(path)
+    if not cache_path.exists():
+        return False
+    age_seconds = max(0, datetime.now().timestamp() - cache_path.stat().st_mtime)
+    return age_seconds <= max(0, int(ttl_hours)) * 3600
+
+
+def load_category_tree(args, rules, domain):
+    if args.category_tree_json:
+        return load_json(args.category_tree_json), "provided_json"
+
+    cache_path = Path(args.category_tree_cache)
+    cached_tree = load_json(cache_path) if cache_path.exists() else None
+    if cached_tree and not args.force_category_tree_refresh and category_tree_cache_is_fresh(
+        cache_path, args.category_tree_cache_hours
+    ):
+        print(f"Using cached category tree: {cache_path}")
+        return cached_tree, "fresh_cache"
+
+    tree_cfg = rules["category_tree"]
+    try:
+        category_tree = call_sorftime(
+            tree_cfg["method"], json.dumps(tree_cfg["payload"], ensure_ascii=False), domain
+        )
+        write_json_atomic(cache_path, category_tree)
+        print(f"Category tree cache refreshed: {cache_path}")
+        return category_tree, "live"
+    except RuntimeError:
+        if cached_tree:
+            print(
+                f"Live CategoryTree failed; using stale cache: {cache_path}",
+                file=sys.stderr,
+            )
+            return cached_tree, "stale_cache"
+        raise
+
+
+def discovery_manifest(run_id, strategy, tree_source=""):
+    return {
+        "run_id": run_id,
+        "strategy": strategy,
+        "status": "running",
+        "started_at": datetime.now().isoformat(timespec="seconds"),
+        "finished_at": "",
+        "category_tree_source": tree_source,
+        "selected_categories": 0,
+        "successful_categories": 0,
+        "failed_categories": 0,
+        "products_examined": 0,
+        "eligible_candidates_before_dedupe": 0,
+        "eligible_candidates_after_dedupe": 0,
+        "candidate_count": 0,
+        "represented_categories": 0,
+        "failed_category_details": [],
+    }
+
+
+def update_discovery_checkpoint(run_dir, manifest, categories, candidates):
+    run_path = Path(run_dir)
+    run_path.mkdir(parents=True, exist_ok=True)
+    write_json_atomic(run_path / "run_manifest.json", manifest)
+    write_category_report(categories, run_path / "categories.csv")
+    write_candidates(dedupe_candidates(candidates), run_path / "candidates_partial.csv")
+
+
 def mark_category_scanned(scan_state, category, products_examined, candidate_count, scanned_at):
     existing = scan_state.get(category["category_id"], {})
     scan_state[category["category_id"]] = {
@@ -528,6 +669,10 @@ def main():
     domain = args.domain or rules["domain"]
     strategy = args.strategy or rules.get("strategy", "search")
     defaults["marketplace"] = rules.get("marketplace", defaults["marketplace"])
+    run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_dir = Path(args.run_dir or Path("archive") / "discovery_runs" / run_id)
+    manifest = discovery_manifest(run_id, strategy)
+    write_json_atomic(run_dir / "run_manifest.json", manifest)
 
     candidates = []
     if args.products_json:
@@ -545,38 +690,92 @@ def main():
         scan_state = read_category_scan_state(args.scan_state)
         scan_state = bootstrap_scan_state(scan_state, args.category_report)
         exclusions = load_category_exclusions(args.category_exclusions)
-        if args.category_tree_json:
-            category_tree = load_json(args.category_tree_json)
-        else:
-            tree_cfg = rules["category_tree"]
-            category_tree = call_sorftime(tree_cfg["method"], json.dumps(tree_cfg["payload"], ensure_ascii=False), domain)
+        category_tree, tree_source = load_category_tree(args, rules, domain)
+        manifest["category_tree_source"] = tree_source
 
         categories = select_categories(category_tree, rules, scan_state, exclusions)
+        manifest["selected_categories"] = len(categories)
         write_category_report(categories, args.category_report)
+        update_discovery_checkpoint(run_dir, manifest, categories, candidates)
         print(f"Selected {len(categories)} categories. Category report: {args.category_report}")
 
         if args.dry_run:
             return
 
         for category in categories:
-            category_candidates, products_examined = collect_products_for_category(category, rules, defaults, domain)
+            try:
+                category_candidates, products_examined = collect_products_for_category(
+                    category, rules, defaults, domain
+                )
+            except RuntimeError as exc:
+                category["scan_status"] = "failed"
+                category["scan_error"] = str(exc).splitlines()[-1][:500]
+                manifest["failed_categories"] += 1
+                manifest["failed_category_details"].append(
+                    {
+                        "category_id": category["category_id"],
+                        "path": category["path"],
+                        "error": category["scan_error"],
+                    }
+                )
+                update_discovery_checkpoint(run_dir, manifest, categories, candidates)
+                print(f"Category failed, continuing: {category['path']}: {category['scan_error']}", file=sys.stderr)
+                continue
             candidates.extend(category_candidates)
             scanned_at = datetime.now().isoformat(timespec="seconds")
             category["products_examined"] = products_examined
             category["candidate_count"] = len(category_candidates)
             category["scan_completed_at"] = scanned_at
+            category["scan_status"] = "success"
+            category["scan_error"] = ""
             mark_category_scanned(scan_state, category, products_examined, len(category_candidates), scanned_at)
             write_category_scan_state(scan_state, args.scan_state)
+            manifest["successful_categories"] += 1
+            manifest["products_examined"] += products_examined
+            manifest["eligible_candidates_before_dedupe"] = len(candidates)
+            update_discovery_checkpoint(run_dir, manifest, categories, candidates)
             print(f"{category['path']}: examined {products_examined}, {len(category_candidates)} candidates")
         write_category_report(categories, args.category_report)
         print(f"Category rotation state: {args.scan_state} ({len(scan_state)} scanned categories)")
 
-    candidates = dedupe_candidates(candidates)[: int(rules["max_candidates"])]
+    eligible_candidates = dedupe_candidates(candidates)
+    candidates = balanced_candidate_sample(eligible_candidates, int(rules["max_candidates"]))
+    manifest["eligible_candidates_after_dedupe"] = len(eligible_candidates)
+    manifest["represented_categories"] = len(
+        {str(row.get("source_strategy") or row.get("category") or "ungrouped") for row in candidates}
+    )
     if not candidates:
-        raise SystemExit("No candidates passed filters. Loosen product filters or check Sorftime response shape.")
+        if strategy == "category" and not manifest["successful_categories"]:
+            manifest["status"] = "failure"
+            manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
+            manifest["error"] = "Every selected category failed"
+            update_discovery_checkpoint(run_dir, manifest, categories, candidates)
+            raise SystemExit("Every selected category failed. Check Sorftime connectivity and the discovery run manifest.")
+
+        output_path = Path(args.output)
+        write_candidates(candidates, output_path)
+        manifest["candidate_count"] = 0
+        manifest["status"] = "success_no_candidates"
+        manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
+        update_discovery_checkpoint(run_dir, manifest, categories, candidates)
+        print(f"Discovery completed with no eligible candidates; wrote an empty result to {output_path}")
+        if args.score:
+            run_scoring(output_path)
+        return
 
     output_path = Path(args.output)
     write_candidates(candidates, output_path)
+    write_candidates(eligible_candidates, run_dir / "candidates_eligible.csv")
+    write_candidates(candidates, run_dir / "candidates_selected.csv")
+    manifest["candidate_count"] = len(candidates)
+    manifest["status"] = "success"
+    manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
+    update_discovery_checkpoint(
+        run_dir,
+        manifest,
+        categories if strategy == "category" else [],
+        eligible_candidates,
+    )
     print(f"Discovered {len(candidates)} candidates into {output_path}")
     if args.score:
         run_scoring(output_path)

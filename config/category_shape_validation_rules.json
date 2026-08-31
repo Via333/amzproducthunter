@@ -11,11 +11,18 @@
   "thresholds": {
     "category_review_wall_median": 1000,
     "category_top_brand_share": 0.35,
+    "category_top10_sales_share": 0.7,
+    "category_concentration_min_count": 20,
     "category_top10_review_wall": 1500,
     "form_min_count": 2,
     "form_max_median_reviews": 300,
-    "form_min_avg_sales": 500,
-    "form_min_low_review_high_sales": 3,
+    "form_min_avg_sales": 150,
+    "form_min_total_sales": 800,
+    "form_full_total_sales": 3000,
+    "form_full_median_sales": 500,
+    "form_top3_sales_share": 0.8,
+    "form_concentration_min_count": 6,
+    "form_min_low_review_high_sales": 2,
     "shape_opportunity_score": 65,
     "watch_shape_score": 55
   }

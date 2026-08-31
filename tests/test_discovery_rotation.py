@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from discover_sorftime_opportunities import mark_category_scanned, select_categories
+from discover_sorftime_opportunities import balanced_candidate_sample, mark_category_scanned, select_categories
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,6 +48,19 @@ def rules() -> dict:
 
 
 class CategoryRotationTest(unittest.TestCase):
+    def test_candidate_sample_round_robins_across_categories(self) -> None:
+        candidates = [
+            {"source_asin": "A1", "source_strategy": "category:A", "product_name": "A1", "target_price": 20},
+            {"source_asin": "A2", "source_strategy": "category:A", "product_name": "A2", "target_price": 20},
+            {"source_asin": "A3", "source_strategy": "category:A", "product_name": "A3", "target_price": 20},
+            {"source_asin": "B1", "source_strategy": "category:B", "product_name": "B1", "target_price": 20},
+            {"source_asin": "B2", "source_strategy": "category:B", "product_name": "B2", "target_price": 20},
+            {"source_asin": "C1", "source_strategy": "category:C", "product_name": "C1", "target_price": 20},
+        ]
+        selected = balanced_candidate_sample(candidates, 4)
+        self.assertEqual([row["source_asin"] for row in selected], ["A1", "B1", "C1", "A2"])
+        self.assertEqual(len({row["source_strategy"] for row in selected}), 3)
+
     def test_duplicate_category_ids_use_one_scan_slot(self) -> None:
         tree = category_tree()
         tree["Data"][0]["children"].append({"NodeId": "a", "name": "Alpha Storage Duplicate", "children": []})

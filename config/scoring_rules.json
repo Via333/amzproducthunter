@@ -69,6 +69,7 @@
     }
   },
   "profitability": {
+    "estimated_score_weight": 0.15,
     "gross_margin": {
       "min": 0.25,
       "max": 0.55,
@@ -104,6 +105,8 @@
     "max_avg_review_count_for_watch": 600,
     "max_oversize_risk_for_watch": 60,
     "max_compliance_risk_for_go": 40,
+    "min_evidence_confidence_for_go": 60,
+    "min_evidence_confidence_for_watch": 30,
     "hard_stop_compliance_risk": 80,
     "hard_stop_oversize_risk": 65,
     "hard_stop_fragile_risk": 80,
@@ -112,6 +115,7 @@
     "reject_score_cap": 45
   },
   "hard_exclusions": {
+    "require_valid_category": true,
     "title_contains": [
       "air mover",
       "blower fan",
@@ -147,7 +151,14 @@
       "hunting",
       "decoy",
       "turkey hunting",
-      "scoot n shoot"
+      "scoot n shoot",
+      "official fifa",
+      "officially licensed",
+      "licensed merchandise",
+      "genuine recoil starter",
+      "recoil starter assy",
+      "80qt rolling cooler",
+      "rolling cooler cart"
     ],
     "category_contains": [
       "industrial",

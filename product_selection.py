@@ -2,10 +2,13 @@
 import argparse
 import csv
 import json
+import os
 import re
 import shutil
 from datetime import datetime
 from pathlib import Path
+
+from product_risk import has_valid_category, infer_compliance_risk, infer_fragile_risk, infer_oversize_risk
 
 
 NUMERIC_FIELDS = {
@@ -25,6 +28,9 @@ NUMERIC_FIELDS = {
     "compliance_risk",
     "fragile_risk",
     "oversize_risk",
+    "market_data_completeness",
+    "profit_data_confidence",
+    "evidence_confidence",
 }
 
 
@@ -43,6 +49,9 @@ OUTPUT_FIELDS = [
     "key_flags",
     "brand_moat_reason",
     "hard_stop_reason",
+    "evidence_confidence",
+    "evidence_grade",
+    "profit_estimate_status",
 ]
 
 
@@ -127,6 +136,11 @@ def rating_improvement_score(avg_rating):
     return 25.0
 
 
+def profit_is_estimated(row):
+    status = str(row.get("profit_estimate_status", "") or "").strip().lower()
+    return not status or "estimated" in status or "unverified" in status
+
+
 def normalize_row(row, config):
     normalized = {key: value for key, value in row.items() if key is not None}
     if "listing_url" not in normalized:
@@ -137,9 +151,42 @@ def normalize_row(row, config):
         normalized["notes"] = ", ".join(part for part in [existing_notes, overflow] if part)
     for field in NUMERIC_FIELDS:
         normalized[field] = parse_number(row.get(field))
+    normalized["fragile_risk"] = infer_fragile_risk(
+        normalized.get("product_name", ""),
+        normalized.get("category", ""),
+        extract_brand(normalized),
+        normalized.get("fragile_risk", 0),
+    )
+    normalized["compliance_risk"] = infer_compliance_risk(
+        normalized.get("product_name", ""),
+        normalized.get("category", ""),
+        extract_brand(normalized),
+        normalized.get("compliance_risk", 0),
+    )
+    normalized["oversize_risk"] = infer_oversize_risk(
+        normalized.get("product_name", ""),
+        normalized.get("category", ""),
+        extract_brand(normalized),
+        normalized.get("oversize_risk", 0),
+    )
+    if "evidence_confidence" not in row or not str(row.get("evidence_confidence", "")).strip():
+        normalized["evidence_confidence"] = 35.0
+    normalized["evidence_grade"] = str(row.get("evidence_grade") or confidence_grade(normalized["evidence_confidence"]))
+    normalized["profit_estimate_status"] = str(row.get("profit_estimate_status") or "estimated_or_unverified")
     if normalized.get("referral_fee_rate", 0) == 0:
         normalized["referral_fee_rate"] = config["defaults"]["referral_fee_rate"]
     return normalized
+
+
+def confidence_grade(value):
+    score = parse_number(value)
+    if score >= 80:
+        return "A"
+    if score >= 60:
+        return "B"
+    if score >= 40:
+        return "C"
+    return "D"
 
 
 def normalize_text(value):
@@ -188,6 +235,8 @@ def text_contains_any(value, terms):
 
 def hard_exclusion_reason(row, config):
     cfg = config.get("hard_exclusions", {})
+    if cfg.get("require_valid_category", False) and not has_valid_category(row.get("category", "")):
+        return "missing or invalid category evidence"
     title_match = text_contains_any(row.get("product_name", ""), cfg.get("title_contains", []))
     if title_match:
         return f"excluded title term: {title_match}"
@@ -332,13 +381,21 @@ def calculate_scores(row, config):
     differentiation_score = clamp(row["differentiation_score"])
 
     weights = config["weights"]
-    opportunity_score = (
-        demand_score * weights["demand"]
-        + competition_score * weights["competition"]
-        + profitability_score * weights["profitability"]
-        + differentiation_score * weights["differentiation"]
-        + risk_control_score * weights["risk_control"]
-    )
+    score_parts = [
+        (demand_score, weights["demand"]),
+        (competition_score, weights["competition"]),
+        (differentiation_score, weights["differentiation"]),
+        (risk_control_score, weights["risk_control"]),
+    ]
+    # Default cost-rate assumptions are useful for rough ranking, but they are
+    # not supplier quotes. Give provisional profit a reduced weight and never
+    # use it as a rejection gate. Verified landed cost restores the full weight.
+    profit_weight = weights["profitability"]
+    if profit_is_estimated(row):
+        profit_weight = min(profit_weight, profit_cfg.get("estimated_score_weight", 0.15))
+    if profit_weight > 0:
+        score_parts.append((profitability_score, profit_weight))
+    opportunity_score = weighted_average(score_parts)
 
     moat_reason = brand_moat_reason(row, config)
     if moat_reason:
@@ -372,6 +429,9 @@ def calculate_scores(row, config):
         "key_flags": "; ".join(flags),
         "brand_moat_reason": moat_reason,
         "hard_stop_reason": stop_reason,
+        "evidence_confidence": round(row["evidence_confidence"], 1),
+        "evidence_grade": confidence_grade(row["evidence_confidence"]),
+        "profit_estimate_status": row.get("profit_estimate_status", "estimated_or_unverified"),
     }
 
 
@@ -384,12 +444,15 @@ def build_flags(row, config, gross_profit, gross_margin, risk_score, moat_reason
         flags.append(moat_reason)
     if stop_reason:
         flags.append(stop_reason)
-    if gross_profit <= 0:
-        flags.append("negative unit profit")
-    if gross_margin < min_margin:
-        flags.append(f"gross margin below {min_margin * 100:.0f}%")
-    if min_unit_profit and gross_profit < min_unit_profit:
-        flags.append(f"unit profit below ${min_unit_profit:.0f}")
+    if profit_is_estimated(row):
+        flags.append("supplier quote required; estimated profit is not a rejection gate")
+    else:
+        if gross_profit <= 0:
+            flags.append("negative unit profit")
+        if gross_margin < min_margin:
+            flags.append(f"gross margin below {min_margin * 100:.0f}%")
+        if min_unit_profit and gross_profit < min_unit_profit:
+            flags.append(f"unit profit below ${min_unit_profit:.0f}")
     max_reviews_for_watch = thresholds.get("max_avg_review_count_for_watch", 800)
     if row["avg_review_count"] > max_reviews_for_watch:
         flags.append(f"review count above {max_reviews_for_watch:.0f}")
@@ -405,6 +468,8 @@ def build_flags(row, config, gross_profit, gross_margin, risk_score, moat_reason
         flags.append("fragile logistics risk")
     if row["oversize_risk"] >= 60:
         flags.append("oversize risk")
+    if row["evidence_confidence"] < thresholds.get("min_evidence_confidence_for_go", 60):
+        flags.append("evidence confidence below supplier-validation threshold")
     if risk_score < 25 and not flags:
         flags.append("clean early risk profile")
     return flags
@@ -413,24 +478,30 @@ def build_flags(row, config, gross_profit, gross_margin, risk_score, moat_reason
 def recommend(row, config, score, gross_margin, gross_profit, moat_reason="", stop_reason=""):
     thresholds = config["recommendation_thresholds"]
     min_unit_profit = thresholds.get("min_gross_profit_per_unit_for_go", 0)
+    estimated_profit = profit_is_estimated(row)
     if moat_reason or stop_reason:
         return "Reject"
-    if gross_profit <= 0:
+    if not estimated_profit and gross_profit <= 0:
         return "Reject"
     if row["compliance_risk"] >= thresholds["hard_stop_compliance_risk"]:
         return "Reject"
     if (
-        score >= thresholds["go_score"]
+        not estimated_profit
+        and score >= thresholds["go_score"]
         and gross_margin >= thresholds["min_gross_margin_for_go"]
         and gross_profit >= min_unit_profit
         and row["compliance_risk"] <= thresholds["max_compliance_risk_for_go"]
+        and row["evidence_confidence"] >= thresholds.get("min_evidence_confidence_for_go", 60)
     ):
         return "Go to supplier validation"
     if score >= thresholds["watch_score"]:
-        if gross_margin < thresholds.get("min_gross_margin_for_watch", 0):
+        if row["evidence_confidence"] < thresholds.get("min_evidence_confidence_for_watch", 30):
             return "Reject"
-        if gross_profit < thresholds.get("min_gross_profit_per_unit_for_watch", 0):
-            return "Reject"
+        if not estimated_profit:
+            if gross_margin < thresholds.get("min_gross_margin_for_watch", 0):
+                return "Reject"
+            if gross_profit < thresholds.get("min_gross_profit_per_unit_for_watch", 0):
+                return "Reject"
         if row["avg_review_count"] > thresholds.get("max_avg_review_count_for_watch", 1000000):
             return "Reject"
         if row["oversize_risk"] > thresholds.get("max_oversize_risk_for_watch", 1000000):
@@ -447,8 +518,6 @@ def load_rows(input_path, config):
 
 
 def write_csv(rows, output_path):
-    if not rows:
-        return
     fieldnames = []
     for row in rows:
         for field in row.keys():
@@ -575,7 +644,7 @@ def update_opportunity_library(rows, config, archive_dir, run_id):
 
 
 def archive_selection_outputs(rows, config, input_path, output_csv_path, output_md_path, archive_dir, top_n):
-    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_id = os.environ.get("AMZ_WEEKLY_RUN_ID") or datetime.now().strftime("%Y%m%d_%H%M%S")
     archive_dir.mkdir(parents=True, exist_ok=True)
     run_dir = write_run_snapshot(rows, input_path, output_csv_path, output_md_path, archive_dir, run_id, str(input_path), top_n)
     library_path, active_count, library_count = update_opportunity_library(rows, config, archive_dir, run_id)

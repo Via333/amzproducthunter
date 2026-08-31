@@ -62,15 +62,28 @@ def csv_count(path: Path) -> int:
         return max(0, sum(1 for _ in csv.DictReader(handle)))
 
 
-def workflow_steps() -> list[tuple[str, list[str]]]:
+def workflow_steps(run_id: str) -> list[tuple[str, list[str]]]:
     return [
-        ("discover_sorftime_opportunities", ["python3", "discover_sorftime_opportunities.py", "--strategy", "category", "--score"]),
+        (
+            "discover_sorftime_opportunities",
+            [
+                "python3",
+                "discover_sorftime_opportunities.py",
+                "--strategy",
+                "category",
+                "--score",
+                "--run-id",
+                run_id,
+            ],
+        ),
+        ("auto_research_shortlist", ["python3", "auto_research_shortlist.py", "--run-id", run_id]),
         ("category_shape_validation", ["python3", "category_shape_validation.py"]),
+        ("build_product_research_pages", ["python3", "build_product_research_pages.py"]),
         ("build_dashboard", ["python3", "build_dashboard.py"]),
     ]
 
 
-def required_outputs() -> list[Path]:
+def required_outputs(run_id: str) -> list[Path]:
     return [
         ROOT / "web" / "index.html",
         ROOT / "reports" / "discovered_categories.csv",
@@ -78,11 +91,13 @@ def required_outputs() -> list[Path]:
         ROOT / "archive" / "category_scan_state.csv",
         ROOT / "data" / "category_shape_validation.csv",
         ROOT / "archive" / "shape_opportunity_library.csv",
+        ROOT / "archive" / "discovery_runs" / run_id / "run_manifest.json",
+        ROOT / "archive" / "auto_research_runs" / run_id / "run_manifest.json",
     ]
 
 
-def validate_required_outputs() -> None:
-    missing = [str(path.relative_to(ROOT)) for path in required_outputs() if not path.exists() or path.stat().st_size == 0]
+def validate_required_outputs(run_id: str) -> None:
+    missing = [str(path.relative_to(ROOT)) for path in required_outputs(run_id) if not path.exists() or path.stat().st_size == 0]
     if missing:
         raise RuntimeError(f"Required outputs are missing or empty: {', '.join(missing)}")
 
@@ -130,6 +145,7 @@ def main() -> None:
     args = parse_args()
     started_at = now_iso()
     run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
+    os.environ["AMZ_WEEKLY_RUN_ID"] = run_id
     log_path = resolve_log_path(args.log_path)
     current_step = ""
 
@@ -139,11 +155,11 @@ def main() -> None:
             raise RuntimeError(f"Mock failure requested for {args.mock_failure_step}")
 
         if not args.report_only:
-            for step_name, command in workflow_steps():
+            for step_name, command in workflow_steps(run_id):
                 current_step = step_name
                 run(command, step_name)
             current_step = "required_outputs"
-            validate_required_outputs()
+            validate_required_outputs(run_id)
 
         status = "report_only" if args.report_only else "success"
         report = build_report(

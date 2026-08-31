@@ -9,6 +9,12 @@ import sys
 import time
 from pathlib import Path
 
+from product_risk import (
+    infer_compliance_risk as infer_title_compliance_risk,
+    infer_fragile_risk,
+    infer_oversize_risk as infer_title_oversize_risk,
+)
+
 
 OUTPUT_FIELDS = [
     "source_strategy",
@@ -33,6 +39,12 @@ OUTPUT_FIELDS = [
     "compliance_risk",
     "fragile_risk",
     "oversize_risk",
+    "market_data_completeness",
+    "profit_data_confidence",
+    "evidence_confidence",
+    "evidence_grade",
+    "data_source_summary",
+    "profit_estimate_status",
     "notes",
 ]
 
@@ -260,7 +272,13 @@ def to_money(value, default=0.0):
 
 
 def build_candidate(item, defaults, category_override=None):
-    price = to_money(pick(item, "price"), 0)
+    raw_price = pick(item, "price")
+    raw_sales = pick(item, "sales")
+    raw_reviews = pick(item, "reviews")
+    raw_rating = pick(item, "rating")
+    raw_search_volume = pick(item, "search_volume")
+    raw_cpc = pick(item, "cpc")
+    price = to_money(raw_price, 0)
     if price <= 0:
         price = 19.99
     cost = round(price * to_float(defaults["cost_rate"], 0.28), 2)
@@ -280,6 +298,31 @@ def build_candidate(item, defaults, category_override=None):
     if brand:
         notes += f"; brand {brand}"
 
+    observed = {
+        "price": to_money(raw_price, 0) > 0,
+        "sales": raw_sales not in (None, ""),
+        "reviews": raw_reviews not in (None, ""),
+        "rating": raw_rating not in (None, ""),
+        "fba_fee": reported_fba_fee > 0,
+        "search_volume": raw_search_volume not in (None, ""),
+        "cpc": raw_cpc not in (None, ""),
+    }
+    completeness_weights = {
+        "price": 15,
+        "sales": 25,
+        "reviews": 15,
+        "rating": 10,
+        "fba_fee": 10,
+        "search_volume": 15,
+        "cpc": 10,
+    }
+    market_completeness = sum(weight for key, weight in completeness_weights.items() if observed[key])
+    profit_confidence = 35 if observed["fba_fee"] else 20
+    evidence_confidence = round(market_completeness * 0.75 + profit_confidence * 0.25, 1)
+    evidence_grade = "A" if evidence_confidence >= 80 else "B" if evidence_confidence >= 60 else "C" if evidence_confidence >= 40 else "D"
+    observed_fields = ",".join(key for key, value in observed.items() if value) or "none"
+    estimated_fields = ",".join(key for key, value in observed.items() if not value)
+
     return {
         "source_asin": asin,
         "source_parent_asin": parent_asin,
@@ -291,24 +334,38 @@ def build_candidate(item, defaults, category_override=None):
         "shipping": shipping,
         "fba_fee": fba_fee,
         "referral_fee_rate": defaults["referral_fee_rate"],
-        "est_monthly_sales": round(to_float(pick(item, "sales"), 0), 0),
-        "avg_review_count": round(to_float(pick(item, "reviews"), 0), 0),
-        "avg_rating": round(to_float(pick(item, "rating"), 0), 1),
+        "est_monthly_sales": round(to_float(raw_sales, 0), 0),
+        "avg_review_count": round(to_float(raw_reviews, 0), 0),
+        "avg_rating": round(to_float(raw_rating, 0), 1),
         "top10_review_share": defaults["top10_review_share"],
-        "keyword_search_volume": round(to_float(pick(item, "search_volume"), defaults["keyword_search_volume"]), 0),
-        "keyword_cpc": to_float(pick(item, "cpc"), defaults["keyword_cpc"]),
+        "keyword_search_volume": round(to_float(raw_search_volume, defaults["keyword_search_volume"]), 0),
+        "keyword_cpc": to_float(raw_cpc, defaults["keyword_cpc"]),
         "seasonality_score": infer_seasonality_score(item, defaults),
         "differentiation_score": defaults["differentiation_score"],
-        "compliance_risk": infer_compliance_risk(item, defaults),
-        "fragile_risk": defaults["fragile_risk"],
-        "oversize_risk": infer_oversize_risk(item, defaults),
+        "compliance_risk": infer_compliance_risk(item, defaults, category),
+        "fragile_risk": infer_fragile_risk(
+            pick(item, "title", ""),
+            category,
+            brand,
+            defaults["fragile_risk"],
+        ),
+        "oversize_risk": infer_oversize_risk(item, defaults, category),
+        "market_data_completeness": market_completeness,
+        "profit_data_confidence": profit_confidence,
+        "evidence_confidence": evidence_confidence,
+        "evidence_grade": evidence_grade,
+        "data_source_summary": f"observed:{observed_fields}; estimated:{estimated_fields}",
+        "profit_estimate_status": "estimated_default_costs",
         "notes": notes,
     }
 
 
-def infer_compliance_risk(item, defaults):
-    text = " ".join(str(part) for part in [pick(item, "title", ""), pick(item, "category", ""), pick(item, "brand", "")]).lower()
-    risk = to_float(defaults["compliance_risk"], 25)
+def infer_compliance_risk(item, defaults, category_override=None):
+    title = pick(item, "title", "")
+    category = category_override or pick(item, "category", "")
+    brand = pick(item, "brand", "")
+    text = " ".join(str(part) for part in [title, category, brand]).lower()
+    risk = infer_title_compliance_risk(title, category, brand, defaults["compliance_risk"])
     high_risk_terms = [
         "supplement",
         "vitamin",
@@ -352,10 +409,13 @@ def infer_seasonality_score(item, defaults):
     return score
 
 
-def infer_oversize_risk(item, defaults):
-    score = to_float(defaults["oversize_risk"], 20)
+def infer_oversize_risk(item, defaults, category_override=None):
+    title = pick(item, "title", "")
+    category = category_override or pick(item, "category", "")
+    brand = pick(item, "brand", "")
+    score = infer_title_oversize_risk(title, category, brand, defaults["oversize_risk"])
     text = " ".join(
-        str(part) for part in [pick(item, "title", ""), pick(item, "category", ""), pick(item, "brand", "")]
+        str(part) for part in [title, category, brand]
     ).lower()
     hard_oversize_terms = [
         "air mover",
@@ -389,6 +449,9 @@ def infer_oversize_risk(item, defaults):
         "industrial",
         "floor care",
         "furniture",
+        "80qt rolling cooler",
+        "rolling cooler cart",
+        "cooler cart with wheels",
     ]
     soft_oversize_terms = [
         "garage light",

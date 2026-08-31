@@ -5,11 +5,14 @@
   "competitor_candidate_pool_size": 100,
   "competitors_to_analyze": 100,
   "product_detail_batch_size": 10,
+  "product_taxonomy": "config/product_taxonomy.json",
+  "demand_taxonomy": "config/demand_taxonomy.json",
+  "business_feasibility_rules": "config/business_feasibility_rules.json",
   "category_products": {
     "enabled": true,
     "method": "CategoryProducts",
-    "pages": 3,
-    "products_per_page": 30,
+    "pages": 5,
+    "products_per_page": 20,
     "payload_template": {
       "nodeId": "{node_id}",
       "page": "{page}"

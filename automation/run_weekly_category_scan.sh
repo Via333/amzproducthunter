@@ -12,6 +12,7 @@ LOCK_FILE="$LOG_DIR/weekly_category_scan.lock"
 FORCE="${AMZ_WEEKLY_FORCE:-0}"
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.npm-global/bin:$HOME/.local/bin"
+export AMZ_WEEKLY_RUN_ID="$RUN_ID"
 export AMZ_WEEKLY_LOG_FILE="$LOG_FILE"
 
 mkdir -p "$LOG_DIR"

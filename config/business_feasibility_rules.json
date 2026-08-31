@@ -1,0 +1,14 @@
+{
+  "referral_fee_rate": 0.15,
+  "default_cost_rate": 0.28,
+  "default_shipping_rate": 0.08,
+  "default_fba_fee_rate": 0.18,
+  "minimum_fba_fee": 3.5,
+  "assumed_return_rate": 0.05,
+  "assumed_return_loss_rate": 0.5,
+  "assumed_coupon_rate": 0.03,
+  "assumed_storage_rate": 0.02,
+  "target_ad_cost_rate": 0.15,
+  "minimum_contribution_margin": 0.2,
+  "maximum_cash_cycle_days": 120
+}

@@ -1,0 +1,41 @@
+{
+  "overrides": [
+    {"label": "wall-mounted storage box", "terms": ["wall mounted storage box", "wall-mounted storage box", "wall organizer for phone remote"]},
+    {"label": "4-way hose splitter", "terms": ["4 way hose splitter", "4-way hose splitter", "four way hose splitter"]},
+    {"label": "3-way hose splitter", "terms": ["3 way hose splitter", "3-way hose splitter"]},
+    {"label": "2-way hose splitter", "terms": ["2 way hose splitter", "2-way hose splitter", "y hose splitter"]},
+    {"label": "hose splitter manifold", "terms": ["hose manifold", "water hose manifold", "outlet manifold"]},
+    {"label": "garden hose splitter", "terms": ["hose splitter", "spigot splitter", "faucet splitter", "hose bib splitter"]},
+    {"label": "hose connector/adapter", "terms": ["hose connector", "hose adapter", "hose quick connect"]},
+    {"label": "beeswax bread bag", "terms": ["beeswax bread bag", "beeswax linen", "beeswax sourdough"]},
+    {"label": "disposable bakery bread bag", "terms": ["clear window bakery bag", "bakery paper bag", "paper bread bag"]},
+    {"label": "linen/cotton bread bag", "terms": ["linen bread bag", "cotton bread bag", "sourdough bag"]},
+    {"label": "plastic bread bag", "terms": ["plastic bread bag", "poly bread bag", "clear bread bag"]},
+    {"label": "bread box", "terms": ["bread box", "breadboxes"]},
+    {"label": "banneton/proofing", "terms": ["banneton", "proofing basket"]},
+    {"label": "beeswax wrap", "terms": ["beeswax wrap", "food wrap"]}
+  ],
+  "modifiers": [
+    {"label": "electric", "terms": ["electric", "powered", "motorized", "rechargeable"]},
+    {"label": "manual", "terms": ["manual", "hand crank", "handheld"]},
+    {"label": "silicone", "terms": ["silicone"]},
+    {"label": "stainless steel", "terms": ["stainless steel"]},
+    {"label": "disposable", "terms": ["disposable", "single use"]},
+    {"label": "reusable", "terms": ["reusable", "washable"]},
+    {"label": "wall-mounted", "terms": ["wall mounted", "wall-mounted", "adhesive mount"]},
+    {"label": "combo", "terms": ["combo", "with holder", "with accessories", "kit", "set"]},
+    {"label": "foldable", "terms": ["foldable", "collapsible"]},
+    {"label": "portable", "terms": ["portable", "travel", "compact"]},
+    {"label": "extra-large", "terms": ["extra large", "oversized", "xl"]}
+  ],
+  "generic_product_terms": [
+    "brush", "holder", "organizer", "rack", "bag", "box", "container", "cover", "tray",
+    "dispenser", "splitter", "adapter", "connector", "grinder", "mill", "pump", "mat",
+    "basket", "bottle", "tool", "kit", "shelf", "hook", "clip", "stand", "case", "wrap"
+  ],
+  "stopwords": [
+    "the", "and", "for", "with", "from", "this", "that", "new", "premium", "upgraded",
+    "heavy", "duty", "best", "home", "kitchen", "outdoor", "indoor", "amazon", "pack",
+    "piece", "pieces", "count", "black", "white", "blue", "green", "red", "large", "small"
+  ]
+}

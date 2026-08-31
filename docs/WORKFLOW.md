@@ -1,6 +1,6 @@
 # AMZ 选品自动化工作流
 
-本文档是项目执行 Runbook，供本地执行智能体和人工维护者使用。所有需求、修复、规则调整都应先进入 Multica Issue，再按对应流程执行。
+本文档是项目执行 Runbook，供本地执行智能体和人工维护者使用。
 
 ## 角色分工
 
@@ -30,12 +30,20 @@ python3 refresh_selection_workflow.py
 执行链路：
 
 ```text
-Sorftime 类目扫描
+Sorftime 类目扫描（类目树缓存、逐类目断点）
 -> 候选产品导入
 -> product_selection.py 初筛评分
+-> auto_research_shortlist.py 自动补高优先候选 Top100
 -> category_shape_validation.py 类目/形态验证
 -> build_dashboard.py 重建网页工作台
 ```
+
+候选池和利润口径：
+
+- 全量合格候选按来源类目轮询抽样进入评分池：先让每个有候选的类目获得一个名额，再取各类目的第二、第三个产品。
+- 运行归档同时保存全量去重候选 `candidates_eligible.csv` 和进入评分的 `candidates_selected.csv`。
+- 默认成本估算只以较低权重参与排序；没有供应商真实报价时，不因估算毛利或估算单件利润直接淘汰。
+- 供应商报价、头程和包装数据齐全后，恢复完整利润权重和毛利/单件利润门槛。
 
 必须检查：
 
@@ -69,8 +77,9 @@ archive/weekly_scan_reports/YYYYMMDD_HHMMSS/
 
 汇报字段用于对账：
 
-- 扫描类目数：`reports/discovered_categories.csv` 行数。
-- 候选产品数：`reports/selection_ranked.csv` 行数。
+- 扫描类目数：当前 Run 的 `archive/discovery_runs/RUN_ID/run_manifest.json` 成功类目数。
+- 候选产品数：当前 Run 的 `archive/selection_runs/RUN_ID/selection_ranked.csv` 行数。
+- 候选类目覆盖：当前 Run 的 discovery manifest 中 `represented_categories`，用于发现候选池被少数类目占满的问题。
 - 新增候选入档数：`archive/opportunity_library.csv` 中 `archive_last_run_id` 等于最新初筛 run 且 `archive_seen_count=1` 的数量。
 - 通过验证进入机会池：`archive/shape_opportunity_library.csv` 中 `archive_status=active_in_latest_run` 的数量。
 - 本次形态机会：`data/category_shape_validation.csv` 中 `shape_recommendation=Shape opportunity` 的数量。
@@ -78,17 +87,7 @@ archive/weekly_scan_reports/YYYYMMDD_HHMMSS/
 - 最新初筛快照、最新类目/形态快照、`web/index.html` mtime、当前日志路径。
 - 初筛和形态淘汰主因 Top 5。
 
-本机定时脚本默认把汇报评论写回固定 Multica Issue：
-
-```text
-AMZ_WEEKLY_REPORT_ISSUE_ID=d19cd6d5-7283-4c88-ad60-55a56c42f603
-```
-
-需要改到单次运行 Issue 时，在执行前覆盖该环境变量；需要只写本地报告、不评论 Issue 时传：
-
-```bash
-python3 refresh_selection_workflow.py --no-issue-comment
-```
+周报默认写入本地 `reports/` 和 `archive/weekly_scan_reports/`。
 
 健康检查默认阈值：
 
@@ -104,7 +103,7 @@ AMZ_HEALTH_ZERO_POOL_WEEKS=3
 AMZ_HEALTH_STALE_DAYS=8
 ```
 
-失败路径会在同一份报告中写入 `failed_step` 和错误摘要，并在配置了 `AMZ_WEEKLY_REPORT_ISSUE_ID` 时评论到 Multica Issue。默认不会 mention 人类负责人，避免定时任务反复刷屏；只有连续两次周扫失败、Dashboard 超过 14 天未更新，或需要人工处理账号/额度问题时，才由执行者在对应 Issue 中手动通知负责人，并说明是否已经暂停自动重试。
+失败路径会在同一份报告中写入 `failed_step` 和错误摘要。失败报告只读取当前 Run，不混入上次成功扫描的数据。
 
 不调用 Sorftime 的本地验证命令：
 
@@ -139,7 +138,7 @@ docs/MIGRATION_BEHAVIOR_BASELINE.md
 每周类目扫描的本机 launchd 配置在：
 
 ```text
-automation/com.multica.amz-selection.weekly.plist
+automation/com.amz-selection.weekly.plist
 automation/run_weekly_category_scan.sh
 ```
 
@@ -155,7 +154,7 @@ logs/launchd.weekly_category_scan.err.log
 排查自动化时先看 latest 日志，再确认 launchd 是否加载：
 
 ```bash
-launchctl print gui/501/com.multica.amz-selection.weekly
+launchctl print gui/501/com.amz-selection.weekly
 ```
 
 定时脚本会把当前日志路径通过 `AMZ_WEEKLY_LOG_FILE` 传给 Python 入口，报告中应能看到同一个日志文件路径。
@@ -167,7 +166,7 @@ launchctl print gui/501/com.multica.amz-selection.weekly
 - `logs/weekly_category_scan.lock` 防止同一时间并发运行。
 - 当天已有完整 `archive/selection_runs/YYYYMMDD_*` 和 `archive/category_shape_runs/YYYYMMDD_*` 快照，且 `web/index.html` 存在时，脚本直接退出，不再调用 Sorftime，也不写入新快照。
 
-如果确实需要同一天重跑，先在对应 Multica Issue 说明原因，再用以下任一方式强制执行：
+如果确实需要同一天重跑，先在运行记录里写明原因，再用以下任一方式强制执行：
 
 ```bash
 automation/run_weekly_category_scan.sh --force
@@ -235,9 +234,11 @@ config/import_defaults.json                  成本、物流、FBA 等估算默�
 - Go：分数 `>=70`、毛利率 `>=35%`、单件毛利 `>=$8`、合规风险 `<=40`。
 - Watch：分数 `>=52`、毛利率 `>=30%`、单件毛利 `>=$8`、平均评论数 `<=600`、大件风险 `<=60`。
 - 硬停止：合规风险 `>=80`、大件风险 `>=65`、易碎风险 `>=80`、季节性风险 `>=80`。
-- 大件判定：硬大件词或重量 `>=5000` 时大件风险至少 85；软大件词或重量 `>=2000` 时至少 65；重量 `>=1000` 时至少 45；尺寸最大边 `>=45` 时至少 60。
+- 食品接触：食品/面包/果蔬收纳袋、食品罐、蜜蜡食品袋/包装等合规风险至少 90，不进入个人卖家自动研究名单。
+- 大件判定：硬大件词、容量 `>=50 quart`、“超大 + 箱/桶/收纳容器”组合词或重量 `>=5000` 时大件风险至少 85；软大件词或重量 `>=2000` 时至少 65；重量 `>=1000` 时至少 45；尺寸最大边 `>=45` 时至少 60。
+- 类目证据：类目为空、`Unknown` 或类似 `['', '']` 时初筛硬停止，且不启动 Top100 自动研究。
 - 类目/形态：类目评论中位数 `>=1000` 或 Top10 评论中位数 `>=1500` 视为评论墙；Top 品牌份额 `>=35%` 视为品牌集中。
-- 形态入池：形态样本 `>=2`、形态月销均值 `>=500`、形态评论中位数 `<=300` 或低评高销样本 `>=3`；种子形态 `shape_score >=65` 才是 `Shape opportunity`。
+- 形态入池：形态样本 `>=2`、形态月销均值 `>=150` 或形态总月销 `>=800`、形态评论中位数 `<=300` 或低评高销样本 `>=2`；同时检查 Top10 和形态 Top3 销量集中度。种子形态 `shape_score >=65` 才是 `Shape opportunity`。
 - 只有 `Shape opportunity` 写入 `archive/shape_opportunity_library.csv`；`Watch shape` 和 `Needs category Top100` 只作为人工复核/补数据项。
 
 调整时必须确认：
@@ -336,9 +337,9 @@ python3 build_dashboard.py
 - 单品研究档案和独立研究页入口。
 - 需要人工复核或供应商验证的下一步动作。
 
-## Issue 结束汇报
+## 任务结束汇报
 
-Issue 完成时，在 Multica Issue 评论中简洁说明：
+任务完成时简洁记录：
 
 - 做了什么。
 - 改了哪些规则或页面。
@@ -346,4 +347,4 @@ Issue 完成时，在 Multica Issue 评论中简洁说明：
 - 有没有失败或未完成部分。
 - 下一步建议。
 
-如果是重要修改，最终状态设为 `in_review`，交给项目审核流程。
+重要修改在提交前完成测试、结果对比和人工复核。

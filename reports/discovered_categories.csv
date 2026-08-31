@@ -1,101 +1,101 @@
-category_id,name,path,depth,is_leaf,selection_score
-21424007011,Garden Houses,Tools & Home Improvement > Storage & Home Organization > Outdoor Storage > Garden Houses,3,True,68
-155370011,Hour Tachometers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Hour Tachometers",5,True,60
-13299201,Access Doors,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Kitchen Appliances & Storage > Outdoor Kitchen Storage > Access Doors",4,True,59
-13299221,Cooling Bins,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Kitchen Appliances & Storage > Outdoor Kitchen Storage > Cooling Bins",4,True,59
-13299211,Outdoor Kitchen Drawers,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Kitchen Appliances & Storage > Outdoor Kitchen Storage > Outdoor Kitchen Drawers",4,True,59
-13299171,Outdoor Ice Machines,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Kitchen Appliances & Storage > Outdoor Kitchen Appliances > Outdoor Ice Machines",4,True,59
-13299141,Outdoor Ovens,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Kitchen Appliances & Storage > Outdoor Kitchen Appliances > Outdoor Ovens",4,True,59
-13299151,Outdoor Refrigerators,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Kitchen Appliances & Storage > Outdoor Kitchen Appliances > Outdoor Refrigerators",4,True,59
-490608011,Paper Clip Holders,"Home & Kitchen > Storage & Organization > Office Storage & Organization > Desk Supplies, Organizers & Dispensers > Paper Clip Holders",4,True,59
-490611011,Self-Stick Note Pad Holders,"Home & Kitchen > Storage & Organization > Office Storage & Organization > Desk Supplies, Organizers & Dispensers > Self-Stick Note Pad Holders",4,True,59
-13638750011,Carports,Tools & Home Improvement > Storage & Home Organization > Outdoor Storage > Carports,3,True,58
-671804011,Deck Boxes,Tools & Home Improvement > Storage & Home Organization > Outdoor Storage > Deck Boxes,3,True,58
-13400671,Storage Sheds,Tools & Home Improvement > Storage & Home Organization > Outdoor Storage > Storage Sheds,3,True,58
-10140455011,Craft Cabinets,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Craft Cabinets,3,True,58
-11601923011,Letter & File Organizers,Home & Kitchen > Storage & Organization > Office Storage & Organization > Letter & File Organizers,3,True,58
-11601926011,Wastebaskets,Home & Kitchen > Storage & Organization > Office Storage & Organization > Wastebaskets,3,True,58
-16353701,Outdoor Trash Cans,"Home & Kitchen > Storage & Organization > Trash, Recycling & Compost > Outdoor Trash Cans",3,True,58
-3564023011,Bearings,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Bearings & Bushings > Bearings",6,True,51
-3564024011,Bushings,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Bearings & Bushings > Bushings",6,True,51
-3564003011,Air Filters,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Filters > Air Filters",6,True,51
-3564004011,Oil Filters,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Filters > Oil Filters",6,True,51
-3564005011,Transmission Filters,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Filters > Transmission Filters",6,True,51
-9001164011,Barbecue Claws,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grilling & Barbecue Utensils > Barbecue Forks & Claws > Barbecue Claws",5,True,50
-13750201,Barbecue Forks,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grilling & Barbecue Utensils > Barbecue Forks & Claws > Barbecue Forks",5,True,50
-4603087011,Covers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Accessories > Covers",5,True,50
-13789571,Grass Catchers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Accessories > Grass Catchers",5,True,50
-13789581,Tune-Up Kits,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Accessories > Tune-Up Kits",5,True,50
-155352011,Batteries,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Batteries",5,True,50
-155358011,Belts,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Belts",5,True,50
-3564008011,Blades,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Blades",5,True,50
-155359011,Chain Guards,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Chain Guards",5,True,50
-155360011,Clutches,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Clutches",5,True,50
-155361011,Deck Parts,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Deck Parts",5,True,50
-155366011,Fuel Lines,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Fuel Lines",5,True,50
-155367011,Gas Caps,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Gas Caps",5,True,50
-155368011,Gas Tanks,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Gas Tanks",5,True,50
-155369011,Handle Parts,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Handle Parts",5,True,50
-155371011,Idlers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Idlers",5,True,50
-155374011,Key Switches,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Key Switches",5,True,50
-155375011,Mufflers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Mufflers",5,True,50
-23576903011,Pull Cords,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Pull Cords",5,True,50
-155376011,Pulleys,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Pulleys",5,True,50
-155377011,Recoil Springs,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Recoil Springs",5,True,50
-155378011,Solenoids,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Solenoids",5,True,50
-155379011,Spark Plugs,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Spark Plugs",5,True,50
-155380011,Starter Keys,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Starter Keys",5,True,50
-155381011,Throttle Controls,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Throttle Controls",5,True,50
-155382011,Tie Rod Ends,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Tie Rod Ends",5,True,50
-155383011,Tires,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Tires",5,True,50
-155384011,Wheel Rims,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Wheel Rims",5,True,50
-155385011,Wheels,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Lawn Mower Parts & Accessories > Lawn Mower Replacement Parts > Wheels",5,True,50
-5769027011,Disposable Cups,Sports & Outdoors > Fan Shop > Home & Kitchen > Kitchen & Dining > Disposable Cups & Plates > Disposable Cups,5,True,50
-5769028011,Disposable Plates,Sports & Outdoors > Fan Shop > Home & Kitchen > Kitchen & Dining > Disposable Cups & Plates > Disposable Plates,5,True,50
-5813573011,Beer Glasses,Sports & Outdoors > Fan Shop > Home & Kitchen > Kitchen & Dining > Cups & Glasses > Beer Glasses,5,True,50
-374883011,Shot Glasses,Sports & Outdoors > Fan Shop > Home & Kitchen > Kitchen & Dining > Cups & Glasses > Shot Glasses,5,True,50
-5813572011,Tumblers,Sports & Outdoors > Fan Shop > Home & Kitchen > Kitchen & Dining > Cups & Glasses > Tumblers,5,True,50
-21551232011,Cereal Containers,Home & Kitchen > Kitchen & Dining > Storage & Organization > Food Storage > Food Containers > Cereal Containers,5,True,50
-21551233011,Coffee Containers,Home & Kitchen > Kitchen & Dining > Storage & Organization > Food Storage > Food Containers > Coffee Containers,5,True,50
-3744021,Container Sets,Home & Kitchen > Kitchen & Dining > Storage & Organization > Food Storage > Food Containers > Container Sets,5,True,50
-21551234011,Containers,Home & Kitchen > Kitchen & Dining > Storage & Organization > Food Storage > Food Containers > Containers,5,True,50
-21551235011,Pasta Containers,Home & Kitchen > Kitchen & Dining > Storage & Organization > Food Storage > Food Containers > Pasta Containers,5,True,50
-21551231011,Rice Containers,Home & Kitchen > Kitchen & Dining > Storage & Organization > Food Storage > Food Containers > Rice Containers,5,True,50
-21613422011,Cups & Mugs,Home & Kitchen > Kitchen & Dining > Storage & Organization > Thermoses > Insulated Beverage Containers > Cups & Mugs,5,True,50
-21613421011,Insulators,Home & Kitchen > Kitchen & Dining > Storage & Organization > Thermoses > Insulated Beverage Containers > Insulators,5,True,50
-13880501,Thermoses,Home & Kitchen > Kitchen & Dining > Storage & Organization > Thermoses > Insulated Beverage Containers > Thermoses,5,True,50
-21613423011,Tumblers,Home & Kitchen > Kitchen & Dining > Storage & Organization > Thermoses > Insulated Beverage Containers > Tumblers,5,True,50
-23749482011,Pod Baskets,Home & Kitchen > Kitchen & Dining > Storage & Organization > Food Storage > Coffee Pod Holders > Pod Baskets,5,True,50
-23749484011,Pod Drawers,Home & Kitchen > Kitchen & Dining > Storage & Organization > Food Storage > Coffee Pod Holders > Pod Drawers,5,True,50
-23749483011,Pod Stands,Home & Kitchen > Kitchen & Dining > Storage & Organization > Food Storage > Coffee Pod Holders > Pod Stands,5,True,50
-2474048011,Freestanding Wine Racks & Cabinets,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Wine Racks & Cabinets > Freestanding Wine Racks & Cabinets,5,True,50
-2474049011,Tabletop Wine Racks,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Wine Racks & Cabinets > Tabletop Wine Racks,5,True,50
-2474050011,Wall-Mounted Wine Racks,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Wine Racks & Cabinets > Wall-Mounted Wine Racks,5,True,50
-695477011,Cabinet Accessories,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Cabinet Accessories,5,True,50
-16351491,Cabinet Door Organizers,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Cabinet Door Organizers,5,True,50
-3744101,Flatware Organizers,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Flatware Organizers,5,True,50
-13840871,"Knife Cases, Holders & Protectors","Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Knife Cases, Holders & Protectors",5,True,50
-3744181,Lazy Susans,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Lazy Susans,5,True,50
-13750001,Pot Lid Holders,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Pot Lid Holders,5,True,50
-16351521,Pull-Out Organizers,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Pull-Out Organizers,5,True,50
-3744211,Shelf Liners,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Shelf Liners,5,True,50
-16351541,Tip-Out Trays,Home & Kitchen > Kitchen & Dining > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Tip-Out Trays,5,True,50
-21613422011,Cups & Mugs,Home & Kitchen > Storage & Organization > Storage & Organization > Thermoses > Insulated Beverage Containers > Cups & Mugs,5,True,50
-21613421011,Insulators,Home & Kitchen > Storage & Organization > Storage & Organization > Thermoses > Insulated Beverage Containers > Insulators,5,True,50
-13880501,Thermoses,Home & Kitchen > Storage & Organization > Storage & Organization > Thermoses > Insulated Beverage Containers > Thermoses,5,True,50
-21613423011,Tumblers,Home & Kitchen > Storage & Organization > Storage & Organization > Thermoses > Insulated Beverage Containers > Tumblers,5,True,50
-21551232011,Cereal Containers,Home & Kitchen > Storage & Organization > Storage & Organization > Food Storage > Food Containers > Cereal Containers,5,True,50
-21551233011,Coffee Containers,Home & Kitchen > Storage & Organization > Storage & Organization > Food Storage > Food Containers > Coffee Containers,5,True,50
-3744021,Container Sets,Home & Kitchen > Storage & Organization > Storage & Organization > Food Storage > Food Containers > Container Sets,5,True,50
-21551234011,Containers,Home & Kitchen > Storage & Organization > Storage & Organization > Food Storage > Food Containers > Containers,5,True,50
-21551235011,Pasta Containers,Home & Kitchen > Storage & Organization > Storage & Organization > Food Storage > Food Containers > Pasta Containers,5,True,50
-21551231011,Rice Containers,Home & Kitchen > Storage & Organization > Storage & Organization > Food Storage > Food Containers > Rice Containers,5,True,50
-23749482011,Pod Baskets,Home & Kitchen > Storage & Organization > Storage & Organization > Food Storage > Coffee Pod Holders > Pod Baskets,5,True,50
-23749484011,Pod Drawers,Home & Kitchen > Storage & Organization > Storage & Organization > Food Storage > Coffee Pod Holders > Pod Drawers,5,True,50
-23749483011,Pod Stands,Home & Kitchen > Storage & Organization > Storage & Organization > Food Storage > Coffee Pod Holders > Pod Stands,5,True,50
-2474048011,Freestanding Wine Racks & Cabinets,Home & Kitchen > Storage & Organization > Storage & Organization > Racks & Holders > Wine Racks & Cabinets > Freestanding Wine Racks & Cabinets,5,True,50
-2474049011,Tabletop Wine Racks,Home & Kitchen > Storage & Organization > Storage & Organization > Racks & Holders > Wine Racks & Cabinets > Tabletop Wine Racks,5,True,50
-2474050011,Wall-Mounted Wine Racks,Home & Kitchen > Storage & Organization > Storage & Organization > Racks & Holders > Wine Racks & Cabinets > Wall-Mounted Wine Racks,5,True,50
-695477011,Cabinet Accessories,Home & Kitchen > Storage & Organization > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Cabinet Accessories,5,True,50
-16351491,Cabinet Door Organizers,Home & Kitchen > Storage & Organization > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Cabinet Door Organizers,5,True,50
-3744101,Flatware Organizers,Home & Kitchen > Storage & Organization > Storage & Organization > Racks & Holders > Cabinet & Drawer Organization > Flatware Organizers,5,True,50
+category_id,name,path,depth,is_leaf,selection_score,rotation_bucket,previous_last_scanned_at,previous_scan_count,products_examined,candidate_count,scan_completed_at,scan_status,scan_error
+13750031,Vertical Plate Holders,Home & Kitchen > Kitchen & Dining > Storage & Organization > Vertical Plate Holders,3,True,48,never_scanned,,0,100,13,2026-08-24T08:30:48,success,
+2422434011,Lidded Storage Bins,"Home & Kitchen > Storage & Organization > Baskets, Bins & Containers > Lidded Storage Bins",3,True,48,never_scanned,,0,100,39,2026-08-24T08:30:51,success,
+3744601,Magazine & Newspaper Baskets,"Home & Kitchen > Storage & Organization > Baskets, Bins & Containers > Magazine & Newspaper Baskets",3,True,48,never_scanned,,0,100,2,2026-08-24T08:30:53,success,
+2422435011,Open Storage Bins,"Home & Kitchen > Storage & Organization > Baskets, Bins & Containers > Open Storage Bins",3,True,48,never_scanned,,0,100,37,2026-08-24T08:30:55,success,
+3744621,Shelf Baskets,"Home & Kitchen > Storage & Organization > Baskets, Bins & Containers > Shelf Baskets",3,True,48,never_scanned,,0,100,52,2026-08-24T08:30:58,success,
+24086069011,Storage Boxes,"Home & Kitchen > Storage & Organization > Baskets, Bins & Containers > Storage Boxes",3,True,48,never_scanned,,0,100,44,2026-08-24T08:30:59,success,
+335116011,Bathroom Shelves,Home & Kitchen > Storage & Organization > Bathroom Storage & Organization > Bathroom Shelves,3,True,48,never_scanned,,0,100,13,2026-08-24T08:31:02,success,
+13749741,Bathroom Trays,Home & Kitchen > Storage & Organization > Bathroom Storage & Organization > Bathroom Trays,3,True,48,never_scanned,,0,100,35,2026-08-24T08:31:05,success,
+13749751,Canisters,Home & Kitchen > Storage & Organization > Bathroom Storage & Organization > Canisters,3,True,48,never_scanned,,0,100,15,2026-08-24T08:31:08,success,
+16187581011,Over-the-Toilet Storage,Home & Kitchen > Storage & Organization > Bathroom Storage & Organization > Over-the-Toilet Storage,3,True,48,never_scanned,,0,100,47,2026-08-24T08:31:10,success,
+85969011,Shower Caddies,Home & Kitchen > Storage & Organization > Bathroom Storage & Organization > Shower Caddies,3,True,48,never_scanned,,0,100,19,2026-08-24T08:31:14,success,
+695476011,Toilet Paper Storage Containers,Home & Kitchen > Storage & Organization > Bathroom Storage & Organization > Toilet Paper Storage Containers,3,True,48,never_scanned,,0,100,36,2026-08-24T08:31:19,success,
+16350721,Towel Racks,Home & Kitchen > Storage & Organization > Bathroom Storage & Organization > Towel Racks,3,True,48,never_scanned,,0,100,50,2026-08-24T08:31:21,success,
+3744461,Drawer Organizers,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Drawer Organizers,3,True,48,never_scanned,,0,100,31,2026-08-24T08:31:24,success,
+207834665011,Eyewear Organizers,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Eyewear Organizers,3,True,48,never_scanned,,0,10,0,2026-08-24T08:31:25,success,
+16353501,Garment Covers,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Garment Covers,3,True,48,never_scanned,,0,100,49,2026-08-24T08:31:27,success,
+16353491,Garment Racks,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Garment Racks,3,True,48,never_scanned,,0,100,59,2026-08-24T09:03:34,success,
+3744491,Hanging Shelves,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Hanging Shelves,3,True,48,never_scanned,,0,100,48,2026-08-24T09:03:37,success,
+11601910011,Hat Racks,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Hat Racks,3,True,48,never_scanned,,0,100,37,2026-08-24T09:03:40,success,
+3743891,Luggage Racks,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Luggage Racks,3,True,48,never_scanned,,0,100,24,2026-08-24T09:03:43,success,
+215542947011,Mattress Bags,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Mattress Bags,3,True,48,never_scanned,,0,12,1,2026-08-24T09:03:44,success,
+16353461,Moth Protection,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Moth Protection,3,True,48,never_scanned,,0,100,40,2026-08-24T09:03:47,success,
+165119011,Mounted Closet Systems,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Mounted Closet Systems,3,True,48,never_scanned,,0,100,32,2026-08-24T09:03:51,success,
+118688596011,Moving Bags,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Moving Bags,3,True,48,never_scanned,,0,100,36,2026-08-24T09:03:54,success,
+21159822011,Portable Closets,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Portable Closets,3,True,48,never_scanned,,0,100,31,2026-08-24T09:19:43,success,
+3744541,Space Saver Bags,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Space Saver Bags,3,True,48,never_scanned,,0,100,4,2026-08-24T09:19:45,success,
+3743931,Under-Bed Storage,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Under-Bed Storage,3,True,48,never_scanned,,0,100,51,2026-08-24T09:19:47,success,
+16353451,Valet & Suit Stands,Home & Kitchen > Storage & Organization > Clothing & Closet Storage > Valet & Suit Stands,3,True,48,never_scanned,,0,100,1,2026-08-24T09:19:49,success,
+16175640011,Decorative Wreath Storage,Home & Kitchen > Storage & Organization > Holiday Décor Storage > Decorative Wreath Storage,3,True,48,never_scanned,,0,100,9,2026-08-24T09:19:51,success,
+16175642011,Gift Wrap Storage,Home & Kitchen > Storage & Organization > Holiday Décor Storage > Gift Wrap Storage,3,True,48,never_scanned,,0,100,14,2026-08-24T09:19:53,success,
+16175646011,Holiday Light Storage,Home & Kitchen > Storage & Organization > Holiday Décor Storage > Holiday Light Storage,3,True,48,never_scanned,,0,100,1,2026-08-24T09:19:54,success,
+16175644011,Ornament Storage,Home & Kitchen > Storage & Organization > Holiday Décor Storage > Ornament Storage,3,True,48,never_scanned,,0,100,11,2026-08-24T09:19:56,success,
+16175648011,Tree Storage,Home & Kitchen > Storage & Organization > Holiday Décor Storage > Tree Storage,3,True,48,never_scanned,,0,100,8,2026-08-24T09:19:58,success,
+3744281,Coat Hooks,Home & Kitchen > Storage & Organization > Home Storage Hooks > Coat Hooks,3,True,48,never_scanned,,0,100,26,2026-08-24T09:20:00,success,
+3744301,Key Hooks,Home & Kitchen > Storage & Organization > Home Storage Hooks > Key Hooks,3,True,48,never_scanned,,0,100,20,2026-08-24T09:20:02,success,
+3744271,Robe & Towel Hooks,Home & Kitchen > Storage & Organization > Home Storage Hooks > Robe & Towel Hooks,3,True,48,never_scanned,,0,100,13,2026-08-24T09:20:04,success,
+511356,Utility Hooks,Home & Kitchen > Storage & Organization > Home Storage Hooks > Utility Hooks,3,True,48,never_scanned,,0,100,1,2026-08-24T09:20:06,success,
+19431297011,Children‘s Jewelry Boxes,Home & Kitchen > Storage & Organization > Jewelry Boxes & Organizers > Children‘s Jewelry Boxes,3,True,48,never_scanned,,0,100,0,2026-08-24T09:20:08,success,
+16350281,Jewelry Armoires,Home & Kitchen > Storage & Organization > Jewelry Boxes & Organizers > Jewelry Armoires,3,True,48,never_scanned,,0,100,0,2026-08-24T09:20:09,success,
+16350291,Jewelry Boxes,Home & Kitchen > Storage & Organization > Jewelry Boxes & Organizers > Jewelry Boxes,3,True,48,never_scanned,,0,100,0,2026-08-24T09:20:11,success,
+16350321,Jewelry Chests,Home & Kitchen > Storage & Organization > Jewelry Boxes & Organizers > Jewelry Chests,3,True,48,never_scanned,,0,100,0,2026-08-24T09:52:17,success,
+3888531,Jewelry Rolls,Home & Kitchen > Storage & Organization > Jewelry Boxes & Organizers > Jewelry Rolls,3,True,48,never_scanned,,0,100,0,2026-08-24T09:52:18,success,
+16350341,Jewelry Towers,Home & Kitchen > Storage & Organization > Jewelry Boxes & Organizers > Jewelry Towers,3,True,48,never_scanned,,0,100,0,2026-08-24T09:52:20,success,
+16350351,Jewelry Trays,Home & Kitchen > Storage & Organization > Jewelry Boxes & Organizers > Jewelry Trays,3,True,48,never_scanned,,0,100,1,2026-08-24T09:52:22,success,
+11601919011,Clothes Pins,Home & Kitchen > Storage & Organization > Laundry Storage & Organization > Clothes Pins,3,True,48,never_scanned,,0,100,5,2026-08-24T09:52:25,success,
+695487011,Clotheslines,Home & Kitchen > Storage & Organization > Laundry Storage & Organization > Clotheslines,3,True,48,never_scanned,,0,100,42,2026-08-24T09:52:26,success,
+3744371,Laundry Bags,Home & Kitchen > Storage & Organization > Laundry Storage & Organization > Laundry Bags,3,True,48,never_scanned,,0,100,22,2026-08-24T09:52:29,success,
+3744381,Laundry Baskets,Home & Kitchen > Storage & Organization > Laundry Storage & Organization > Laundry Baskets,3,True,48,never_scanned,,0,100,10,2026-08-24T09:52:31,success,
+695489011,Laundry Hampers,Home & Kitchen > Storage & Organization > Laundry Storage & Organization > Laundry Hampers,3,True,48,never_scanned,,0,100,7,2026-08-24T09:52:33,success,
+695490011,Laundry Liners,Home & Kitchen > Storage & Organization > Laundry Storage & Organization > Laundry Liners,3,True,48,never_scanned,,0,100,4,2026-08-24T09:52:34,success,
+3744401,Laundry Sorters,Home & Kitchen > Storage & Organization > Laundry Storage & Organization > Laundry Sorters,3,True,48,never_scanned,,0,100,22,2026-08-24T09:52:36,success,
+3744361,Pop-Up Laundry Hampers,Home & Kitchen > Storage & Organization > Laundry Storage & Organization > Pop-Up Laundry Hampers,3,True,48,never_scanned,,0,100,7,2026-08-24T10:10:24,success,
+3744001,Standing Shelf Units,"Home & Kitchen > Storage & Organization > Racks, Shelves & Drawers > Standing Shelf Units",3,True,48,never_scanned,,0,100,17,2026-08-24T10:10:26,success,
+3744431,Storage Drawer Units,"Home & Kitchen > Storage & Organization > Racks, Shelves & Drawers > Storage Drawer Units",3,True,48,never_scanned,,0,100,42,2026-08-24T10:10:28,success,
+3753631,Composting Bins,"Home & Kitchen > Storage & Organization > Trash, Recycling & Compost > Composting Bins",3,True,48,never_scanned,,0,100,7,2026-08-24T10:10:30,success,
+3744051,In-Home Composting Bins,"Home & Kitchen > Storage & Organization > Trash, Recycling & Compost > In-Home Composting Bins",3,True,48,never_scanned,,0,100,6,2026-08-24T10:10:32,success,
+695485011,In-Home Recycling Bins,"Home & Kitchen > Storage & Organization > Trash, Recycling & Compost > In-Home Recycling Bins",3,True,48,never_scanned,,0,100,12,2026-08-24T10:10:34,success,
+3744241,Kitchen Trash Cans,"Home & Kitchen > Storage & Organization > Trash, Recycling & Compost > Kitchen Trash Cans",3,True,48,never_scanned,,0,100,15,2026-08-24T10:10:36,success,
+11601925011,Recycling Bins,"Home & Kitchen > Storage & Organization > Trash, Recycling & Compost > Recycling Bins",3,True,48,never_scanned,,0,100,0,2026-08-24T10:10:37,success,
+16186594011,Trash Can Lids,"Home & Kitchen > Storage & Organization > Trash, Recycling & Compost > Trash Can Lids",3,True,48,never_scanned,,0,100,13,2026-08-24T10:10:39,success,
+3742101,Drip Pans,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Drip Pans",3,True,48,never_scanned,,0,100,42,2026-08-24T10:10:41,success,
+13363621,Flavorizer Bars,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Flavorizer Bars",3,True,48,never_scanned,,0,100,16,2026-08-24T10:10:43,success,
+17426922011,Grate Lifters,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grate Lifters",3,True,48,never_scanned,,0,100,3,2026-08-24T10:10:44,success,
+9001147011,Grids & Grates,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grids & Grates",3,True,48,never_scanned,,0,100,39,2026-08-24T10:42:48,success,
+12759041,Grill Carts,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grill Carts",3,True,48,never_scanned,,0,100,3,2026-08-24T10:42:50,success,
+12759051,Grill Covers,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grill Covers",3,True,48,never_scanned,,0,100,27,2026-08-24T10:42:52,success,
+13299271,Grill Lighting,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grill Lighting",3,True,48,never_scanned,,0,100,1,2026-08-24T10:42:53,success,
+13638736011,Grill Pads & Floor Mats,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grill Pads & Floor Mats",3,True,48,never_scanned,,0,100,55,2026-08-24T10:42:59,success,
+16135369011,Grill Stands & Shelves,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grill Stands & Shelves",3,True,48,never_scanned,,0,100,5,2026-08-24T10:43:01,success,
+3563990011,Grill Thermometers,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grill Thermometers",3,True,48,never_scanned,,0,100,27,2026-08-24T10:43:03,success,
+13299261,Grilling Planks,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Grilling Planks",3,True,48,never_scanned,,0,100,8,2026-08-24T10:43:05,success,
+2474790011,Outdoor Fryer Accessories,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Outdoor Fryer Accessories",3,True,48,never_scanned,,0,100,6,2026-08-24T10:43:07,success,
+341996011,Protective Mitts & Potholders,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Protective Mitts & Potholders",3,True,48,never_scanned,,0,100,11,2026-08-24T10:43:09,success,
+3753701,Riding Lawn Mowers & Tractors,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Lawn Mowers & Tractors > Riding Lawn Mowers & Tractors",3,True,48,never_scanned,,0,100,0,2026-08-24T10:43:11,success,
+13638738011,Robotic Lawn Mowers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Lawn Mowers & Tractors > Robotic Lawn Mowers",3,True,48,never_scanned,,0,100,0,2026-08-24T10:43:12,success,
+3754911,Tow-Behind Lawn Mowers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Lawn Mowers & Tractors > Tow-Behind Lawn Mowers",3,True,48,never_scanned,,0,100,0,2026-08-24T11:11:25,success,
+4543152011,Walk-Behind Lawn Mowers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Lawn Mowers & Tractors > Walk-Behind Lawn Mowers",3,True,48,never_scanned,,0,100,11,2026-08-24T11:11:32,success,
+21580220011,Pruning Shears,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Pruning Shears, Parts & Accessories > Pruning Shears",3,True,48,never_scanned,,0,100,5,2026-08-24T11:11:37,success,
+21580219011,Pruning Shears Parts & Accessories,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Pruning Shears, Parts & Accessories > Pruning Shears Parts & Accessories",3,True,48,never_scanned,,0,100,1,2026-08-24T11:11:41,success,
+3564001011,Four-Stroke Engine Oil,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Four-Stroke Engine Oil",3,True,48,never_scanned,,0,100,2,2026-08-24T11:43:51,success,
+15707861,Gasoline Cans,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Gasoline Cans",3,True,48,never_scanned,,0,100,0,2026-08-24T11:43:57,success,
+9425910011,Metal Detector Parts & Accessories,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Metal Detector Parts & Accessories",3,True,48,never_scanned,,0,100,9,2026-08-24T11:44:02,success,
+9425912011,Pole Saw Parts & Accessories,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Pole Saw Parts & Accessories",3,True,48,never_scanned,,0,100,0,2026-08-24T11:44:04,success,
+9001150011,Replacement Engines,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Replacement Engines",3,True,48,never_scanned,,0,100,3,2026-08-24T11:44:05,success,
+3564002011,Two-Stroke Engine Oil,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Two-Stroke Engine Oil",3,True,48,never_scanned,,0,100,2,2026-08-24T11:44:07,success,
+553938,Hedge Trimmers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Trimmers & Accessories > Hedge Trimmers",3,True,48,never_scanned,,0,100,19,2026-08-24T11:44:09,success,
+6871439011,Bathroom Storage & Mirrors,Tools & Home Improvement > Kitchen & Bath Fixtures > Bathroom Fixtures > Bathroom Storage & Mirrors,3,True,48,never_scanned,,0,100,0,2026-08-24T12:12:25,success,
+165113011,Bike Racks & Stands,Tools & Home Improvement > Storage & Home Organization > Garage Storage > Bike Racks & Stands,3,True,48,never_scanned,,0,100,25,2026-08-24T12:12:34,success,
+2423298011,Ceiling Mounted Storage Racks,Tools & Home Improvement > Storage & Home Organization > Garage Storage > Ceiling Mounted Storage Racks,3,True,48,never_scanned,,0,100,1,2026-08-24T12:12:40,success,
+167334011,Mounted Storage Systems,Tools & Home Improvement > Storage & Home Organization > Garage Storage > Mounted Storage Systems,3,True,48,never_scanned,,0,100,5,2026-08-24T12:12:42,success,
+303685011,Rack Accessories,Tools & Home Improvement > Storage & Home Organization > Garage Storage > Rack Accessories,3,True,48,never_scanned,,0,100,7,2026-08-24T12:30:53,success,
+165116011,Ski Storage Racks,Tools & Home Improvement > Storage & Home Organization > Garage Storage > Ski Storage Racks,3,True,48,never_scanned,,0,100,2,2026-08-24T12:30:58,success,
+165115011,Storage Racks,Tools & Home Improvement > Storage & Home Organization > Garage Storage > Storage Racks,3,True,48,never_scanned,,0,100,34,2026-08-24T12:31:02,success,
+13400741,Utility Shelves,Tools & Home Improvement > Storage & Home Organization > Garage Storage > Utility Shelves,3,True,48,never_scanned,,0,100,9,2026-08-24T12:31:05,success,
+15782421,Bucket Organizers,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Bucket Organizers,3,True,48,never_scanned,,0,100,11,2026-08-24T12:31:08,success,
+322566011,Tool Aprons,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Aprons,3,True,48,never_scanned,,0,100,18,2026-08-24T12:47:51,success,
+553578,Tool Bags,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Bags,3,True,48,never_scanned,,0,100,20,2026-08-24T12:47:54,success,
+553580,Tool Belts,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Belts,3,True,48,never_scanned,,0,100,36,2026-08-24T12:47:58,success,
+13400721,Tool Boxes,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Boxes,3,True,48,never_scanned,,0,100,33,2026-08-24T12:48:02,success,
+10140456011,Tool Chests & Cabinets,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Chests & Cabinets,3,True,48,never_scanned,,0,100,11,2026-08-24T12:48:06,success,

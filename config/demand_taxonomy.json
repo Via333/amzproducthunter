@@ -1,0 +1,31 @@
+{
+  "themes": [
+    {"label": "durability", "terms": ["break", "broken", "tear", "rip", "crack", "durable", "sturdy", "flimsy"]},
+    {"label": "size_fit", "terms": ["size", "fit", "small", "large", "short", "long", "wide", "narrow"]},
+    {"label": "ease_of_use", "terms": ["easy", "difficult", "hard to", "convenient", "messy", "simple"]},
+    {"label": "performance", "terms": ["work", "works", "effective", "useless", "leak", "fresh", "mold", "power"]},
+    {"label": "material_quality", "terms": ["material", "plastic", "metal", "silicone", "fabric", "quality", "smell", "odor"]},
+    {"label": "cleaning_maintenance", "terms": ["clean", "wash", "stain", "maintenance", "dishwasher"]},
+    {"label": "value_quantity", "terms": ["price", "expensive", "value", "pack", "quantity", "worth"]},
+    {"label": "instructions_setup", "terms": ["instruction", "manual", "assemble", "install", "setup"]},
+    {"label": "packaging_delivery", "terms": ["shipping", "delivery", "package", "packaging", "arrived", "box damaged"]}
+  ],
+  "basic_terms": ["broken", "break", "leak", "unsafe", "does not work", "poor quality", "missing", "wrong size"],
+  "expected_terms": ["easy", "quality", "durable", "fit", "value", "clean", "convenient", "effective"],
+  "delight_terms": ["love", "perfect", "excellent", "amazing", "exceeded", "pleasant surprise", "game changer"],
+  "reverse_terms": ["too complicated", "too difficult", "messy", "bulky", "overkill", "hard to store"],
+  "fulfillment_terms": ["shipping", "delivery", "arrived", "package", "seller", "refund"],
+  "profiles": [
+    {"label": "family", "terms": ["family", "kids", "children", "mom", "dad"]},
+    {"label": "older_adult", "terms": ["elderly", "senior", "arthritis", "older"]},
+    {"label": "professional", "terms": ["professional", "business", "work", "commercial"]},
+    {"label": "beginner", "terms": ["beginner", "first time", "new to"]}
+  ],
+  "scenes": [
+    {"label": "daily_home", "terms": ["daily", "every day", "home", "kitchen", "bathroom"]},
+    {"label": "travel", "terms": ["travel", "trip", "camping", "rv"]},
+    {"label": "gift", "terms": ["gift", "present", "christmas", "birthday"]},
+    {"label": "storage", "terms": ["store", "storage", "organize", "space"]},
+    {"label": "outdoor", "terms": ["garden", "yard", "outdoor", "patio"]}
+  ]
+}

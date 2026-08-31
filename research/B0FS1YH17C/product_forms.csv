@@ -1,7 +1,11 @@
-product_form,count,direct_count,keyword_count,avg_price,median_price,avg_monthly_sales,median_reviews,avg_rating,low_review_high_sales_count,top_materials,top_pack_counts,top_styles,opportunity_note
-beeswax bread bag,23,12,11,21.26,21.99,778.0,100.0,4.5,5,beeswax:22; cotton:1,2:19; 1:2; 3:1,farmhouse/natural:14; patterned:2; giftable:1,评论门槛低；2-pack 已是主流，需靠材质/清洗/尺寸差异化
-disposable bakery bread bag,5,0,5,15.31,12.99,3800.0,278.0,4.7,3,paper:5,100:2; 1:1; 120:1,clear/minimal:4,评论门槛低；100-pack 已是主流，需靠材质/清洗/尺寸差异化
-banneton/proofing,3,0,3,22.15,19.99,2683.0,323.0,4.5,0,linen:1; paper:1,1:2; 38:1,farmhouse/natural:1; giftable:1,供给少但需求可见；多件套可能仍有切入空间
-beeswax wrap,3,0,3,17.59,14.99,933.0,2289.0,4.6,0,beeswax:3,1:2; 9:1,farmhouse/natural:2,供给少但需求可见；多件套可能仍有切入空间
-linen/cotton bread bag,5,0,5,19.39,12.99,760.0,1967.0,4.5,1,plastic:3; beeswax:1; linen:1,2:2; 1:2; 100:1,clear/minimal:2; farmhouse/natural:1,2-pack 已是主流，需靠材质/清洗/尺寸差异化
-bread storage adjacent,1,0,1,20.99,20.99,50.0,17.0,4.8,0,plastic:1,2:1,,需要供应商和评论验证
+product_form,count,direct_count,keyword_count,avg_price,median_price,avg_monthly_sales,median_monthly_sales,total_monthly_sales,sales_share,top3_sales_share,median_reviews,avg_rating,low_review_high_sales_count,top_materials,top_pack_counts,top_styles,price_p25,price_p75,new_listing_share_12m,opportunity_note
+beeswax bread bag,21,11,10,22.29,22.04,836.0,500.0,17550.0,0.3401,0.5698,100.0,4.5,5,beeswax:10; fabric/waxed-looking:9; cotton:1,2:18; 1:2; 3:1,farmhouse/natural:6; patterned:3; natural/minimal:2,18.15,24.92,0,评论门槛低；2-pack 已是主流，需靠材质/清洗/尺寸差异化
+beeswax bread bag + bowl cover,2,1,1,24.44,24.44,350.0,350.0,700.0,0.0136,1.0,142.0,4.5,0,fabric/waxed-looking:2,2:1; 1:1,floral/giftable:1; sourdough gift set:1,21.66,27.21,0,需要供应商和评论验证
+banneton/proofing kit,2,0,2,23.99,23.99,4000.0,4000.0,8000.0,0.155,1.0,810.0,4.6,0,cane basket/cloth:2,1:2,gift/kit:2,21.99,25.99,0,供给少但需求可见
+disposable bakery bread bag,5,0,5,15.31,12.99,3800.0,2000.0,19000.0,0.3682,0.8947,278.0,4.7,3,paper with clear window:3; paper:1; kraft paper:1,100:2; 1:1; 120:1,clear window:3; clear/minimal:1; kraft/minimal:1,11.69,21.99,0,评论门槛低
+beeswax wrap,3,0,3,17.59,14.99,933.0,1000.0,2800.0,0.0543,1.0,2289.0,4.6,0,wrap sheet:2; beeswax:1,1:2; 9:1,honeycomb/natural:2,14.88,19.0,0,供给少但需求可见；多件套可能仍有切入空间
+plastic bread bag,1,0,1,12.99,12.99,800.0,800.0,800.0,0.0155,1.0,4853.0,4.7,0,plastic:1,100:1,clear/minimal:1,12.99,12.99,0,供给少但需求可见
+reusable food storage bag,3,0,3,19.32,20.99,683.0,1000.0,2050.0,0.0397,1.0,1967.0,4.6,0,plastic:3,2:2; 1:1,clear/minimal:1,16.98,22.49,0,供给少但需求可见；2-pack 已是主流，需靠材质/清洗/尺寸差异化
+linen/cotton bread bag,1,0,1,9.99,9.99,600.0,600.0,600.0,0.0116,1.0,181.0,4.5,1,linen:1,1:1,farmhouse/natural:1,9.99,9.99,0,供给少但需求可见；评论门槛低
+beeswax wrap set,1,0,1,9.99,9.99,50.0,50.0,50.0,0.001,1.0,41.0,4.4,0,wrap sheets:1,9:1,patterned:1,9.99,9.99,0,需要供应商和评论验证
+banneton/proofing,1,0,1,18.48,18.48,50.0,50.0,50.0,0.001,1.0,65.0,4.4,0,,38:1,,18.48,18.48,0,需要供应商和评论验证

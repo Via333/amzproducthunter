@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import shutil
 import subprocess
 from datetime import datetime
@@ -39,6 +40,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--asin", required=True, help="ASIN to research.")
     parser.add_argument("--domain", default=None, help="Sorftime domain id. Defaults to opportunity research config.")
     parser.add_argument("--register-existing", action="store_true", help="Do not call Sorftime; archive existing research/{ASIN}.")
+    parser.add_argument("--no-dashboard", action="store_true", help="Skip dashboard rebuild for batch research runs.")
     return parser.parse_args()
 
 
@@ -125,7 +127,7 @@ def update_index(asin: str, run_id: str) -> dict[str, str]:
 def main() -> None:
     args = parse_args()
     asin = args.asin.strip().upper()
-    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_id = os.environ.get("AMZ_WEEKLY_RUN_ID") or datetime.now().strftime("%Y%m%d_%H%M%S")
 
     if not args.register_existing:
         command = ["python3", "product_opportunity_research.py", "--asin", asin]
@@ -134,8 +136,9 @@ def main() -> None:
         run(command)
 
     updated = update_index(asin, run_id)
-    run(["python3", "build_product_research_pages.py"])
-    run(["python3", "build_dashboard.py"])
+    if not args.no_dashboard:
+        run(["python3", "build_product_research_pages.py"])
+        run(["python3", "build_dashboard.py"])
 
     print(f"Archived product research: {asin}")
     print(f"Research page: {updated['web_page']}")

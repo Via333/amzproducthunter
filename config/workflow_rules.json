@@ -1,0 +1,18 @@
+{
+  "auto_top100_research": {
+    "enabled": true,
+    "max_candidates": 4,
+    "minimum_score": 52,
+    "recommendations": [
+      "Go to supplier validation",
+      "Watch or collect more data"
+    ],
+    "freshness_days": 30,
+    "minimum_cached_products": 50,
+    "max_compliance_risk": 79,
+    "max_fragile_risk": 79,
+    "max_oversize_risk": 64,
+    "require_valid_category": true,
+    "continue_on_error": true
+  }
+}
