@@ -68,32 +68,38 @@ cleanup() {
 trap cleanup EXIT
 
 csv_count() {
-  local path="$1"
-  if [[ ! -f "$path" ]]; then
+  local file_path="$1"
+  if [[ ! -f "$file_path" ]]; then
     printf '0'
     return
   fi
-  python3 -c 'import csv, sys; f = open(sys.argv[1], "r", encoding="utf-8-sig", newline=""); print(sum(1 for _ in csv.DictReader(f))); f.close()' "$path"
+  python3 -c 'import csv, sys; f = open(sys.argv[1], "r", encoding="utf-8-sig", newline=""); print(sum(1 for _ in csv.DictReader(f))); f.close()' "$file_path"
 }
 
 csv_count_matching() {
-  local path="$1"
+  local file_path="$1"
   local key="$2"
   local value="$3"
-  if [[ ! -f "$path" ]]; then
+  if [[ ! -f "$file_path" ]]; then
     printf '0'
     return
   fi
-  python3 -c 'import csv, sys; path, key, value = sys.argv[1:4]; f = open(path, "r", encoding="utf-8-sig", newline=""); print(sum(1 for row in csv.DictReader(f) if row.get(key) == value)); f.close()' "$path" "$key" "$value"
+  python3 -c 'import csv, sys; file_path, key, value = sys.argv[1:4]; f = open(file_path, "r", encoding="utf-8-sig", newline=""); print(sum(1 for row in csv.DictReader(f) if row.get(key) == value)); f.close()' "$file_path" "$key" "$value"
 }
 
 top_reject_reasons() {
-  local path="$1"
-  if [[ ! -f "$path" ]]; then
+  local file_path="$1"
+  if [[ ! -f "$file_path" ]]; then
     printf 'none'
     return
   fi
-  python3 -c 'import csv, sys; from collections import Counter; c = Counter(); f = open(sys.argv[1], "r", encoding="utf-8-sig", newline=""); rows = csv.DictReader(f); [c.update([part.strip() for part in (row.get("key_flags") or "").split(";") if part.strip()]) for row in rows if row.get("recommendation") == "Reject"]; f.close(); print(", ".join(f"{k}:{v}" for k, v in c.most_common(5)) or "none")' "$path"
+  python3 -c 'import csv, sys; from collections import Counter; c = Counter(); f = open(sys.argv[1], "r", encoding="utf-8-sig", newline=""); rows = csv.DictReader(f); [c.update([part.strip() for part in (row.get("key_flags") or "").split(";") if part.strip()]) for row in rows if row.get("recommendation") == "Reject"]; f.close(); print(", ".join(f"{k}:{v}" for k, v in c.most_common(5)) or "none")' "$file_path"
+}
+
+discovery_run_succeeded() {
+  local manifest_path="$1"
+  [[ -s "$manifest_path" ]] || return 1
+  python3 -c 'import json, sys; data=json.load(open(sys.argv[1], encoding="utf-8")); raise SystemExit(0 if data.get("status") == "success" else 1)' "$manifest_path"
 }
 
 if ! /usr/bin/shlock -p "$$" -f "$LOCK_FILE"; then
@@ -105,11 +111,14 @@ cd "$ROOT"
 
 if [[ "$FORCE" != "1" ]]; then
   completed_seed_snapshot="$(latest_completed_seed_snapshot_for_date "$RUN_DATE")"
-  completed_shape_snapshot="$(latest_completed_shape_snapshot_for_date "$RUN_DATE")"
-  if [[ -n "$completed_seed_snapshot" && -n "$completed_shape_snapshot" && -s "$ROOT/web/index.html" ]]; then
+  completed_run_id="${completed_seed_snapshot:t}"
+  discovery_manifest="$ROOT/archive/discovery_runs/$completed_run_id/run_manifest.json"
+  matching_shape_snapshot="$ROOT/archive/category_shape_runs/$completed_run_id"
+  if [[ -n "$completed_seed_snapshot" && -d "$matching_shape_snapshot" && -s "$matching_shape_snapshot/category_shape_validation.csv" && -s "$ROOT/web/index.html" ]] && discovery_run_succeeded "$discovery_manifest"; then
     log "Completed weekly category scan already exists for $RUN_DATE; exiting without a duplicate run."
     log "Existing seed snapshot: $completed_seed_snapshot"
-    log "Existing category/form snapshot: $completed_shape_snapshot"
+    log "Existing category/form snapshot: $matching_shape_snapshot"
+    log "Existing discovery manifest: $discovery_manifest"
     log "Dashboard: $ROOT/web/index.html"
     log "Use --force or AMZ_WEEKLY_FORCE=1 only after recording the rerun reason."
     exit 0

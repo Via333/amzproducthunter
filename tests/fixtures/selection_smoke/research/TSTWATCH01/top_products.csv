@@ -1,5 +1,5 @@
 asin,source,title,monthly_sales,reviews,rating,brand,seller_address,is_fba,bsr_category,product_form,visual_product_form
-TSTWATCH01,seed,"Reusable Beeswax Bread Bag XL 2 Pack with Zipper",700,180,4.3,FixtureCo,US,true,"Home & Kitchen > Kitchen Storage > Bread Bags",beeswax bread bag,beeswax bread bag
-TSTCOMP02,direct,"Large Beeswax Bread Storage Bag for Sourdough",900,120,4.4,D2CHome,US,true,"Home & Kitchen > Kitchen Storage > Bread Bags",beeswax bread bag,beeswax bread bag
-TSTCOMP03,keyword,"Natural Waxed Cotton Bread Bag 2 Pack",620,240,4.2,MakerCN,CN,true,"Home & Kitchen > Kitchen Storage > Bread Bags",beeswax bread bag,beeswax bread bag
-TSTCOMP04,direct,"XL Reusable Bread Keeper Bag with Zipper",540,80,4.1,KitchenStudio,US,true,"Home & Kitchen > Kitchen Storage > Bread Bags",beeswax bread bag,beeswax bread bag
+TSTWATCH01,seed,"Wall Mounted Mail Organizer with Key Hooks",700,180,4.3,FixtureCo,US,true,"Home & Kitchen > Entryway > Mail Organizers",wall-mounted mail organizer,wall-mounted mail organizer
+TSTCOMP02,direct,"Wood Wall Mail Holder with Key Hooks",900,120,4.4,D2CHome,US,true,"Home & Kitchen > Entryway > Mail Organizers",wall-mounted mail organizer,wall-mounted mail organizer
+TSTCOMP03,keyword,"Metal Entryway Mail and Key Organizer",620,240,4.2,MakerCN,CN,true,"Home & Kitchen > Entryway > Mail Organizers",wall-mounted mail organizer,wall-mounted mail organizer
+TSTCOMP04,direct,"Compact Wall Mount Letter Holder",540,80,4.1,HomeStudio,US,true,"Home & Kitchen > Entryway > Mail Organizers",wall-mounted mail organizer,wall-mounted mail organizer

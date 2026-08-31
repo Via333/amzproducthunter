@@ -565,8 +565,10 @@ def update_shape_archive(rows, archive_dir, run_id):
             row.get("product_form", ""),
         )
     )
-    if archive_rows:
-        write_csv(archive_path, archive_rows, OUTPUT_FIELDS + ARCHIVE_FIELDS)
+    # A zero-opportunity run is still a valid result. Always create a CSV with
+    # headers so downstream reporting can distinguish "none found" from a
+    # failed or missing archive step.
+    write_csv(archive_path, archive_rows, OUTPUT_FIELDS + ARCHIVE_FIELDS)
     return archive_path, len(active_keys), len(archive_rows)
 
 

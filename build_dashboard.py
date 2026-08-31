@@ -123,6 +123,9 @@ def normalize_selection(rows: list[dict[str, str]]) -> list[dict[str, object]]:
                 "title_short": short_title(row.get("product_name", "")),
                 "category": row.get("category", ""),
                 "strategy": row.get("source_strategy", ""),
+                "source_category_id": row.get("source_category_id", ""),
+                "source_category_name": row.get("source_category_name", ""),
+                "source_category_path": row.get("source_category_path", ""),
                 "price": to_float(row.get("target_price")),
                 "score": to_float(row.get("opportunity_score")),
                 "recommendation": row.get("recommendation", ""),
@@ -1403,7 +1406,18 @@ def build_html() -> str:
     selection_strategies = tag_list(
         [{"source_strategy": str(row.get("strategy", ""))} for row in selection_rows], "source_strategy"
     )
-    selection_category_count = len(selection_strategies)
+    selection_category_count = len(
+        {
+            str(
+                row.get("source_category_id")
+                or row.get("source_category_path")
+                or row.get("strategy")
+                or row.get("category")
+                or "ungrouped"
+            )
+            for row in selection_rows
+        }
+    )
     selection_recommendations = tag_list(
         [{"recommendation": str(row.get("recommendation", ""))} for row in selection_rows], "recommendation"
     )

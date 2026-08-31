@@ -458,7 +458,13 @@ def balanced_candidate_sample(candidates, limit):
 
     grouped = {}
     for candidate in unique:
-        group = str(candidate.get("source_strategy") or candidate.get("category") or "ungrouped")
+        group = str(
+            candidate.get("source_category_id")
+            or candidate.get("source_category_path")
+            or candidate.get("source_strategy")
+            or candidate.get("category")
+            or "ungrouped"
+        )
         grouped.setdefault(group, []).append(candidate)
 
     selected = []
@@ -554,6 +560,9 @@ def collect_products_for_category(category, rules, defaults, domain):
             product_category = pick(item, "category", category["path"])
             candidate = build_candidate(item, defaults, product_category)
             candidate["source_strategy"] = f"category:{category['name']}"
+            candidate["source_category_id"] = category["category_id"]
+            candidate["source_category_name"] = category["name"]
+            candidate["source_category_path"] = category["path"]
             if product_passes_filters(candidate, rules["product_filters"]):
                 products.append(candidate)
         if not page_records:
@@ -742,7 +751,16 @@ def main():
     candidates = balanced_candidate_sample(eligible_candidates, int(rules["max_candidates"]))
     manifest["eligible_candidates_after_dedupe"] = len(eligible_candidates)
     manifest["represented_categories"] = len(
-        {str(row.get("source_strategy") or row.get("category") or "ungrouped") for row in candidates}
+        {
+            str(
+                row.get("source_category_id")
+                or row.get("source_category_path")
+                or row.get("source_strategy")
+                or row.get("category")
+                or "ungrouped"
+            )
+            for row in candidates
+        }
     )
     if not candidates:
         if strategy == "category" and not manifest["successful_categories"]:

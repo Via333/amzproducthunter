@@ -18,6 +18,9 @@ from product_risk import (
 
 OUTPUT_FIELDS = [
     "source_strategy",
+    "source_category_id",
+    "source_category_name",
+    "source_category_path",
     "source_asin",
     "source_parent_asin",
     "product_name",
