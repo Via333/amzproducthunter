@@ -1,0 +1,59 @@
+{
+  "run_id": "20260810_084304",
+  "status": "failure",
+  "started_at": "2026-08-10T08:43:04",
+  "finished_at": "2026-08-10T10:16:36",
+  "failed_step": "discover_sorftime_opportunities",
+  "error_summary": "discover_sorftime_opportunities failed with exit code 1: python3 discover_sorftime_opportunities.py --strategy category --score",
+  "metrics": {
+    "scanned_categories": 100,
+    "ranked_candidates": 200,
+    "new_archived_candidates": 2,
+    "selection_watch_or_go": 4,
+    "validation_rows": 4,
+    "shape_opportunities_latest_validation": 0,
+    "watch_shapes": 0,
+    "needs_category_top100": 4,
+    "manual_review_rows": 4,
+    "active_validated_pool_rows": 0,
+    "total_validated_pool_rows": 1,
+    "seed_reject_reasons": "gross margin below 35%:195, unit profit below $8:159, review count above 600:56, hard oversize/logistics risk:55, oversize risk:55",
+    "shape_reject_reasons": "none"
+  },
+  "paths": {
+    "latest_seed_snapshot": "/Users/y33/项目/Codex/2026-05-06/amz-listing/archive/selection_runs/20260809_173908",
+    "latest_category_shape_snapshot": "/Users/y33/项目/Codex/2026-05-06/amz-listing/archive/category_shape_runs/20260809_173908",
+    "dashboard": "/Users/y33/项目/Codex/2026-05-06/amz-listing/web/index.html",
+    "dashboard_mtime": "2026-08-10T07:36:21",
+    "log_path": "/Users/y33/项目/Codex/2026-05-06/amz-listing/logs/weekly_category_scan_20260810_084304.log",
+    "latest_report_json": "/Users/y33/项目/Codex/2026-05-06/amz-listing/reports/weekly_scan_report.json",
+    "latest_report_md": "/Users/y33/项目/Codex/2026-05-06/amz-listing/reports/weekly_scan_report.md"
+  },
+  "health_checks": [
+    {
+      "name": "workflow_failure",
+      "status": "critical",
+      "message": "discover_sorftime_opportunities failed: discover_sorftime_opportunities failed with exit code 1: python3 discover_sorftime_opportunities.py --strategy category --score"
+    },
+    {
+      "name": "dashboard_freshness",
+      "status": "ok",
+      "message": "web/index.html age is 0.11 days"
+    },
+    {
+      "name": "consecutive_zero_pool",
+      "status": "warning",
+      "message": "2 latest scan day(s) have 0 Shape opportunity rows"
+    },
+    {
+      "name": "weekly_success_log",
+      "status": "critical",
+      "message": "No weekly_category_scan*.log contains a successful completion marker"
+    },
+    {
+      "name": "current_log",
+      "status": "ok",
+      "message": "Current log path: /Users/y33/项目/Codex/2026-05-06/amz-listing/logs/weekly_category_scan_20260810_084304.log"
+    }
+  ]
+}

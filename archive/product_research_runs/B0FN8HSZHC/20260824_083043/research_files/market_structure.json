@@ -1,0 +1,52 @@
+{
+  "sample_count": 84,
+  "total_monthly_sales": 285850,
+  "median_monthly_sales": 500,
+  "top10_sales_share": 0.7486,
+  "top20_sales_share": 0.8711,
+  "top50_sales_share": 0.9886,
+  "review_sales_spearman": 0.656,
+  "price_p25": 26.74,
+  "price_median": 40.89,
+  "price_p75": 62.29,
+  "listing_date_coverage": 0.0,
+  "new_listing_share_12m": 0,
+  "new_listing_share_24m": 0,
+  "price_bands": [
+    {
+      "price_band": "under_15",
+      "listing_count": 6,
+      "monthly_sales": 6500,
+      "sales_share": 0.0227,
+      "median_reviews": 90
+    },
+    {
+      "price_band": "15_to_25",
+      "listing_count": 11,
+      "monthly_sales": 86450,
+      "sales_share": 0.3024,
+      "median_reviews": 2751
+    },
+    {
+      "price_band": "25_to_40",
+      "listing_count": 25,
+      "monthly_sales": 132250,
+      "sales_share": 0.4627,
+      "median_reviews": 1110
+    },
+    {
+      "price_band": "40_to_60",
+      "listing_count": 20,
+      "monthly_sales": 43550,
+      "sales_share": 0.1524,
+      "median_reviews": 290
+    },
+    {
+      "price_band": "60_plus",
+      "listing_count": 22,
+      "monthly_sales": 17100,
+      "sales_share": 0.0598,
+      "median_reviews": 826
+    }
+  ]
+}

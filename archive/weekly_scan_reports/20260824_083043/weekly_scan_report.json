@@ -1,0 +1,60 @@
+{
+  "run_id": "20260824_083043",
+  "status": "success",
+  "started_at": "2026-08-24T08:30:43",
+  "finished_at": "2026-08-24T15:13:59",
+  "failed_step": "",
+  "error_summary": "",
+  "metrics": {
+    "metrics_source": "current_run",
+    "discovery_status": "success",
+    "selected_categories": 100,
+    "scanned_categories": 100,
+    "failed_categories": 0,
+    "products_examined": 9822,
+    "ranked_candidates": 200,
+    "new_archived_candidates": 5,
+    "selection_watch_or_go": 5,
+    "validation_rows": 13,
+    "shape_opportunities_latest_validation": 1,
+    "watch_shapes": 0,
+    "needs_category_top100": 3,
+    "manual_review_rows": 3,
+    "active_validated_pool_rows": 1,
+    "total_validated_pool_rows": 2,
+    "seed_reject_reasons": "landed cost still estimated:195, gross margin below 35%:194, unit profit below $8:168, review count above 600:83, hard oversize/logistics risk:56",
+    "shape_reject_reasons": "top10 review wall:9, sales concentration:7, thin form sample:7, form review wall:4, weak form demand:3"
+  },
+  "paths": {
+    "current_discovery_run": "/Users/y33/项目/Codex/2026-05-06/amz-listing/archive/discovery_runs/20260824_083043",
+    "latest_seed_snapshot": "/Users/y33/项目/Codex/2026-05-06/amz-listing/archive/selection_runs/20260824_083043",
+    "latest_category_shape_snapshot": "/Users/y33/项目/Codex/2026-05-06/amz-listing/archive/category_shape_runs/20260824_083043",
+    "dashboard": "/Users/y33/项目/Codex/2026-05-06/amz-listing/web/index.html",
+    "dashboard_mtime": "2026-08-24T15:13:59",
+    "log_path": "/Users/y33/项目/Codex/2026-05-06/amz-listing/logs/weekly_category_scan_20260824_083043.log",
+    "latest_report_json": "/Users/y33/项目/Codex/2026-05-06/amz-listing/reports/weekly_scan_report.json",
+    "latest_report_md": "/Users/y33/项目/Codex/2026-05-06/amz-listing/reports/weekly_scan_report.md"
+  },
+  "health_checks": [
+    {
+      "name": "dashboard_freshness",
+      "status": "ok",
+      "message": "web/index.html age is 0.0 days"
+    },
+    {
+      "name": "consecutive_zero_pool",
+      "status": "ok",
+      "message": "Recent shape opportunity counts: [{'day': '20260817', 'run_id': '20260817_083848', 'shape_opportunities': 0}, {'day': '20260820', 'run_id': '20260820_fragile_fix', 'shape_opportunities': 0}, {'day': '20260824', 'run_id': '20260824_083043', 'shape_opportunities': 1}]"
+    },
+    {
+      "name": "weekly_success_log",
+      "status": "ok",
+      "message": "Current workflow reached success; launch wrapper appends the completion marker after report writing"
+    },
+    {
+      "name": "current_log",
+      "status": "ok",
+      "message": "Current log path: /Users/y33/项目/Codex/2026-05-06/amz-listing/logs/weekly_category_scan_20260824_083043.log"
+    }
+  ]
+}

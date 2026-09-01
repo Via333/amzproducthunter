@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import os
 import subprocess
 import sys
@@ -31,6 +32,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-id", default=os.environ.get("AMZ_WEEKLY_RUN_ID", ""), help="Override report run id.")
     parser.add_argument("--log-path", default=os.environ.get("AMZ_WEEKLY_LOG_FILE", ""), help="Current run log path for the report.")
     parser.add_argument("--report-only", action="store_true", help="Skip Sorftime/scoring/validation and report on existing local outputs.")
+    parser.add_argument(
+        "--replay-source-run",
+        help="Rebuild from one archived MCP discovery run without new Sorftime calls.",
+    )
     parser.add_argument("--mock-failure-step", help="Write a failure report for a named mock step, without running workflow commands.")
     parser.add_argument(
         "--zero-pool-weeks",
@@ -62,19 +67,22 @@ def csv_count(path: Path) -> int:
         return max(0, sum(1 for _ in csv.DictReader(handle)))
 
 
-def workflow_steps(run_id: str) -> list[tuple[str, list[str]]]:
+def workflow_steps(run_id: str, replay_source_run: str = "") -> list[tuple[str, list[str]]]:
+    discovery_command = [
+        "python3",
+        "discover_sorftime_opportunities.py",
+        "--strategy",
+        "category",
+        "--score",
+        "--run-id",
+        run_id,
+    ]
+    if replay_source_run:
+        discovery_command.extend(["--replay-run-dir", replay_source_run])
     return [
         (
             "discover_sorftime_opportunities",
-            [
-                "python3",
-                "discover_sorftime_opportunities.py",
-                "--strategy",
-                "category",
-                "--score",
-                "--run-id",
-                run_id,
-            ],
+            discovery_command,
         ),
         ("auto_research_shortlist", ["python3", "auto_research_shortlist.py", "--run-id", run_id]),
         ("category_shape_validation", ["python3", "category_shape_validation.py"]),
@@ -100,6 +108,26 @@ def validate_required_outputs(run_id: str) -> None:
     missing = [str(path.relative_to(ROOT)) for path in required_outputs(run_id) if not path.exists() or path.stat().st_size == 0]
     if missing:
         raise RuntimeError(f"Required outputs are missing or empty: {', '.join(missing)}")
+
+    manifest_path = ROOT / "archive" / "discovery_runs" / run_id / "run_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("status") not in {"success", "success_no_candidates"}:
+        raise RuntimeError(f"Discovery manifest is not successful: {manifest.get('status') or 'unknown'}")
+    if int(manifest.get("successful_categories") or 0) <= 0 or int(manifest.get("products_examined") or 0) <= 0:
+        raise RuntimeError("Discovery returned zero product records; live outputs must not be published")
+
+
+def existing_report_status(run_id: str) -> tuple[str, str, str]:
+    manifest_path = ROOT / "archive" / "discovery_runs" / run_id / "run_manifest.json"
+    if not manifest_path.exists():
+        return "report_only", "", ""
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return "failure", "discover_sorftime_opportunities", "Discovery manifest is invalid JSON"
+    if manifest.get("status") == "failure":
+        return "failure", "discover_sorftime_opportunities", str(manifest.get("error") or "Discovery failed")
+    return "report_only", "", ""
 
 
 def resolve_log_path(raw_path: str) -> Path | None:
@@ -155,19 +183,24 @@ def main() -> None:
             raise RuntimeError(f"Mock failure requested for {args.mock_failure_step}")
 
         if not args.report_only:
-            for step_name, command in workflow_steps(run_id):
+            for step_name, command in workflow_steps(run_id, args.replay_source_run or ""):
                 current_step = step_name
                 run(command, step_name)
             current_step = "required_outputs"
             validate_required_outputs(run_id)
 
-        status = "report_only" if args.report_only else "success"
+        if args.report_only:
+            status, report_failed_step, report_error = existing_report_status(run_id)
+        else:
+            status, report_failed_step, report_error = "success", "", ""
         report = build_report(
             root=ROOT,
             run_id=run_id,
             status=status,
             started_at=started_at,
             log_path=log_path,
+            failed_step=report_failed_step,
+            error_summary=report_error,
             zero_pool_weeks=args.zero_pool_weeks,
             stale_days=args.stale_days,
         )

@@ -25,13 +25,39 @@ HARD_FOOD_CONTACT_PATTERNS = {
     "snack storage": r"\b(?:snack|sandwich|freezer)\s+(?:storage\s+)?(?:bag|bags|box|boxes|container|containers)\b",
     "food jar": r"\b(?:cookie|sweets|candy|sugar|flour|cereal)\s+(?:storage\s+)?(?:jar|jars|container|containers|canister|canisters)\b",
     "beeswax food storage": r"\bbeeswax\s+(?:bread\s+)?(?:bag|bags|wrap|wraps)\b",
+    "salt and pepper tools": r"\b(?:salt|pepper|spice)\s+(?:mill|mills|grinder|grinders|shaker|shakers|dispenser|dispensers)\b",
+    "cookware": r"\b(?:camping\s+)?(?:cookware|cooking\s+set|cook\s+pot|pots?\s*(?:,|&|and)\s*pans?)\b",
+    "tableware": r"\b(?:dishes?\s*&\s*utensils|dinnerware|silverware|flatware|paper\s+plates?|plastic\s+(?:plates?|bowls?)|camping\s+(?:plates?|bowls?))\b",
+    "food preparation tool": r"\b(?:potato|french\s+fry)\s+(?:cutter|slicer)\b",
+    "garlic preparation tool": r"\bgarlic\s+(?:press|presses|grinder|grinders|cutter|cutters)\b",
+    "beverage contact": r"\b(?:(?:wine|liquor)\s+(?:bottle\s+)?pourers?|ice\s+buckets?)\b",
+    "edible material": r"\bedible\b",
+    "combustion appliance": r"\b(?:camping\s+(?:stove|stoves|grill|grills)|gas\s+stove|charcoal\s+grill|fire\s+grill)\b",
+    "weapon accessory": r"\b(?:concealed\s+carry|belly\s+band\s+holster|shoulder\s+holster)\b",
+    "medical bathroom aid": r"\b(?:raised\s+toilet\s+seats?|toilet\s+seat\s+risers?|toilet\s+seat\s+risers?\s+for\s+seniors|handicap\s+bathroom\s+safety)\b",
     "food contact": r"\bfood\s+contact\b",
 }
 
 HARD_OVERSIZE_COMBINATIONS = [
     r"\b(?:extra[ -]?large|oversized|jumbo)\b.*\b(?:storage\s+)?(?:box|bin|container|hamper|chest)\b",
     r"\b(?:storage\s+)?(?:box|bin|container|hamper|chest)\b.*\b(?:extra[ -]?large|oversized|jumbo)\b",
+    r"\blarge\b.*\b(?:storage\s+)?(?:boxes|bins|baskets|containers|hampers|box|bin|basket|container|hamper|blanket\s+baskets?)\b",
+    r"\b(?:storage\s+)?(?:boxes|bins|baskets|containers|hampers|box|bin|basket|container|hamper|blanket\s+baskets?)\b.*\blarge\b",
+    r"\b(?:[4-9]|[1-9]\d)[ -]?(?:pack|count|pcs?)\b.*\b(?:storage|closet|classroom)\b.*\b(?:box|bin|basket|cube)s?\b",
+    r"\bpack\s+of\s+(?:[4-9]|[1-9]\d)\b.*\b(?:storage\s+)?(?:box|bin|basket|container)s?\b",
+    r"\b(?:storage\s+)?(?:box|bin|basket|container)s?\b.*\bpack\s+of\s+(?:[4-9]|[1-9]\d)\b",
+    r"\bset\s+of\s+\(?(?:[4-9]|[1-9]\d)\)?\b.*\b(?:storage\s+)?(?:box|bin|basket|container)s?\b",
     r"\bwheeled\b.*\b(?:box|bin|container|stacker|hamper)\b",
+    r"\b(?:spin\s+mop|mop\s+system)\b.*\b(?:bucket|wringer)\b",
+    r"\b(?:bucket|wringer)\b.*\b(?:spin\s+mop|mop\s+system)\b",
+    r"\bmops?\s*(?:and|&)\s*bucket\s+sets?\b",
+    r"\bmop\s+and\s+bucket\s+(?:set|system)\b",
+    r"\b(?:broom|mop|brush|scrubber)\b.*\b(?:long\s+handle|pole)\b",
+    r"\b(?:long\s+handle|pole)\b.*\b(?:broom|mop|brush|scrubber)\b",
+    r"\b(?:outdoor|corn|push|angle|floor)\s+broom\b",
+    r"\b(?:sponge|string|dust|floor)\s+mop\b",
+    r"\btelescoping\s+brush\b",
+    r"\blarge\b.*\b(?:ice\s+)?(?:bucket|tub|basin)\b",
 ]
 
 
@@ -77,12 +103,34 @@ def infer_compliance_risk(
 
 def oversize_signal(title: object, category: object = "", brand: object = "") -> tuple[int, str]:
     text = combined_text(title, category, brand)
+    for match in re.finditer(r"\b(\d{1,2}(?:\.\d+)?)\s*(?:gallon|gal)\b", text):
+        capacity = float(match.group(1))
+        if capacity >= 3:
+            return 90, f"{capacity:g} gallon capacity"
+        if capacity >= 2:
+            return 70, f"{capacity:g} gallon capacity"
     for match in re.finditer(r"\b(\d{1,3})\s*(?:qt|quart)s?\b", text):
         capacity = int(match.group(1))
         if capacity >= 50:
             return 90, f"{capacity} quart capacity"
-        if capacity >= 30:
+        if capacity >= 20:
             return 70, f"{capacity} quart capacity"
+        if capacity >= 10 and re.search(r"\b(?:bucket|tub|basin)\b", text):
+            return 70, f"{capacity} quart bucket capacity"
+    for match in re.finditer(r"\b(\d{1,3})\s*(?:l|liter|litre)s?\b", text):
+        capacity = int(match.group(1))
+        if capacity >= 40:
+            return 90, f"{capacity} liter capacity"
+        if capacity >= 25:
+            return 70, f"{capacity} liter capacity"
+    for match in re.finditer(r"\b(\d{2,3}(?:\.\d+)?)\s*(?:in|inch|inches)\b", text):
+        dimension = float(match.group(1))
+        if dimension >= 24:
+            return 70, f"{dimension:g} inch dimension"
+    for match in re.finditer(r"\b(\d{2,3}(?:\.\d+)?)\s*[\"“”″]", text):
+        dimension = float(match.group(1))
+        if dimension >= 24:
+            return 70, f"{dimension:g} inch dimension"
     for pattern in HARD_OVERSIZE_COMBINATIONS:
         if re.search(pattern, text):
             return 90, "large storage form"

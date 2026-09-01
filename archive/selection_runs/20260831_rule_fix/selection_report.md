@@ -1,0 +1,37 @@
+# Amazon Product Selection Report
+
+- Source: `data/discovered_candidates.csv`
+- Generated: 2026-08-31 07:56
+- Candidates: 200
+
+## Ranked Shortlist
+
+| Rank | Product | Category | Score | Recommendation | Margin | Monthly Gross Profit | Flags |
+| ---: | --- | --- | ---: | --- | ---: | ---: | --- |
+| 1 | [Superio 6.25 Quart Clear Plastic Storage Bin with Lid, Non-Toxic, BPA Free, Odor Free, Organizer Storage Box, Stackable Plastic Tote for Home, Garage, School, and Office (Pack of 4)](https://www.amazon.com/dp/B0CX979FY1) | ['Home & Kitchen', 'home-garden'] | 60.7 | Watch or collect more data | 34.0% | $24,467.41 | gross margin below 35%; landed cost still estimated |
+| 2 | [Bathroom Counter Organizer, Vanity Organizer, Perfume Organizer](https://www.amazon.com/dp/B0GV43R4TJ) | ['Tools & Home Improvement', 'hi'] | 55.1 | Watch or collect more data | 31.5% | $5,570.65 | gross margin below 35%; landed cost still estimated |
+| 3 | [Invisible Wall Plate Hangers - Clear Adhesive Picture Hanging Strips for Displaying Decorative Plates, Paintings & Photo Frames - Damage-Free, Strong Hold (2.4 Inch)](https://www.amazon.com/dp/B0GSZS9TST) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 27.0% | $2,821.95 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 4 | [Storage Bins with Lids 6 Pack Clear Storage Containers, 7 Quart Stackable Plastic Containers with Secure Black Buckle Latch, Durable Storage Box Organizer for Pantry, Closet, Office & Classroom](https://www.amazon.com/dp/B0GK8P7BNM) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 14.7% | $10,855.65 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 5 | [Decorative Storage Boxes with Lids - Set of 2 Fluted Photo Organizer Bins](https://www.amazon.com/dp/B0DVRGDQ4W) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 24.9% | $10,385.38 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 6 | [StorageWorks Storage Bins with Lids, Fabric Closet Storage Bins, Large](https://www.amazon.com/dp/B0FVSCWNT9) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 22.6% | $6,565.42 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 7 | [BLACK & YELLOW 5-Gallon Stackable Plastic Storage Bins with Lids, 6 Pack \| Small heavy-duty storage totes for garage, closet, classroom & home organization, 8.6H x 12.3W x 16.4D, Black & Yellow](https://www.amazon.com/dp/B085WD2D8X) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 31.0% | $15,050.93 | gross margin below 35%; review count above 600; evidence confidence below supplier-validation threshold; landed cost still estimated |
+| 8 | [Household Essentials Natural Woven Wicker Storage Basket with Handles](https://www.amazon.com/dp/B09QLLLBJ3) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 31.0% | $4,290.71 | gross margin below 35%; unit profit below $8; evidence confidence below supplier-validation threshold; landed cost still estimated |
+| 9 | [RattanView 6 Pcs 11in Cube Storage Bins Crayon Classroom Cubbies Fabric \| Colorful Organizers for Daycare, Stackable Collapsible Design, Treasure Prize Boxes for Students, School Supply Storage](https://www.amazon.com/dp/B0D2QYNRLD) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 21.9% | $5,706.16 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 10 | [Yilobi 5 Pack Small Woven Storage Baskets for Shelves, Gift Baskets Empty](https://www.amazon.com/dp/B0GJDW2CDL) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 21.4% | $22,237.17 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 11 | [Nonam Wicker Storage Basket with Lid,Seagrass Shelf Basket Set of 2,Coffee](https://www.amazon.com/dp/B0GTLCP7LN) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 18.1% | $10,056.51 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 12 | [iEGrow Scalloped Wicker Basket, Set of 2 Hand-Woven Natural Rattan Baskets with Built-in Handles, Water Hyacinth Storage Oval Cute Baby Baskets for Nursery, Organizing, Decor and Shelves](https://www.amazon.com/dp/B0FY235Z3J) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 19.2% | $7,675.81 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 13 | [Stylave Pantry Baskets for Organizing，Wicker Storage Bins,3 Pack,Natural \| Water Hyacinth Large Baskets Organizers for Shelves, Labeled Baskets with Handles , Boho Decorative](https://www.amazon.com/dp/B0F32LSGGV) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 26.1% | $10,795.31 | gross margin below 35%; landed cost still estimated |
+| 14 | [Large Handwoven Water Hyacinth Storage Wicker Basket with 2 Handles - Brown \| Handcrafted Rectangular Organizer, Sturdy Iron Frame, Ideal for Towels, Blankets, Shelves & Décor - 16.5“x13“x7.50“](https://www.amazon.com/dp/B0DN6TTN1Y) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 17.9% | $5,070.88 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 15 | [Criusia 4 Pack Closet Organizers and Storage, Large Linen Closet Baskets for Organization, Foldable Storage Containers for Towels, Clothing, Jeans, Books, Shelves, White](https://www.amazon.com/dp/B0FFGRNXGY) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 28.6% | $6,036.56 | gross margin below 35%; landed cost still estimated |
+| 16 | [8-Pack Clear Classroom Storage Bins, Plastic Cubby Book Bins for Classroom Organization, Book & Toy Storage Organizer, Perfect for Classroom Library, Shelves, STEM Centers, Daycare & Homeschool](https://www.amazon.com/dp/B0DYJRMZCV) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 16.7% | $4,347.67 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 17 | [INFINITKIN Smell Proof Box Large Airtight Storage Box with Lock](https://www.amazon.com/dp/B0CQLP1HQ6) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 30.9% | $8,288.91 | gross margin below 35%; landed cost still estimated |
+| 18 | [Set of (10) 6 Quart Storage Boxes, Clear Plastic Storage Bin with Snap-on Lid, White](https://www.amazon.com/dp/B0H1C5J3R2) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 27.1% | $2,812.12 | gross margin below 35%; unit profit below $8; evidence confidence below supplier-validation threshold; landed cost still estimated |
+| 19 | [6 Pack Large Closet Storage Baskets Bins for Shelves, Collapsible Fabric Closet Organizers and Storage with Polyester Handles, Decorative Baskets for Organizing Clothes, Towels, Linen Closet 14“x10“](https://www.amazon.com/dp/B0GWCKKT5X) | ['Home & Kitchen', 'home-garden'] | 44.8 | Reject | 18.9% | $4,040.39 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 20 | [Himake Photo Storage Box 8x10, Decorative Photo Storage Containers With Lid \| Acid Free Photo Storage Boxes, Linen Photo Organizers and Storage, Beige Scrapbook Picture Box, Fits 800 Photos](https://www.amazon.com/dp/B0FVLJ6845) | ['Home & Kitchen', 'home-garden'] | 44.5 | Reject | 17.2% | $2,610.85 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+
+## Next Actions
+
+1. Keep only products marked `Go to supplier validation` or `Watch or collect more data`.
+2. For each kept product, collect 10-20 competitor ASINs and supplier quotes.
+3. Replace estimated costs with real landed costs before sampling.
+4. Run compliance checks before moving to material and listing automation.

@@ -17,3 +17,8 @@ output/playwright/
 credentials.json
 secrets.json
 config/local*.json
+
+# Regenerable Sorftime caches and raw category payloads stay local.
+archive/cache/
+archive/discovery_runs/*/raw_category_reports/
+archive/product_research_runs/*/*/research_files/images/

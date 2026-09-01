@@ -8,7 +8,7 @@
 
 ## 核心边界
 
-- 不直接爬 Amazon 前台；市场数据优先通过 Sorftime CLI 和现有脚本获取。
+- 不直接爬 Amazon 前台；周扫描优先通过 Sorftime MCP，旧的单品研究暂时仍依赖 Sorftime CLI。
 - 不把 Account-SK、API key、token、cookie 写入 README、CSV、JSON 或报告。
 - 不删除历史数据；新扫描只能追加快照或更新长期档案状态。
 - 机会池只收通过类目/形态验证的产品，避免把普通初筛候选误当机会。
@@ -26,7 +26,7 @@ python3 refresh_selection_workflow.py
 
 ```text
 1. discover_sorftime_opportunities.py --strategy category --score
-2. auto_research_shortlist.py（最多 4 个高优先候选，自动补最小类目 Top100）
+2. auto_research_shortlist.py（MCP 迁移期间关闭自动调用，候选保留人工深挖入口）
 3. category_shape_validation.py
 4. build_dashboard.py
 ```
@@ -111,7 +111,7 @@ automation/run_weekly_category_scan.sh
 
 ## 从 Sorftime 自动导入
 
-不想手填候选品时，优先用 Sorftime API/CLI，不建议直接抓 Amazon 页面。
+不想手填候选品时，优先用 Sorftime MCP，不建议直接抓 Amazon 页面。
 
 当前已加导入器：
 
@@ -135,10 +135,10 @@ python3 discover_sorftime_opportunities.py --score
 它会做五步：
 
 ```text
-1. 调 Sorftime `CategoryTree`，拿 US 站类目树
+1. 从本地缓存读取 US 站完整类目树
 2. 按 config/autodiscovery_rules.json 和 config/category_exclusions.json 永久跳过高合规、高物流、强专利/品牌垄断类目
 3. 优先扫描从未扫描的最小类目；全部覆盖后按最久未扫描轮换
-4. 对保留下来的类目调 `CategoryProducts`，每类目最多查看 100 个 Top 产品
+4. 对每个类目调用一次 MCP `category_report`，每类目最多查看 100 个 Top 产品
 5. 抓取候选并生成评分和网页
 ```
 
@@ -147,11 +147,22 @@ python3 discover_sorftime_opportunities.py --score
 ```text
 reports/discovered_categories.csv
 archive/category_scan_state.csv
+archive/discovery_runs/RUN_ID/raw_category_reports/
 data/discovered_candidates.csv
 reports/selection_ranked.csv
 reports/selection_report.md
 archive/selection_runs/YYYYMMDD_HHMMSS/
 archive/opportunity_library.csv
+```
+
+MCP 密钥只保存在用户级 `~/.codex/config.toml`，不能写入仓库。每次真实周扫的
+`run_manifest.json` 会记录 `data_provider=mcp` 和 `provider_call_count`。如需调整规则后重算，
+使用已归档的原始报告回放，不重复消耗额度：
+
+```bash
+python3 refresh_selection_workflow.py \
+  --replay-source-run archive/discovery_runs/RUN_ID \
+  --run-id NEW_RUN_ID
 ```
 
 ### 更新和归档机制

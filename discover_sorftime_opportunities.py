@@ -12,6 +12,7 @@ from import_sorftime_candidates import (
     call_sorftime,
     dedupe_candidates,
     find_product_records,
+    is_non_retryable_sorftime_error,
     load_json,
     pick,
     to_float,
@@ -19,6 +20,7 @@ from import_sorftime_candidates import (
     run_scoring,
 )
 from product_risk import has_valid_category
+from sorftime_mcp_client import SorftimeMcpClient
 
 
 CATEGORY_ID_ALIASES = [
@@ -98,6 +100,7 @@ def parse_args():
         help="Permanent category exclusion rules and reasons.",
     )
     parser.add_argument("--domain", help="Override Sorftime domain id.")
+    parser.add_argument("--provider", choices=["cli", "mcp"], help="Override the configured Sorftime data provider.")
     parser.add_argument("--strategy", choices=["search", "category"], help="Discovery strategy.")
     parser.add_argument("--category-tree-json", help="Use a saved category tree JSON instead of calling Sorftime.")
     parser.add_argument(
@@ -113,8 +116,13 @@ def parse_args():
     )
     parser.add_argument("--force-category-tree-refresh", action="store_true")
     parser.add_argument("--products-json", help="Use one saved products JSON for offline mapping tests.")
+    parser.add_argument(
+        "--replay-run-dir",
+        help="Reapply current filters to archived MCP category reports without making network calls.",
+    )
     parser.add_argument("--run-id", default=os.environ.get("AMZ_WEEKLY_RUN_ID", ""))
     parser.add_argument("--run-dir", help="Directory for discovery checkpoints and run manifest.")
+    parser.add_argument("--max-categories", type=int, help="Limit selected categories for a probe or manual run.")
     parser.add_argument("--score", action="store_true", help="Run product_selection.py after discovery.")
     parser.add_argument("--dry-run", action="store_true", help="List categories that would be scanned, without products.")
     return parser.parse_args()
@@ -570,6 +578,44 @@ def collect_products_for_category(category, rules, defaults, domain):
     return products, examined
 
 
+def extract_category_report_products(report):
+    if isinstance(report, dict):
+        data = report.get("data")
+        if isinstance(data, dict) and isinstance(data.get("top100_products"), list):
+            return [item for item in data["top100_products"] if isinstance(item, dict)]
+        if isinstance(report.get("top100_products"), list):
+            return [item for item in report["top100_products"] if isinstance(item, dict)]
+    return find_product_records(report)
+
+
+def collect_products_from_category_report(category, rules, defaults, report):
+    records = extract_category_report_products(report)
+    max_products = int(rules["products_per_category"])
+    page_records = records[:max_products]
+    products = []
+    for item in page_records:
+        candidate = build_candidate(item, defaults, category["path"])
+        candidate["source_strategy"] = f"category:{category['name']}"
+        candidate["source_category_id"] = category["category_id"]
+        candidate["source_category_name"] = category["name"]
+        candidate["source_category_path"] = category["path"]
+        if product_passes_filters(candidate, rules["product_filters"]):
+            products.append(candidate)
+    return products, len(page_records)
+
+
+def collect_products_for_category_mcp(category, rules, defaults, client, raw_dir):
+    report = client.call_tool(
+        "category_report",
+        {
+            "amz_site": str(rules.get("marketplace") or "US"),
+            "node_id": str(category["category_id"]),
+        },
+    )
+    write_json_atomic(Path(raw_dir) / f"{category['category_id']}.json", report)
+    return collect_products_from_category_report(category, rules, defaults, report)
+
+
 def write_category_report(categories, output_path):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -578,6 +624,17 @@ def write_category_report(categories, output_path):
         writer.writeheader()
         for category in categories:
             writer.writerow({field: category.get(field, "") for field in CATEGORY_REPORT_FIELDS})
+
+
+def read_category_report(path):
+    with Path(path).open("r", encoding="utf-8-sig", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    for row in rows:
+        row["depth"] = as_int(row.get("depth"))
+        row["is_leaf"] = str(row.get("is_leaf", "")).lower() in {"1", "true", "yes"}
+        row["selection_score"] = to_float(row.get("selection_score"))
+        row["previous_scan_count"] = as_int(row.get("previous_scan_count"))
+    return rows
 
 
 def write_json_atomic(path, value):
@@ -596,23 +653,30 @@ def category_tree_cache_is_fresh(path, ttl_hours):
     return age_seconds <= max(0, int(ttl_hours)) * 3600
 
 
-def load_category_tree(args, rules, domain):
+def load_category_tree(args, rules, domain, provider="cli", mcp_client=None):
     if args.category_tree_json:
         return load_json(args.category_tree_json), "provided_json"
 
     cache_path = Path(args.category_tree_cache)
     cached_tree = load_json(cache_path) if cache_path.exists() else None
-    if cached_tree and not args.force_category_tree_refresh and category_tree_cache_is_fresh(
-        cache_path, args.category_tree_cache_hours
-    ):
+    if cached_tree and not args.force_category_tree_refresh:
+        source = "fresh_cache" if category_tree_cache_is_fresh(cache_path, args.category_tree_cache_hours) else "stale_cache"
         print(f"Using cached category tree: {cache_path}")
-        return cached_tree, "fresh_cache"
+        return cached_tree, source
 
     tree_cfg = rules["category_tree"]
     try:
-        category_tree = call_sorftime(
-            tree_cfg["method"], json.dumps(tree_cfg["payload"], ensure_ascii=False), domain
-        )
+        if provider == "mcp":
+            if mcp_client is None:
+                raise RuntimeError("Sorftime MCP client was not initialized")
+            category_tree = mcp_client.call_tool(
+                "category_tree",
+                {"amz_site": str(rules.get("marketplace") or "US")},
+            )
+        else:
+            category_tree = call_sorftime(
+                tree_cfg["method"], json.dumps(tree_cfg["payload"], ensure_ascii=False), domain
+            )
         write_json_atomic(cache_path, category_tree)
         print(f"Category tree cache refreshed: {cache_path}")
         return category_tree, "live"
@@ -626,16 +690,18 @@ def load_category_tree(args, rules, domain):
         raise
 
 
-def discovery_manifest(run_id, strategy, tree_source=""):
+def discovery_manifest(run_id, strategy, provider="cli", tree_source=""):
     return {
         "run_id": run_id,
         "strategy": strategy,
+        "data_provider": provider,
         "status": "running",
         "started_at": datetime.now().isoformat(timespec="seconds"),
         "finished_at": "",
         "category_tree_source": tree_source,
         "selected_categories": 0,
         "successful_categories": 0,
+        "empty_categories": 0,
         "failed_categories": 0,
         "products_examined": 0,
         "eligible_candidates_before_dedupe": 0,
@@ -643,6 +709,7 @@ def discovery_manifest(run_id, strategy, tree_source=""):
         "candidate_count": 0,
         "represented_categories": 0,
         "failed_category_details": [],
+        "provider_call_count": 0,
     }
 
 
@@ -674,13 +741,18 @@ def mark_category_scanned(scan_state, category, products_examined, candidate_cou
 def main():
     args = parse_args()
     rules = load_json(args.rules)
+    if args.max_categories is not None:
+        rules["max_categories"] = max(0, args.max_categories)
     defaults = load_json(args.defaults)
     domain = args.domain or rules["domain"]
     strategy = args.strategy or rules.get("strategy", "search")
+    provider = args.provider or rules.get("data_provider", "cli")
+    if args.replay_run_dir:
+        provider = "mcp_replay"
     defaults["marketplace"] = rules.get("marketplace", defaults["marketplace"])
     run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
     run_dir = Path(args.run_dir or Path("archive") / "discovery_runs" / run_id)
-    manifest = discovery_manifest(run_id, strategy)
+    manifest = discovery_manifest(run_id, strategy, provider)
     write_json_atomic(run_dir / "run_manifest.json", manifest)
 
     candidates = []
@@ -691,32 +763,61 @@ def main():
             if product_passes_filters(candidate, rules["product_filters"]):
                 candidates.append(candidate)
     elif strategy == "search":
+        if provider != "cli":
+            raise SystemExit("MCP keyword search is not connected to this discovery command yet; use category strategy.")
         if args.dry_run:
             print("ProductSearch strategy does not need category discovery.")
             return
         candidates = collect_products_by_search(rules, defaults, domain)
     else:
+        mcp_client = SorftimeMcpClient() if provider == "mcp" else None
         scan_state = read_category_scan_state(args.scan_state)
         scan_state = bootstrap_scan_state(scan_state, args.category_report)
-        exclusions = load_category_exclusions(args.category_exclusions)
-        category_tree, tree_source = load_category_tree(args, rules, domain)
-        manifest["category_tree_source"] = tree_source
-
-        categories = select_categories(category_tree, rules, scan_state, exclusions)
+        if args.replay_run_dir:
+            replay_dir = Path(args.replay_run_dir)
+            categories = read_category_report(replay_dir / "categories.csv")
+            manifest["category_tree_source"] = "archived_run"
+            manifest["replay_source"] = str(replay_dir)
+        else:
+            exclusions = load_category_exclusions(args.category_exclusions)
+            category_tree, tree_source = load_category_tree(args, rules, domain, provider, mcp_client)
+            manifest["category_tree_source"] = tree_source
+            manifest["provider_call_count"] = mcp_client.tool_call_count if mcp_client else 0
+            categories = select_categories(category_tree, rules, scan_state, exclusions)
         manifest["selected_categories"] = len(categories)
-        write_category_report(categories, args.category_report)
         update_discovery_checkpoint(run_dir, manifest, categories, candidates)
-        print(f"Selected {len(categories)} categories. Category report: {args.category_report}")
+        print(f"Selected {len(categories)} categories. Staged report: {run_dir / 'categories.csv'}")
 
         if args.dry_run:
+            write_category_report(categories, args.category_report)
             return
 
         for category in categories:
             try:
-                category_candidates, products_examined = collect_products_for_category(
-                    category, rules, defaults, domain
-                )
+                if args.replay_run_dir:
+                    report_path = Path(args.replay_run_dir) / "raw_category_reports" / f"{category['category_id']}.json"
+                    category_candidates, products_examined = collect_products_from_category_report(
+                        category,
+                        rules,
+                        defaults,
+                        load_json(report_path),
+                    )
+                elif provider == "mcp":
+                    category_candidates, products_examined = collect_products_for_category_mcp(
+                        category,
+                        rules,
+                        defaults,
+                        mcp_client,
+                        run_dir / "raw_category_reports",
+                    )
+                    manifest["provider_call_count"] = mcp_client.tool_call_count
+                else:
+                    category_candidates, products_examined = collect_products_for_category(
+                        category, rules, defaults, domain
+                    )
             except RuntimeError as exc:
+                if mcp_client:
+                    manifest["provider_call_count"] = mcp_client.tool_call_count
                 category["scan_status"] = "failed"
                 category["scan_error"] = str(exc).splitlines()[-1][:500]
                 manifest["failed_categories"] += 1
@@ -729,6 +830,25 @@ def main():
                 )
                 update_discovery_checkpoint(run_dir, manifest, categories, candidates)
                 print(f"Category failed, continuing: {category['path']}: {category['scan_error']}", file=sys.stderr)
+                if is_non_retryable_sorftime_error(category["scan_error"]):
+                    manifest["status"] = "failure"
+                    manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
+                    manifest["error"] = category["scan_error"]
+                    update_discovery_checkpoint(run_dir, manifest, categories, candidates)
+                    raise SystemExit(
+                        "Sorftime rejected the request. Live discovery outputs were preserved; "
+                        f"see {run_dir / 'run_manifest.json'}."
+                    )
+                continue
+            if products_examined == 0:
+                category["products_examined"] = 0
+                category["candidate_count"] = 0
+                category["scan_completed_at"] = datetime.now().isoformat(timespec="seconds")
+                category["scan_status"] = "empty"
+                category["scan_error"] = "Sorftime returned no product records"
+                manifest["empty_categories"] += 1
+                update_discovery_checkpoint(run_dir, manifest, categories, candidates)
+                print(f"Category returned no products: {category['path']}", file=sys.stderr)
                 continue
             candidates.extend(category_candidates)
             scanned_at = datetime.now().isoformat(timespec="seconds")
@@ -737,15 +857,19 @@ def main():
             category["scan_completed_at"] = scanned_at
             category["scan_status"] = "success"
             category["scan_error"] = ""
-            mark_category_scanned(scan_state, category, products_examined, len(category_candidates), scanned_at)
-            write_category_scan_state(scan_state, args.scan_state)
+            if not args.replay_run_dir:
+                mark_category_scanned(scan_state, category, products_examined, len(category_candidates), scanned_at)
+                write_category_scan_state(scan_state, args.scan_state)
             manifest["successful_categories"] += 1
             manifest["products_examined"] += products_examined
             manifest["eligible_candidates_before_dedupe"] = len(candidates)
             update_discovery_checkpoint(run_dir, manifest, categories, candidates)
             print(f"{category['path']}: examined {products_examined}, {len(category_candidates)} candidates")
-        write_category_report(categories, args.category_report)
-        print(f"Category rotation state: {args.scan_state} ({len(scan_state)} scanned categories)")
+        if not args.replay_run_dir:
+            scanned_state_count = sum(1 for row in scan_state.values() if as_int(row.get("scan_count")) > 0)
+            print(f"Category rotation state: {args.scan_state} ({scanned_state_count} scanned categories)")
+        else:
+            print(f"Replayed archived MCP reports without advancing category rotation: {args.replay_run_dir}")
 
     eligible_candidates = dedupe_candidates(candidates)
     candidates = balanced_candidate_sample(eligible_candidates, int(rules["max_candidates"]))
@@ -766,12 +890,17 @@ def main():
         if strategy == "category" and not manifest["successful_categories"]:
             manifest["status"] = "failure"
             manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
-            manifest["error"] = "Every selected category failed"
+            manifest["error"] = "No selected category returned product records"
             update_discovery_checkpoint(run_dir, manifest, categories, candidates)
-            raise SystemExit("Every selected category failed. Check Sorftime connectivity and the discovery run manifest.")
+            raise SystemExit(
+                "No selected category returned product records. Live discovery outputs were preserved; "
+                "check Sorftime quota/connectivity and the discovery run manifest."
+            )
 
         output_path = Path(args.output)
         write_candidates(candidates, output_path)
+        if strategy == "category":
+            write_category_report(categories, args.category_report)
         manifest["candidate_count"] = 0
         manifest["status"] = "success_no_candidates"
         manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
@@ -783,6 +912,8 @@ def main():
 
     output_path = Path(args.output)
     write_candidates(candidates, output_path)
+    if strategy == "category":
+        write_category_report(categories, args.category_report)
     write_candidates(eligible_candidates, run_dir / "candidates_eligible.csv")
     write_candidates(candidates, run_dir / "candidates_selected.csv")
     manifest["candidate_count"] = len(candidates)

@@ -72,6 +72,7 @@ ALIASES = {
         "sales",
         "Sales",
         "monthly_sales",
+        "monthly_sales_volume",
         "monthlySales",
         "monthSaleVolume",
         "MonthSaleVolume",
@@ -92,9 +93,20 @@ ALIASES = {
         "ratings_total",
         "ratingCount",
     ],
-    "rating": ["rating", "Rating", "ratings", "Ratings", "avg_rating", "star", "Star", "stars"],
-    "category": ["category", "category_name", "categoryName"],
+    "rating": [
+        "rating",
+        "Rating",
+        "ratings",
+        "Ratings",
+        "avg_rating",
+        "star_rating",
+        "star",
+        "Star",
+        "stars",
+    ],
+    "category": ["category", "category_name", "categoryName", "product_category"],
     "brand": ["brand", "Brand"],
+    "package_size": ["package_size", "packageSize", "Size", "size"],
     "search_volume": ["search_volume", "searchVolume", "volume", "monthlySearches"],
     "cpc": ["cpc", "CPC", "keyword_cpc"],
 }
@@ -183,7 +195,9 @@ def call_sorftime(method, payload, domain, max_attempts=3):
         completed = subprocess.run(command, text=True, capture_output=True)
         last_output = "\n".join(part for part in [completed.stdout, completed.stderr] if part).strip()
         if completed.returncode == 0:
-            return parse_cli_json(completed.stdout)
+            response = parse_cli_json(completed.stdout)
+            validate_sorftime_response(response)
+            return response
         if attempt >= max_attempts or not is_transient_sorftime_error(last_output):
             break
         delay_seconds = attempt * 2
@@ -201,6 +215,18 @@ def parse_cli_json(output):
     if not starts:
         raise RuntimeError(f"Sorftime CLI did not return JSON:\n{text}")
     return json.loads(text[min(starts):])
+
+
+def validate_sorftime_response(response):
+    """Raise when the CLI transport succeeded but Sorftime rejected the request."""
+
+    if not isinstance(response, dict) or "Code" not in response:
+        return
+    code = str(response.get("Code", "")).strip()
+    if code in {"", "0", "200"}:
+        return
+    message = str(response.get("Message") or response.get("message") or "Unknown Sorftime error").strip()
+    raise RuntimeError(f"Sorftime API business error {code}: {message}")
 
 
 def read_query_rows(path):
@@ -416,9 +442,15 @@ def infer_oversize_risk(item, defaults, category_override=None):
     title = pick(item, "title", "")
     category = category_override or pick(item, "category", "")
     brand = pick(item, "brand", "")
-    score = infer_title_oversize_risk(title, category, brand, defaults["oversize_risk"])
+    package_size = pick(item, "package_size", "")
+    score = infer_title_oversize_risk(
+        " ".join(str(part) for part in [title, package_size]),
+        category,
+        brand,
+        defaults["oversize_risk"],
+    )
     text = " ".join(
-        str(part) for part in [title, category, brand]
+        str(part) for part in [title, category, brand, package_size]
     ).lower()
     hard_oversize_terms = [
         "air mover",

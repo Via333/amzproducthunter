@@ -127,6 +127,14 @@ def latest_daily_shape_counts(root: Path) -> list[dict[str, Any]]:
     daily = []
     for day, run_dir in sorted(by_day.items()):
         validation_path = run_dir / "category_shape_validation.csv"
+        discovery_manifest = root / "archive" / "discovery_runs" / run_dir.name / "run_manifest.json"
+        if discovery_manifest.exists():
+            try:
+                discovery_status = json.loads(discovery_manifest.read_text(encoding="utf-8")).get("status")
+            except json.JSONDecodeError:
+                discovery_status = "failure"
+            if discovery_status not in {"success", "success_no_candidates"}:
+                continue
         daily.append(
             {
                 "day": day,
@@ -277,6 +285,7 @@ def collect_metrics(root: Path, run_id: str) -> dict[str, Any]:
         "discovery_status": discovery_manifest.get("status", "not_started"),
         "selected_categories": int(discovery_manifest.get("selected_categories") or 0),
         "scanned_categories": int(discovery_manifest.get("successful_categories") or 0),
+        "empty_categories": int(discovery_manifest.get("empty_categories") or 0),
         "failed_categories": int(discovery_manifest.get("failed_categories") or 0),
         "products_examined": int(discovery_manifest.get("products_examined") or 0),
         "eligible_candidates_before_dedupe": int(
@@ -333,7 +342,17 @@ def build_report(
     latest_seed = current_seed if current_seed.exists() else None
     latest_shape = current_shape if current_shape.exists() else None
     finished_at = finished_at or now_iso()
+    metrics = collect_metrics(root, run_id)
     checks = health_checks(root, zero_pool_weeks, stale_days, log_path, status)
+    if metrics["selected_categories"] > 0 and metrics["products_examined"] == 0:
+        checks.insert(
+            0,
+            {
+                "name": "zero_products_examined",
+                "status": "critical",
+                "message": "Selected categories returned 0 products; this run is invalid and must not replace live outputs",
+            },
+        )
     if status == "failure":
         checks.insert(
             0,
@@ -351,7 +370,7 @@ def build_report(
         "finished_at": finished_at,
         "failed_step": failed_step,
         "error_summary": sanitize(error_summary)[:1000],
-        "metrics": collect_metrics(root, run_id),
+        "metrics": metrics,
         "paths": {
             "current_discovery_run": str(current_discovery if current_discovery.exists() else ""),
             "latest_seed_snapshot": str(latest_seed or ""),
@@ -377,7 +396,7 @@ def report_markdown(report: dict[str, Any]) -> str:
         f"- Run ID：`{report['run_id']}`",
         f"- 时间：{report['started_at']} -> {report['finished_at']}",
         f"- 数据口径：本次运行，不混用历史输出",
-        f"- 计划/成功/失败类目：{metrics['selected_categories']}/{metrics['scanned_categories']}/{metrics['failed_categories']}",
+        f"- 计划/成功/空返回/失败类目：{metrics['selected_categories']}/{metrics['scanned_categories']}/{metrics['empty_categories']}/{metrics['failed_categories']}",
         f"- 本次查看产品数：{metrics['products_examined']}",
         f"- 合格候选（去重前/后）：{metrics['eligible_candidates_before_dedupe']}/{metrics['eligible_candidates_after_dedupe']}",
         f"- 进入评分候选：{metrics['ranked_candidates']}（覆盖 {metrics['represented_candidate_categories']} 个类目）",

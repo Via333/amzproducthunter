@@ -1,4 +1,123 @@
 category_id,name,path,first_scanned_at,last_scanned_at,scan_count,last_products_examined,last_candidate_count,lifetime_products_examined,lifetime_candidate_count,status
+203313515011,Kitchen Brushes,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Brushes > Kitchen Brushes,2026-09-01T21:42:00,2026-09-01T21:42:00,1,100,6,100,6,scanned
+85975011,Toilet Brushes & Holders,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Brushes > Toilet Brushes & Holders,2026-09-01T21:42:01,2026-09-01T21:42:01,1,100,32,100,32,scanned
+2245498011,Feather Dusters,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Dusting > Feather Dusters,2026-09-01T21:42:01,2026-09-01T21:42:01,1,100,24,100,24,scanned
+14253971,Mop Handles,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Mopping > Accessories > Mop Handles,2026-09-01T21:41:49,2026-09-01T21:41:49,1,100,0,100,0,scanned
+695492011,Refill Sponges,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Mopping > Accessories > Refill Sponges,2026-09-01T21:41:50,2026-09-01T21:41:50,1,100,0,100,0,scanned
+695491011,Replacement Heads,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Mopping > Accessories > Replacement Heads,2026-09-01T21:41:50,2026-09-01T21:41:50,1,100,0,100,0,scanned
+23537025011,Replacement Mop Pads,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Mopping > Accessories > Replacement Mop Pads,2026-09-01T21:41:51,2026-09-01T21:41:51,1,100,0,100,0,scanned
+2245509011,Buckets,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Mopping > Buckets,2026-09-01T21:42:02,2026-09-01T21:42:02,1,100,30,100,30,scanned
+23537016011,Mops & Bucket Sets,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Mopping > Mops & Bucket Sets,2026-09-01T21:42:03,2026-09-01T21:42:03,1,100,26,100,26,scanned
+23537023011,Dust Mops,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Mopping > Wet & Dry Mops > Dust Mops,2026-09-01T21:41:51,2026-09-01T21:41:51,1,100,26,100,26,scanned
+23537024011,Sponge Mops,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Mopping > Wet & Dry Mops > Sponge Mops,2026-09-01T21:41:52,2026-09-01T21:41:52,1,100,7,100,7,scanned
+23537022011,String Mops,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Mopping > Wet & Dry Mops > String Mops,2026-09-01T21:41:52,2026-09-01T21:41:52,1,100,7,100,7,scanned
+14253831,Angle Brooms,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Sweeping > Brooms > Angle Brooms,2026-09-01T21:41:53,2026-09-01T21:41:53,1,100,17,100,17,scanned
+14253841,Hand Brooms,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Sweeping > Brooms > Hand Brooms,2026-09-01T21:41:56,2026-09-01T21:41:56,1,100,14,100,14,scanned
+14253851,Push Brooms,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Sweeping > Brooms > Push Brooms,2026-09-01T21:41:57,2026-09-01T21:41:57,1,100,29,100,29,scanned
+3278164011,Broom Handles,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Sweeping > Parts & Accessories > Broom Handles,2026-09-01T21:41:58,2026-09-01T21:41:58,1,100,0,100,0,scanned
+3278165011,Broom Heads,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Sweeping > Parts & Accessories > Broom Heads,2026-09-01T21:41:59,2026-09-01T21:41:59,1,100,0,100,0,scanned
+21588789011,Dustpans,Home & Kitchen > Cleaning Supplies > Household Cleaning > Cleaning Tools > Sweeping > Parts & Accessories > Dustpans,2026-09-01T21:41:59,2026-09-01T21:41:59,1,100,0,100,0,scanned
+3735231,Andirons,"Home & Kitchen > Heating, Cooling & Air Quality > Parts & Accessories > Stove & Fireplace Accessories > Fireplace Tools > Andirons",2026-09-01T21:42:03,2026-09-01T21:42:03,1,24,0,24,0,scanned
+3735301,Bellows,"Home & Kitchen > Heating, Cooling & Air Quality > Parts & Accessories > Stove & Fireplace Accessories > Fireplace Tools > Bellows",2026-09-01T21:42:04,2026-09-01T21:42:04,1,100,0,100,0,scanned
+1243382011,Pokers,"Home & Kitchen > Heating, Cooling & Air Quality > Parts & Accessories > Stove & Fireplace Accessories > Fireplace Tools > Pokers",2026-09-01T21:42:04,2026-09-01T21:42:04,1,100,0,100,0,scanned
+1243384011,Shovels,"Home & Kitchen > Heating, Cooling & Air Quality > Parts & Accessories > Stove & Fireplace Accessories > Fireplace Tools > Shovels",2026-09-01T21:42:05,2026-09-01T21:42:05,1,100,0,100,0,scanned
+1243385011,Tongs,"Home & Kitchen > Heating, Cooling & Air Quality > Parts & Accessories > Stove & Fireplace Accessories > Fireplace Tools > Tongs",2026-09-01T21:42:06,2026-09-01T21:42:06,1,100,0,100,0,scanned
+1243386011,Tool Sets,"Home & Kitchen > Heating, Cooling & Air Quality > Parts & Accessories > Stove & Fireplace Accessories > Fireplace Tools > Tool Sets",2026-09-01T21:42:06,2026-09-01T21:42:06,1,100,0,100,0,scanned
+8147491011,Edible Printer Paper & Frosting Sheets,Home & Kitchen > Kitchen & Dining > Bakeware > Decorating Tools > Edible Printer Ink & Paper > Edible Printer Paper & Frosting Sheets,2026-09-01T21:42:07,2026-09-01T21:42:07,1,100,10,100,10,scanned
+498924,Coasters,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Bar Tools > Coasters,,,0,0,0,0,0,pending_after_quota_failure
+2566762011,Cocktail Napkins,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Bar Tools > Cocktail Napkins,,,0,0,0,0,0,pending_after_quota_failure
+2566771011,Cocktail Picks,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Bar Tools > Cocktail Picks,,,0,0,0,0,0,pending_after_quota_failure
+13789651,Flasks,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Bar Tools > Flasks,,,0,0,0,0,0,pending_after_quota_failure
+2566784011,Swizzle Sticks,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Bar Tools > Swizzle Sticks,,,0,0,0,0,0,pending_after_quota_failure
+13217971,Collins Glasses,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Cocktail Drinkware > Collins Glasses,,,0,0,0,0,0,pending_after_quota_failure
+17867734011,Drinking Jars,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Cocktail Drinkware > Drinking Jars,,,0,0,0,0,0,pending_after_quota_failure
+13218091,Highball Glasses,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Cocktail Drinkware > Highball Glasses,,,0,0,0,0,0,pending_after_quota_failure
+13218121,Hurricane Glasses,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Cocktail Drinkware > Hurricane Glasses,,,0,0,0,0,0,pending_after_quota_failure
+13218181,Irish Coffee Glasses,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Cocktail Drinkware > Irish Coffee Glasses,,,0,0,0,0,0,pending_after_quota_failure
+13218241,Margarita Glasses,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Cocktail Drinkware > Margarita Glasses,,,0,0,0,0,0,pending_after_quota_failure
+13218271,Martini Glasses,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Cocktail Drinkware > Martini Glasses,,,0,0,0,0,0,pending_after_quota_failure
+13218301,Mint Julep Cups,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Cocktail Drinkware > Mint Julep Cups,,,0,0,0,0,0,pending_after_quota_failure
+15645210011,Moscow Mule Mugs,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Cocktail Drinkware > Moscow Mule Mugs,,,0,0,0,0,0,pending_after_quota_failure
+13218031,Cordial Glasses,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Liqueur & Spirits Glasses > Cordial Glasses,,,0,0,0,0,0,pending_after_quota_failure
+13218331,Old Fashioned Glasses,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Liqueur & Spirits Glasses > Old Fashioned Glasses,,,0,0,0,0,0,pending_after_quota_failure
+13218391,Shot Glasses,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Liqueur & Spirits Glasses > Shot Glasses,,,0,0,0,0,0,pending_after_quota_failure
+13218421,Snifters,Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Bar Tools & Drinkware > Liqueur & Spirits Glasses > Snifters,,,0,0,0,0,0,pending_after_quota_failure
+14309831,Chinese Chef‘s Knives & Cleavers,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Asian Knives > Chinese Chef‘s Knives & Cleavers",,,0,0,0,0,0,pending_after_quota_failure
+14309841,Chinese Vegetable Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Asian Knives > Chinese Vegetable Knives",,,0,0,0,0,0,pending_after_quota_failure
+14309851,Deba Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Asian Knives > Deba Knives",,,0,0,0,0,0,pending_after_quota_failure
+14309861,Gyutou Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Asian Knives > Gyutou Knives",,,0,0,0,0,0,pending_after_quota_failure
+14309871,Santoku Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Asian Knives > Santoku Knives",,,0,0,0,0,0,pending_after_quota_failure
+14309881,Sashimi Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Asian Knives > Sashimi Knives",,,0,0,0,0,0,pending_after_quota_failure
+14309891,Usuba & Nakiri Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Asian Knives > Usuba & Nakiri Knives",,,0,0,0,0,0,pending_after_quota_failure
+19290350011,Boning Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Boning Knives",,,0,0,0,0,0,pending_after_quota_failure
+720777011,Bread Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Bread Knives",,,0,0,0,0,0,pending_after_quota_failure
+3737381,Cake Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Cake Knives",,,0,0,0,0,0,pending_after_quota_failure
+409656,Carving Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Carving Knives",,,0,0,0,0,0,pending_after_quota_failure
+409660,Carving Sets,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Carving Sets",,,0,0,0,0,0,pending_after_quota_failure
+289857,Chef‘s Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Chef‘s Knives",,,0,0,0,0,0,pending_after_quota_failure
+409662,Meat Cleavers,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Cleavers > Meat Cleavers",,,0,0,0,0,0,pending_after_quota_failure
+409664,Vegetable Cleavers,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Cleavers > Vegetable Cleavers",,,0,0,0,0,0,pending_after_quota_failure
+3737391,Electric Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Electric Knives",,,0,0,0,0,0,pending_after_quota_failure
+19290351011,Fillet Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Fillet Knives",,,0,0,0,0,0,pending_after_quota_failure
+13875921,Fruit Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Fruit Knives",,,0,0,0,0,0,pending_after_quota_failure
+13875961,Garnishing Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Garnishing Knives",,,0,0,0,0,0,pending_after_quota_failure
+409670,Knife Block Sets,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Knife Block Sets",,,0,0,0,0,0,pending_after_quota_failure
+13840851,Knife Blocks,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Knife Blocks",,,0,0,0,0,0,pending_after_quota_failure
+13875941,Cheese Knives,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Specialty Knives > Cheese Knives",,,0,0,0,0,0,pending_after_quota_failure
+289804,Seafood Tools,"Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Cookware, Bakeware & Tools > Kitchen Knives & Accessories > Specialty Knives > Seafood Tools",,,0,0,0,0,0,pending_after_quota_failure
+289731,Bar Sets,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Bar Sets,,,0,0,0,0,0,pending_after_quota_failure
+3736991,Bar Strainers,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Bar Strainers,,,0,0,0,0,0,pending_after_quota_failure
+21560396011,Beverage Tubs,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Beverage Tubs,,,0,0,0,0,0,pending_after_quota_failure
+23763387011,Bottle Pourer Spouts,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Bottle Pourer Spouts,,,0,0,0,0,0,pending_after_quota_failure
+289733,Cocktail Shakers,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Cocktail Shakers,,,0,0,0,0,0,pending_after_quota_failure
+2566775011,Glass Markers & Charms,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Glass Markers & Charms,,,0,0,0,0,0,pending_after_quota_failure
+289732,Ice Crushers,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Ice Crushers,,,0,0,0,0,0,pending_after_quota_failure
+2566780011,Jiggers,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Jiggers,,,0,0,0,0,0,pending_after_quota_failure
+2566781011,Muddlers,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Muddlers,,,0,0,0,0,0,pending_after_quota_failure
+2566783011,Rimming Salts & Sugars,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Rimming Salts & Sugars,,,0,0,0,0,0,pending_after_quota_failure
+49572011,Seltzer Bottles & Chargers,Home & Kitchen > Kitchen & Dining > Food Service Equipment & Supplies > Tabletop & Serveware > Bar Equipment > Bar & Wine Tools > Seltzer Bottles & Chargers,,,0,0,0,0,0,pending_after_quota_failure
+16188240011,Bread Proofing Baskets,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Baking Tools & Accessories > Baking & Pastry Utensils > Bread Proofing Baskets,2026-09-01T21:42:07,2026-09-01T21:42:07,1,100,0,100,0,scanned
+678523011,Cake Testers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Baking Tools & Accessories > Baking & Pastry Utensils > Cake Testers,2026-09-01T21:42:08,2026-09-01T21:42:08,1,97,0,97,0,scanned
+678524011,Dough Blenders,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Baking Tools & Accessories > Baking & Pastry Utensils > Dough Blenders,2026-09-01T21:42:08,2026-09-01T21:42:08,1,100,0,100,0,scanned
+678525011,Pastry Brushes,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Baking Tools & Accessories > Baking & Pastry Utensils > Pastry Brushes,2026-09-01T21:42:09,2026-09-01T21:42:09,1,100,0,100,0,scanned
+3109475011,Bottle Openers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Bar & Wine Tools > Corkscrews & Openers > Bottle Openers,2026-09-01T21:42:09,2026-09-01T21:42:09,1,100,4,100,4,scanned
+13825981,Screwpull Levers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Bar & Wine Tools > Corkscrews & Openers > Screwpull Levers,2026-09-01T21:42:10,2026-09-01T21:42:10,1,47,5,47,5,scanned
+13826001,Waiter Corkscrews,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Bar & Wine Tools > Corkscrews & Openers > Waiter Corkscrews,2026-09-01T21:42:10,2026-09-01T21:42:10,1,100,9,100,9,scanned
+13826011,Wing Corkscrews,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Bar & Wine Tools > Corkscrews & Openers > Wing Corkscrews,2026-09-01T21:42:11,2026-09-01T21:42:11,1,100,1,100,1,scanned
+21560397011,Ice Bucket Kits,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Bar & Wine Tools > Ice Buckets & Tongs > Ice Bucket Kits,2026-09-01T21:42:12,2026-09-01T21:42:12,1,100,6,100,6,scanned
+678496011,Ice Buckets,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Bar & Wine Tools > Ice Buckets & Tongs > Ice Buckets,2026-09-01T21:42:12,2026-09-01T21:42:12,1,100,47,100,47,scanned
+678497011,Ice Tongs,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Bar & Wine Tools > Ice Buckets & Tongs > Ice Tongs,2026-09-01T21:42:13,2026-09-01T21:42:13,1,100,2,100,2,scanned
+678498011,Wine Pourers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Bar & Wine Tools > Wine Stoppers & Pourers > Wine Pourers,2026-09-01T21:42:13,2026-09-01T21:42:13,1,100,12,100,12,scanned
+678499011,Wine Stoppers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Bar & Wine Tools > Wine Stoppers & Pourers > Wine Stoppers,2026-09-01T21:42:14,2026-09-01T21:42:14,1,100,6,100,6,scanned
+17384865011,Burners,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Cheese Tools > Fondue > Burners,2026-09-01T21:42:14,2026-09-01T21:42:14,1,24,0,24,0,scanned
+17384862011,Electric Fondue Pots,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Cheese Tools > Fondue > Electric Fondue Pots,2026-09-01T21:42:15,2026-09-01T21:42:15,1,100,7,100,7,scanned
+17384863011,Forks,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Cheese Tools > Fondue > Forks,2026-09-01T21:42:16,2026-09-01T21:42:16,1,100,0,100,0,scanned
+17384864011,Pots & Sets,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Cheese Tools > Fondue > Pots & Sets,2026-09-01T21:42:16,2026-09-01T21:42:16,1,100,3,100,3,scanned
+678502011,Corers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Fruit & Vegetable Tools > Corers & Pitters > Corers,2026-09-01T21:42:17,2026-09-01T21:42:17,1,100,12,100,12,scanned
+678503011,Pitters,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Fruit & Vegetable Tools > Corers & Pitters > Pitters,2026-09-01T21:42:17,2026-09-01T21:42:17,1,100,3,100,3,scanned
+21606414011,Grapefruit Knives,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Fruit & Vegetable Tools > Grapefruit Utensils > Grapefruit Knives,2026-09-01T21:42:18,2026-09-01T21:42:18,1,100,0,100,0,scanned
+21606415011,Grapefruit Spoons,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Fruit & Vegetable Tools > Grapefruit Utensils > Grapefruit Spoons,2026-09-01T21:42:19,2026-09-01T21:42:19,1,99,0,99,0,scanned
+678504011,Potato Mashers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Fruit & Vegetable Tools > Potato Mashers & Ricers > Potato Mashers,2026-09-01T21:42:19,2026-09-01T21:42:19,1,100,3,100,3,scanned
+678505011,Potato Ricers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Fruit & Vegetable Tools > Potato Mashers & Ricers > Potato Ricers,2026-09-01T21:42:20,2026-09-01T21:42:20,1,100,3,100,3,scanned
+678508011,Digital Scales,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Measuring Tools & Scales > Kitchen Scales > Digital Scales,2026-09-01T21:42:20,2026-09-01T21:42:20,1,100,5,100,5,scanned
+678509011,Mechanical Scales,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Measuring Tools & Scales > Kitchen Scales > Mechanical Scales,2026-09-01T21:42:21,2026-09-01T21:42:21,1,100,0,100,0,scanned
+17548248011,Electric Pasta Makers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Pasta & Pizza Tools > Pasta Makers & Accessories > Electric Pasta Makers,2026-09-01T21:42:21,2026-09-01T21:42:21,1,100,0,100,0,scanned
+17548249011,Manual Pasta Makers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Pasta & Pizza Tools > Pasta Makers & Accessories > Manual Pasta Makers,2026-09-01T21:42:22,2026-09-01T21:42:22,1,100,0,100,0,scanned
+289760,Cheese Slicers,"Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Peeling, Grating & Slicing Tools > Mandolines & Slicers > Cheese Slicers",2026-09-01T21:42:23,2026-09-01T21:42:23,1,100,6,100,6,scanned
+17548242011,Egg Slicers,"Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Peeling, Grating & Slicing Tools > Mandolines & Slicers > Egg Slicers",2026-09-01T21:42:23,2026-09-01T21:42:23,1,100,6,100,6,scanned
+23616035011,Mandolines,"Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Peeling, Grating & Slicing Tools > Mandolines & Slicers > Mandolines",2026-09-01T21:42:24,2026-09-01T21:42:24,1,100,11,100,11,scanned
+678514011,Choppers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Choppers & Mincers > Choppers,2026-09-01T21:42:24,2026-09-01T21:42:24,1,100,7,100,7,scanned
+678515011,Mincers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Choppers & Mincers > Mincers,2026-09-01T21:42:25,2026-09-01T21:42:25,1,42,0,42,0,scanned
+678516011,Garlic Keepers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Garlic Tools > Garlic Keepers,2026-09-01T21:42:25,2026-09-01T21:42:25,1,100,0,100,0,scanned
+678517011,Garlic Peelers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Garlic Tools > Garlic Peelers,2026-09-01T21:42:26,2026-09-01T21:42:26,1,100,0,100,0,scanned
+678518011,Garlic Presses,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Garlic Tools > Garlic Presses,2026-09-01T21:42:26,2026-09-01T21:42:26,1,100,7,100,7,scanned
+678519011,Garlic Roasters,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Garlic Tools > Garlic Roasters,2026-09-01T21:42:27,2026-09-01T21:42:27,1,59,0,59,0,scanned
+15850251,Pepper Mills,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Salt & Pepper > Pepper Mills,2026-09-01T21:42:27,2026-09-01T21:42:27,1,100,10,100,10,scanned
+15850291,Pepper Shakers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Salt & Pepper > Pepper Shakers,2026-09-01T21:42:28,2026-09-01T21:42:28,1,100,4,100,4,scanned
+15850261,Salt & Pepper Mill Sets,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Salt & Pepper > Salt & Pepper Mill Sets,2026-09-01T21:42:29,2026-09-01T21:42:29,1,100,5,100,5,scanned
+15850301,Salt & Pepper Shaker Sets,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Salt & Pepper > Salt & Pepper Shaker Sets,2026-09-01T21:42:29,2026-09-01T21:42:29,1,100,7,100,7,scanned
+15850271,Salt Mills,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Salt & Pepper > Salt Mills,2026-09-01T21:42:30,2026-09-01T21:42:30,1,100,5,100,5,scanned
+15850311,Salt Shakers,Home & Kitchen > Kitchen & Dining > Kitchen Utensils & Gadgets > Seasoning & Spice Tools > Salt & Pepper > Salt Shakers,2026-09-01T21:42:30,2026-09-01T21:42:30,1,100,2,100,2,scanned
 16188247011,Utensil Crocks,Home & Kitchen > Kitchen & Dining > Storage & Organization > Flatware & Utensil Storage > Utensil Crocks,2026-08-17T09:44:05,2026-08-17T09:44:05,1,100,2,100,2,scanned
 23573463011,Utensil Hooks,Home & Kitchen > Kitchen & Dining > Storage & Organization > Flatware & Utensil Storage > Utensil Hooks,2026-08-17T09:44:06,2026-08-17T09:44:06,1,100,0,100,0,scanned
 16188248011,Utensil Racks,Home & Kitchen > Kitchen & Dining > Storage & Organization > Flatware & Utensil Storage > Utensil Racks,2026-08-17T09:44:08,2026-08-17T09:44:08,1,100,0,100,0,scanned
@@ -144,6 +263,9 @@ category_id,name,path,first_scanned_at,last_scanned_at,scan_count,last_products_
 16353701,Outdoor Trash Cans,"Home & Kitchen > Storage & Organization > Trash, Recycling & Compost > Outdoor Trash Cans",2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
 11601925011,Recycling Bins,"Home & Kitchen > Storage & Organization > Trash, Recycling & Compost > Recycling Bins",2026-08-24T10:10:37,2026-08-24T10:10:37,1,100,0,100,0,scanned
 16186594011,Trash Can Lids,"Home & Kitchen > Storage & Organization > Trash, Recycling & Compost > Trash Can Lids",2026-08-24T10:10:39,2026-08-24T10:10:39,1,100,13,100,13,scanned
+12900921,Index Card Storage,Office Products > Office Supplies > Education & Crafts > Filing Products > Index Card Filing > Index Card Storage,2026-09-01T21:42:31,2026-09-01T21:42:31,1,100,12,100,12,scanned
+21208375011,Outdoor Hanging Brackets,"Patio, Lawn & Garden > Gardening > Pots, Planters & Container Accessories > Plant Container Accessories > Hooks & Hangers > Outdoor Hanging Brackets",2026-09-01T21:42:31,2026-09-01T21:42:31,1,100,0,100,0,scanned
+21208376011,Outdoor Shepherd‘s Hooks,"Patio, Lawn & Garden > Gardening > Pots, Planters & Container Accessories > Plant Container Accessories > Hooks & Hangers > Outdoor Shepherd‘s Hooks",2026-09-01T21:42:32,2026-09-01T21:42:32,1,100,0,100,0,scanned
 13750261,Combination Grill Brushes & Scrapers,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Cleaning & Maintenance Tools > Combination Grill Brushes & Scrapers",2026-08-17T11:41:39,2026-08-17T11:41:39,1,100,5,100,5,scanned
 13750271,Grill Brushes,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Cleaning & Maintenance Tools > Grill Brushes",2026-08-17T11:41:41,2026-08-17T11:41:41,1,100,41,100,41,scanned
 13750281,Grill Scrapers,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Cooking Tools & Accessories > Cleaning & Maintenance Tools > Grill Scrapers",2026-08-17T11:41:42,2026-08-17T11:41:42,1,100,17,100,17,scanned
@@ -183,10 +305,16 @@ category_id,name,path,first_scanned_at,last_scanned_at,scan_count,last_products_
 13299201,Access Doors,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Kitchen Appliances & Storage > Outdoor Kitchen Storage > Access Doors",2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
 13299221,Cooling Bins,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Kitchen Appliances & Storage > Outdoor Kitchen Storage > Cooling Bins",2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
 13299211,Outdoor Kitchen Drawers,"Patio, Lawn & Garden > Grills & Outdoor Cooking > Outdoor Kitchen Appliances & Storage > Outdoor Kitchen Storage > Outdoor Kitchen Drawers",2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
+552918,Chainsaws,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Chainsaws",,,0,0,0,0,0,pending_after_quota_failure
+553914,Edgers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Edgers",,,0,0,0,0,0,pending_after_quota_failure
 3753701,Riding Lawn Mowers & Tractors,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Lawn Mowers & Tractors > Riding Lawn Mowers & Tractors",2026-08-24T10:43:11,2026-08-24T10:43:11,1,100,0,100,0,scanned
 13638738011,Robotic Lawn Mowers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Lawn Mowers & Tractors > Robotic Lawn Mowers",2026-08-24T10:43:12,2026-08-24T10:43:12,1,100,0,100,0,scanned
 3754911,Tow-Behind Lawn Mowers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Lawn Mowers & Tractors > Tow-Behind Lawn Mowers",2026-08-24T11:11:25,2026-08-24T11:11:25,1,100,0,100,0,scanned
 4543152011,Walk-Behind Lawn Mowers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Lawn Mowers & Tractors > Walk-Behind Lawn Mowers",2026-08-24T11:11:32,2026-08-24T11:11:32,1,100,11,100,11,scanned
+1091946,Log Splitters,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Log Splitters",,,0,0,0,0,0,pending_after_quota_failure
+554036,Metal Detectors,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Metal Detectors",,,0,0,0,0,0,pending_after_quota_failure
+3753651,Pole Saws,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Pole Saws",,,0,0,0,0,0,pending_after_quota_failure
+552856,Pressure Washers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Pressure Washers",,,0,0,0,0,0,pending_after_quota_failure
 21580220011,Pruning Shears,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Pruning Shears, Parts & Accessories > Pruning Shears",2026-08-24T11:11:37,2026-08-24T11:11:37,1,100,5,100,5,scanned
 21580219011,Pruning Shears Parts & Accessories,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Pruning Shears, Parts & Accessories > Pruning Shears Parts & Accessories",2026-08-24T11:11:41,2026-08-24T11:11:41,1,100,1,100,1,scanned
 9425917011,Accessories,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Chainsaw Parts & Accessories > Accessories",2026-08-17T12:42:56,2026-08-17T12:42:56,1,100,27,100,27,scanned
@@ -249,12 +377,44 @@ category_id,name,path,first_scanned_at,last_scanned_at,scan_count,last_products_
 492202011,Lines & Spools,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > String Trimmer Parts & Accessories > Lines & Spools",2026-08-17T13:43:55,2026-08-17T13:43:55,1,100,24,100,24,scanned
 9425937011,Replacement Parts,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > String Trimmer Parts & Accessories > Replacement Parts",2026-08-17T13:43:57,2026-08-17T13:43:57,1,100,54,100,54,scanned
 3564002011,Two-Stroke Engine Oil,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Replacement Parts & Accessories > Two-Stroke Engine Oil",2026-08-24T11:44:07,2026-08-24T11:44:07,1,100,2,100,2,scanned
+215739577011,Sawmills,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Sawmills",,,0,0,0,0,0,pending_after_quota_failure
+553954,String Trimmers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > String Trimmers",,,0,0,0,0,0,pending_after_quota_failure
+553956,Tillers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Tillers",,,0,0,0,0,0,pending_after_quota_failure
 553938,Hedge Trimmers,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Trimmers & Accessories > Hedge Trimmers",2026-08-24T11:44:09,2026-08-24T11:44:09,1,100,19,100,19,scanned
+3480723011,Weed Torches,"Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Weed Torches",,,0,0,0,0,0,pending_after_quota_failure
+3753621,"Wood Chippers, Shredders, & Mulchers","Patio, Lawn & Garden > Mowers & Outdoor Power Tools > Wood Chippers, Shredders, & Mulchers",,,0,0,0,0,0,pending_after_quota_failure
+3563985011,Decorative Garden Stools,"Patio, Lawn & Garden > Outdoor Décor > Decorative Garden Stools",2026-09-01T21:41:49,2026-09-01T21:41:49,1,100,1,100,1,scanned
 5813573011,Beer Glasses,Sports & Outdoors > Fan Shop > Home & Kitchen > Kitchen & Dining > Cups & Glasses > Beer Glasses,2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
 374883011,Shot Glasses,Sports & Outdoors > Fan Shop > Home & Kitchen > Kitchen & Dining > Cups & Glasses > Shot Glasses,2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
 5813572011,Tumblers,Sports & Outdoors > Fan Shop > Home & Kitchen > Kitchen & Dining > Cups & Glasses > Tumblers,2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
 5769027011,Disposable Cups,Sports & Outdoors > Fan Shop > Home & Kitchen > Kitchen & Dining > Disposable Cups & Plates > Disposable Cups,2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
 5769028011,Disposable Plates,Sports & Outdoors > Fan Shop > Home & Kitchen > Kitchen & Dining > Disposable Cups & Plates > Disposable Plates,2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
+3400591,Open Fire Cookware,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Camping Cookware > Open Fire Cookware,2026-09-01T21:42:33,2026-09-01T21:42:33,1,100,6,100,6,scanned
+3258961011,"Pots, Pans & Griddles","Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Camping Cookware > Pots, Pans & Griddles",2026-09-01T21:42:33,2026-09-01T21:42:33,1,100,17,100,17,scanned
+3400711,Bowls,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Dishes & Utensils > Bowls,2026-09-01T21:42:34,2026-09-01T21:42:34,1,100,6,100,6,scanned
+3400731,Cups & Mugs,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Dishes & Utensils > Cups & Mugs,2026-09-01T21:42:34,2026-09-01T21:42:34,1,100,9,100,9,scanned
+3400741,Flatware,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Dishes & Utensils > Flatware,2026-09-01T21:42:35,2026-09-01T21:42:35,1,100,8,100,8,scanned
+3400751,Mess Kits,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Dishes & Utensils > Mess Kits,2026-09-01T21:42:35,2026-09-01T21:42:35,1,100,5,100,5,scanned
+3400771,Plates,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Dishes & Utensils > Plates,2026-09-01T21:42:36,2026-09-01T21:42:36,1,100,9,100,9,scanned
+3401031,Empty Fuel Bottles,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Stove Accessories > Empty Fuel Bottles,2026-09-01T21:42:36,2026-09-01T21:42:36,1,79,0,79,0,scanned
+2204647011,Fire Starters,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Stove Accessories > Fire Starters,2026-09-01T21:42:37,2026-09-01T21:42:37,1,100,0,100,0,scanned
+3400961,Replacement Fuel,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Stove Accessories > Replacement Fuel,2026-09-01T21:42:37,2026-09-01T21:42:37,1,100,0,100,0,scanned
+19450135011,Backpacking Stoves,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Stoves & Grills > Backpacking Stoves,2026-09-01T21:42:38,2026-09-01T21:42:38,1,100,5,100,5,scanned
+3401041,Camping Grills,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Stoves & Grills > Camping Grills,2026-09-01T21:42:38,2026-09-01T21:42:38,1,100,7,100,7,scanned
+19450136011,Camping Stoves,Sports & Outdoors > Outdoor Recreation > Camping & Hiking > Camp Kitchen > Stoves & Grills > Camping Stoves,2026-09-01T21:42:39,2026-09-01T21:42:39,1,100,30,100,30,scanned
+3397571,Storage,Sports & Outdoors > Sports > Boating & Sailing > Boating > Boat Cabin Products > Storage,2026-09-01T21:42:40,2026-09-01T21:42:40,1,100,10,100,10,scanned
+3398891,Cleaning Tools,Sports & Outdoors > Sports > Boating & Sailing > Boating > Maintenance Supplies > Cleaning Tools,2026-09-01T21:42:40,2026-09-01T21:42:40,1,100,6,100,6,scanned
+3398991,Tools,Sports & Outdoors > Sports > Boating & Sailing > Boating > Maintenance Supplies > Tools,2026-09-01T21:42:41,2026-09-01T21:42:41,1,100,6,100,6,scanned
+10208099011,Spoke Tools,Sports & Outdoors > Sports > Cycling > Wheels & Accessories > Spokes & Parts > Spoke Tools,2026-09-01T21:42:41,2026-09-01T21:42:41,1,100,0,100,0,scanned
+3416231,Tools,"Sports & Outdoors > Sports > Skates, Skateboards & Scooters > Skateboarding > Accessories > Tools",2026-09-01T21:42:42,2026-09-01T21:42:42,1,100,0,100,0,scanned
+12118748011,Ball Storage,Sports & Outdoors > Sports > Team Sports > Basketball > Accessories > Ball Storage,2026-09-01T21:42:43,2026-09-01T21:42:43,1,100,0,100,0,scanned
+3420031,Stringing Machines & Tools,Sports & Outdoors > Sports > Team Sports > Tennis & Racquet Sports > Tennis > Accessories > Stringing Machines & Tools,2026-09-01T21:42:00,2026-09-01T21:42:00,1,100,0,100,0,scanned
+10208160011,Indoor Paddleboard Storage,Sports & Outdoors > Sports > Water Sports > Surfing > Stand-Up Paddleboarding > Indoor Paddleboard Storage,2026-09-01T21:42:43,2026-09-01T21:42:43,1,75,1,75,1,scanned
+13398341,Patio Doors,Tools & Home Improvement > Building Supplies > Building Materials > Doors > Exterior Doors > Patio Doors,2026-09-01T21:42:44,2026-09-01T21:42:44,1,60,0,60,0,scanned
+3775401,Raised Toilet Seats,Tools & Home Improvement > Kitchen & Bath Fixtures > Bathroom Fixtures > Bathroom Safety & Accessibility > Toilets & Toilet Aids > Raised Toilet Seats,2026-09-01T21:42:44,2026-09-01T21:42:44,1,100,25,100,25,scanned
+8624797011,Toilet Assistance Cushions,Tools & Home Improvement > Kitchen & Bath Fixtures > Bathroom Fixtures > Bathroom Safety & Accessibility > Toilets & Toilet Aids > Toilet Assistance Cushions,2026-09-01T21:42:45,2026-09-01T21:42:45,1,100,5,100,5,scanned
+8624798011,Toilet Assistance Steps,Tools & Home Improvement > Kitchen & Bath Fixtures > Bathroom Fixtures > Bathroom Safety & Accessibility > Toilets & Toilet Aids > Toilet Assistance Steps,2026-09-01T21:42:45,2026-09-01T21:42:45,1,100,28,100,28,scanned
+3775391,Toilet Safety Frames & Rails,Tools & Home Improvement > Kitchen & Bath Fixtures > Bathroom Fixtures > Bathroom Safety & Accessibility > Toilets & Toilet Aids > Toilet Safety Frames & Rails,2026-09-01T21:42:46,2026-09-01T21:42:46,1,100,13,100,13,scanned
 6871439011,Bathroom Storage & Mirrors,Tools & Home Improvement > Kitchen & Bath Fixtures > Bathroom Fixtures > Bathroom Storage & Mirrors,2026-08-24T12:12:25,2026-08-24T12:12:25,1,100,0,100,0,scanned
 5486441011,Close to Ceiling Lights,Tools & Home Improvement > Lighting & Ceiling Fans > Outdoor Lighting > Porch & Patio Lights > Close to Ceiling Lights,2026-08-17T13:44:00,2026-08-17T13:44:00,1,100,4,100,4,scanned
 5486442011,Pendant Lights,Tools & Home Improvement > Lighting & Ceiling Fans > Outdoor Lighting > Porch & Patio Lights > Pendant Lights,2026-08-17T13:44:02,2026-08-17T13:44:02,1,100,14,100,14,scanned
@@ -273,6 +433,7 @@ category_id,name,path,first_scanned_at,last_scanned_at,scan_count,last_products_
 671804011,Deck Boxes,Tools & Home Improvement > Storage & Home Organization > Outdoor Storage > Deck Boxes,2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
 21424007011,Garden Houses,Tools & Home Improvement > Storage & Home Organization > Outdoor Storage > Garden Houses,2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
 13400671,Storage Sheds,Tools & Home Improvement > Storage & Home Organization > Outdoor Storage > Storage Sheds,2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
+23575205011,Storage Lockers,Tools & Home Improvement > Storage & Home Organization > Storage Lockers,,,0,0,0,0,0,pending_after_quota_failure
 15782421,Bucket Organizers,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Bucket Organizers,2026-08-24T12:31:08,2026-08-24T12:31:08,1,100,11,100,11,scanned
 10140455011,Craft Cabinets,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Craft Cabinets,2026-08-09T17:37:09,2026-08-09T17:37:09,1,,,,,scanned
 322566011,Tool Aprons,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Aprons,2026-08-24T12:47:51,2026-08-24T12:47:51,1,100,18,100,18,scanned
@@ -280,3 +441,7 @@ category_id,name,path,first_scanned_at,last_scanned_at,scan_count,last_products_
 553580,Tool Belts,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Belts,2026-08-24T12:47:58,2026-08-24T12:47:58,1,100,36,100,36,scanned
 13400721,Tool Boxes,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Boxes,2026-08-24T12:48:02,2026-08-24T12:48:02,1,100,33,100,33,scanned
 10140456011,Tool Chests & Cabinets,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Chests & Cabinets,2026-08-24T12:48:06,2026-08-24T12:48:06,1,100,11,100,11,scanned
+553582,Tool Holsters,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Holsters,2026-09-01T21:41:47,2026-09-01T21:41:47,1,100,21,100,21,scanned
+322568011,Tool Pouches,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Pouches,2026-09-01T21:41:48,2026-09-01T21:41:48,1,100,29,100,29,scanned
+15709201,Tool Trays,Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Trays,2026-09-01T21:41:48,2026-09-01T21:41:48,1,100,30,100,30,scanned
+166352011,Gardening Tools,Toys & Games > Sports & Outdoor Play > Gardening Tools,,,0,0,0,0,0,pending_after_quota_failure

@@ -99,7 +99,7 @@ top_reject_reasons() {
 discovery_run_succeeded() {
   local manifest_path="$1"
   [[ -s "$manifest_path" ]] || return 1
-  python3 -c 'import json, sys; data=json.load(open(sys.argv[1], encoding="utf-8")); raise SystemExit(0 if data.get("status") == "success" else 1)' "$manifest_path"
+  python3 -c 'import json, sys; data=json.load(open(sys.argv[1], encoding="utf-8")); ok=data.get("status") in {"success", "success_no_candidates"} and int(data.get("successful_categories") or 0)>0 and int(data.get("products_examined") or 0)>0; raise SystemExit(0 if ok else 1)' "$manifest_path"
 }
 
 if ! /usr/bin/shlock -p "$$" -f "$LOCK_FILE"; then

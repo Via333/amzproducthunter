@@ -1,0 +1,15 @@
+{
+  "run_id": "20260817_083848",
+  "strategy": "category",
+  "status": "success",
+  "started_at": "2026-08-17T08:38:48",
+  "finished_at": "2026-08-17T13:44:12",
+  "category_tree_source": "live",
+  "selected_categories": 100,
+  "successful_categories": 100,
+  "failed_categories": 0,
+  "products_examined": 9951,
+  "eligible_candidates_before_dedupe": 1637,
+  "candidate_count": 200,
+  "failed_category_details": []
+}

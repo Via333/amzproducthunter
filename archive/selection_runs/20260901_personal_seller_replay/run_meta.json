@@ -1,0 +1,9 @@
+{
+  "run_id": "20260901_personal_seller_replay",
+  "generated_at": "2026-09-01T21:52:33",
+  "input": "data/discovered_candidates.csv",
+  "output_csv": "reports/selection_ranked.csv",
+  "output_md": "reports/selection_report.md",
+  "candidate_count": 200,
+  "archived_candidate_count": 20
+}

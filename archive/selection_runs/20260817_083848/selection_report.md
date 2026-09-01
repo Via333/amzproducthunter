@@ -1,0 +1,37 @@
+# Amazon Product Selection Report
+
+- Source: `data/discovered_candidates.csv`
+- Generated: 2026-08-17 13:44
+- Candidates: 200
+
+## Ranked Shortlist
+
+| Rank | Product | Category | Score | Recommendation | Margin | Monthly Gross Profit | Flags |
+| ---: | --- | --- | ---: | --- | ---: | ---: | --- |
+| 1 | [MACKENZIE-CHILDS Glass Sweets Jar with Lid, Pink-and-White Rosy Check](https://www.amazon.com/dp/B0CV7H2DLQ) | ['Kitchen & Dining', 'kitchen'] | 59.4 | Watch or collect more data | 36.5% | $7,107.77 | landed cost still estimated |
+| 2 | [Acellegic 3 Sets Lemon Party Decorations, Mediterranean, Blue Yellow \| 3 Utensil Holders, Yellow Forks Spoons Knives Kit, Disposable Cutlery Set, for Weddings, Showers, Tables Centerpieces](https://www.amazon.com/dp/B0H2GRHQN1) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 21.9% | $2,727.45 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 3 | [Bread Box with Lid and Handle,Airtight Bread Storage Container with Time Recording,Bread Keeper for Homemade Toast, Bagel, Portable bread boxes for Camping & Outdoor Travel,Not dishwasher safe](https://www.amazon.com/dp/B0H29SKG78) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 12.4% | $4,194.75 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 4 | [Large Stainless Steel Bread Storage Box with Lid \| Large Capacity, Airtight Fresh-Keeping See-through Lid, Time Recording, Perfect for Homemade Loaf, Toast, Bagel and Cookies](https://www.amazon.com/dp/B0H35SLNQC) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 9.1% | $2,375.86 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 5 | [Dovipira 2 Pack Large Magnetic Plastic Wrap and Foil Dispenser with Cutter](https://www.amazon.com/dp/B0G96HZ25P) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 29.4% | $4,833.98 | gross margin below 35%; landed cost still estimated |
+| 6 | [4 Pack 20 oz Overnight Oats Containers with Lids and Spoons, Glass \| 16+4 oz Dual-Layer Glass Jars Dry and Wet Separation, Leak Proof, Good Grade, Reusable, Portable,For Oatmeal Salad Yogurt](https://www.amazon.com/dp/B0G8VDQQP4) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 32.7% | $30,336.20 | gross margin below 35%; landed cost still estimated |
+| 7 | [Overnight Oats Containers with Lids - Glass Mason Jars, Meal Prep](https://www.amazon.com/dp/B0FSRPZVZJ) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 16.4% | $8,040.62 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 8 | [11 Pcs Boho Hanging Wall Basket Decor Handmade Woven Basket Wall Decorative Boho Wicker Baskets Placemats Round Farmhouse Bulrush Art for Rustic Home Decorations Christmas Gift(Stylish)](https://www.amazon.com/dp/B0D41ZYL8D) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 34.4% | $6,316.88 | gross margin below 35%; high seasonality; landed cost still estimated |
+| 9 | [Glenmal 13 Pcs Boho Wall Basket Decor Set Woven Rattan Seagrass,Plain \| Handmade Flat Baskets for Bedroom Living Room Office, Wicker Bamboo Seagrass Hanging Art, Farmhouse Gallery Ready to Hang](https://www.amazon.com/dp/B0BWLV23R9) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 30.5% | $3,658.22 | gross margin below 35%; landed cost still estimated |
+| 10 | [FUIN Tea Towel Ladder, Mini Rustic Solid Wood Decorative Ladder, Brown \| Farmhouse living room accent, Layered blanket towel quilt display, Visible wood grain, Bathroom and Bedroom use](https://www.amazon.com/dp/B0BY2GBNJ4) | ['Home & Kitchen', 'home-garden'] | 45.0 | Reject | 20.8% | $3,028.75 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 11 | [Reusable Dirty Rag Storage Linen Bag,Green and White,Classic](https://www.amazon.com/dp/B0GY8ZDJF4) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 27.4% | $1,784.11 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 12 | [MyLifeUNIT Water Bottle Organizer for Stanley Cups 40oz/30oz/20oz, 360° Rotating Wooden Tumbler Organizer, Stanley Cup Holder for Cabinet Storage (Yellow)](https://www.amazon.com/dp/B0DZ6H3PSP) | ['Kitchen & Dining', 'kitchen'] | 45.0 | Reject | 25.1% | $4,634.60 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 13 | [Vtopmart 6 Pack 16oz Glass Overnight Oats Containers with Bamboo Lids \| Airtight Lid, Leak Proof, Good Grade, Wide Mouth, Reusable, Portable, For Yogurt Chia Pudding Salad Pickling Snacks Meal prep](https://www.amazon.com/dp/B0FNN4WLKJ) | ['Kitchen & Dining', 'kitchen'] | 44.6 | Reject | 11.7% | $9,617.44 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 14 | [4 in 1 Metal Clip On Cup Holder Attachment for Gaming Desk or Table, Fits up to 40oz Cups, Sturdy and Easy to Clamp, Attachable Anti-Spill Cup Holder for Chair, Bedside, Bottles, Drinks - Black](https://www.amazon.com/dp/B0DLLCWTR4) | ['Kitchen & Dining', 'kitchen'] | 44.5 | Reject | 27.6% | $3,479.85 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 15 | [Sorbus Water Bottle Organizer for Refrigerator & Pantry, Stackable (2 Pack) \| BPA-free construction keeps drinks arranged and visible, with easy dispenser access for chilled storage and restocking.](https://www.amazon.com/dp/B0D6RZLSRC) | ['Kitchen & Dining', 'kitchen'] | 44.4 | Reject | 19.5% | $14,057.23 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 16 | [Foldable Cake Carrier with Lid and Handle Fits 10in round 8.5in High Cake \| Tall Cake Transport Container](https://www.amazon.com/dp/B0FJ8MPX54) | ['Kitchen & Dining', 'kitchen'] | 44.0 | Reject | 11.9% | $1,592.12 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 17 | [Cotton Hanging Fruit Basket,3 Tier Woven wall Basket, hanging Storage baskets for Kicthen and Bathroom, Macrame wall hanging, Boho Decor Over The Door Decor Organizer, White (Brown)](https://www.amazon.com/dp/B0FJLRZQWM) | ['Kitchen & Dining', 'kitchen'] | 44.0 | Reject | 29.6% | $2,756.85 | gross margin below 35%; landed cost still estimated |
+| 18 | [Adorabby Cereal Dispenser Countertop 2 Pack, Double 3L Airtight](https://www.amazon.com/dp/B0GFW9LGSD) | ['Kitchen & Dining', 'kitchen'] | 43.8 | Reject | 26.1% | $2,990.97 | gross margin below 35%; landed cost still estimated |
+| 19 | [Degeyoyo Hanging Basket, 3-Tier Woven Wall Basket with 4 Hooks, Cotton Rope Storage Baskets, Over the Door Organizer for Nursery, Bedroom, Cottage and Boho Wall Decor](https://www.amazon.com/dp/B0F6LFRDHQ) | ['Kitchen & Dining', 'kitchen'] | 43.6 | Reject | 17.7% | $3,970.51 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+| 20 | [Sotfamily FIFO Soda Can Organizer for Pantry or Fridge, Holds 24 Cans \| 2-Pack Automatic Rolling Drink Organizer for Fridge, Space-Saving Pop Can Dispenser/Holder/Storage/Container for Refrigerator](https://www.amazon.com/dp/B0DN6BDBHQ) | ['Kitchen & Dining', 'kitchen'] | 43.5 | Reject | 17.5% | $6,832.01 | gross margin below 35%; unit profit below $8; landed cost still estimated |
+
+## Next Actions
+
+1. Keep only products marked `Go to supplier validation` or `Watch or collect more data`.
+2. For each kept product, collect 10-20 competitor ASINs and supplier quotes.
+3. Replace estimated costs with real landed costs before sampling.
+4. Run compliance checks before moving to material and listing automation.

@@ -1,0 +1,34 @@
+{
+  "run_id": "20260824_083043",
+  "status": "partial",
+  "started_at": "2026-08-24T12:48:06",
+  "finished_at": "2026-08-24T15:13:58",
+  "selected_count": 4,
+  "researched_count": 2,
+  "cached_count": 0,
+  "failed_count": 2,
+  "items": [
+    {
+      "asin": "B0DRN24XD6",
+      "score": "69.1",
+      "status": "researched"
+    },
+    {
+      "asin": "B0FN8HSZHC",
+      "score": "63.3",
+      "status": "researched"
+    },
+    {
+      "asin": "B0CX979FY1",
+      "score": "60.7",
+      "status": "failed",
+      "error": "subprocess.CalledProcessError: Command '['python3', 'product_opportunity_research.py', '--asin', 'B0CX979FY1']' returned non-zero exit status 1."
+    },
+    {
+      "asin": "B0FPRFFNH6",
+      "score": "59.3",
+      "status": "failed",
+      "error": "subprocess.CalledProcessError: Command '['python3', 'product_opportunity_research.py', '--asin', 'B0FPRFFNH6']' returned non-zero exit status 1."
+    }
+  ]
+}

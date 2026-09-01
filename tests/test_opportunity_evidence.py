@@ -80,6 +80,26 @@ class EvidenceTest(unittest.TestCase):
         self.assertIn("observed:price,sales,reviews,rating", candidate["data_source_summary"])
         self.assertGreater(candidate["evidence_confidence"], 30)
 
+    def test_mcp_category_report_fields_map_to_candidate(self) -> None:
+        defaults = json.loads((ROOT / "config" / "import_defaults.json").read_text(encoding="utf-8"))
+        candidate = build_candidate(
+            {
+                "asin": "MCP1",
+                "title": "Compact Drawer Organizer",
+                "price": 26.99,
+                "monthly_sales_volume": 640,
+                "review_count": 83,
+                "star_rating": 4.2,
+                "product_category": "Drawer Organizers",
+                "fba_fee": 5.25,
+            },
+            defaults,
+        )
+        self.assertEqual(candidate["est_monthly_sales"], 640)
+        self.assertEqual(candidate["avg_rating"], 4.2)
+        self.assertEqual(candidate["category"], "Drawer Organizers")
+        self.assertIn("observed:price,sales,reviews,rating,fba_fee", candidate["data_source_summary"])
+
     def test_fragile_material_is_a_hard_risk_signal(self) -> None:
         defaults = json.loads((ROOT / "config" / "import_defaults.json").read_text(encoding="utf-8"))
         candidate = build_candidate(
@@ -100,8 +120,29 @@ class EvidenceTest(unittest.TestCase):
 
     def test_personal_seller_hard_risk_signals(self) -> None:
         self.assertGreaterEqual(infer_oversize_risk("2 Count 160 Quart Wheeled Extra Large Storage Bin"), 80)
+        self.assertGreaterEqual(infer_oversize_risk("Clear Stackable Storage Container 21 Qt"), 65)
+        self.assertGreaterEqual(infer_oversize_risk("65L Large Woven Cotton Rope Blanket Basket"), 80)
+        self.assertGreaterEqual(infer_oversize_risk("6 Pack Large Closet Storage Baskets for Shelves"), 80)
+        self.assertGreaterEqual(infer_oversize_risk("StorageWorks Storage Bins with Lids, Fabric Closet Storage Bins, Large"), 80)
+        self.assertGreaterEqual(infer_oversize_risk("Storage Box Organizer, Pack of 4"), 80)
+        self.assertGreaterEqual(infer_oversize_risk("Storage Box 28 Inches Long"), 65)
         self.assertGreaterEqual(infer_compliance_risk("Reusable Beeswax Bread Bags for Sourdough"), 80)
         self.assertGreaterEqual(infer_compliance_risk("Glass Sweets Jar", "Cookie Jars"), 80)
+        self.assertGreaterEqual(infer_compliance_risk("Camping Stove with Gas Regulator"), 80)
+        self.assertGreaterEqual(infer_compliance_risk("Quick Draw Belly Band Holster for Concealed Carry"), 80)
+        self.assertGreaterEqual(infer_compliance_risk("Stainless Steel Camping Cookware Set"), 80)
+        self.assertGreaterEqual(infer_compliance_risk("Raised Toilet Seat with Handles"), 80)
+        self.assertGreaterEqual(infer_compliance_risk("Edible Wafer Paper for Cake Decoration"), 80)
+        self.assertGreaterEqual(infer_compliance_risk("Liquor Bottle Pourer Dispenser"), 80)
+        self.assertGreaterEqual(infer_compliance_risk("Collapsible Bowls", "Camping Dishes & Utensils"), 80)
+        self.assertGreaterEqual(infer_compliance_risk("Mini Hand Garlic Grinder"), 80)
+        self.assertGreaterEqual(infer_oversize_risk("Broom and Dustpan Set with 53“ Long Handle"), 65)
+        self.assertGreaterEqual(infer_oversize_risk("4 Gallon Ice Bucket with Handles"), 80)
+        self.assertGreaterEqual(infer_oversize_risk("Spin Mop System with Bucket and Wringer"), 80)
+        self.assertGreaterEqual(infer_oversize_risk("Mop and Bucket Set for Floor Cleaning"), 80)
+        self.assertGreaterEqual(infer_oversize_risk("Heavy-Duty Outdoor Broom with Stiff Bristles"), 80)
+        self.assertGreaterEqual(infer_oversize_risk("Large 10 Quart Wash Basin Bucket"), 65)
+        self.assertGreaterEqual(infer_oversize_risk("Floor Scrub Brush with 52 inch Long Handle"), 65)
         self.assertFalse(has_valid_category("['', '']"))
         self.assertTrue(has_valid_category("Home & Kitchen > Storage Boxes"))
 

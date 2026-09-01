@@ -3,6 +3,7 @@
   "deep_dive_summary": "data/competitor_deep_dive_summary.csv",
   "allow_deep_dive_fallback": false,
   "research_root": "research",
+  "discovery_runs_root": "archive/discovery_runs",
   "output_csv": "data/category_shape_validation.csv",
   "output_report": "reports/category_shape_validation.md",
   "archive_dir": "archive",

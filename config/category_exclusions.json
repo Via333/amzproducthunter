@@ -131,6 +131,36 @@
       "term": "collectible trading cards",
       "type": "品牌垄断",
       "reason": "IP、授权、真伪和头部品牌壁垒明显"
+    },
+    {
+      "term": "mowers & outdoor power tools",
+      "type": "大件/高售后",
+      "reason": "普遍体积或重量较大，机械安全、维修和退货成本高"
+    },
+    {
+      "term": "storage lockers",
+      "type": "大件",
+      "reason": "包装体积和重量高，不适合个人卖家"
+    },
+    {
+      "term": "kitchen knives & accessories",
+      "type": "高责任/食品接触",
+      "reason": "刀具安全责任、直接食品接触和品牌专利风险较高"
+    },
+    {
+      "term": "bar tools & drinkware",
+      "type": "易碎/食品接触",
+      "reason": "大量玻璃制品和直接饮品接触产品，不符合当前低风险范围"
+    },
+    {
+      "term": "food service equipment & supplies",
+      "type": "食品接触/商用门槛",
+      "reason": "直接食品接触、商用规格和合规证明要求较多"
+    },
+    {
+      "term": "toys & games",
+      "type": "儿童合规",
+      "reason": "儿童产品测试、标签和产品责任门槛较高"
     }
   ]
 }

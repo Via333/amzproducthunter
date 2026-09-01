@@ -1,0 +1,6 @@
+price_band,listing_count,monthly_sales,sales_share,median_reviews
+under_15,41,271400,0.5751,3562
+15_to_25,15,163400,0.3463,14209
+25_to_40,6,23200,0.0492,2274
+40_to_60,4,13000,0.0275,5504
+60_plus,1,900,0.0019,287

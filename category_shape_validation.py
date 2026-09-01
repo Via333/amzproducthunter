@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import os
 import re
 import shutil
@@ -19,11 +20,15 @@ from product_selection import amazon_listing_url
 
 
 OUTPUT_FIELDS = [
+    "seed_rank",
     "seed_asin",
     "seed_listing_url",
     "seed_title",
     "seed_score",
     "seed_recommendation",
+    "source_category_id",
+    "source_category_name",
+    "validation_run_id",
     "category_path",
     "data_quality",
     "product_form",
@@ -83,6 +88,33 @@ ARCHIVE_FIELDS = [
 ]
 
 
+KNOWN_TITLE_FORMS = {
+    "magnetic tool mat",
+    "card binder",
+    "tool holster",
+    "duster refill",
+    "boat rail cup holder",
+    "boat storage bag",
+    "boat caddy",
+    "digital scale",
+    "socket organizer",
+    "beeswax bread bag",
+    "disposable bakery bread bag",
+    "bread box",
+    "beeswax wrap",
+    "toilet brush holder",
+    "toilet plunger brush combo",
+    "under-rim toilet brush",
+    "silicone toilet brush",
+    "disposable toilet brush refill",
+    "hose splitter",
+    "hose connector",
+    "bike air pump",
+    "salt grinder",
+    "solar pathway lights",
+}
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Validate Amazon seeds by category and product form.")
     parser.add_argument("--rules", default="config/category_shape_validation_rules.json")
@@ -130,6 +162,48 @@ def med(values):
     return median(values) if values else 0.0
 
 
+def percentile(values, fraction):
+    numbers = sorted(to_float(value, 0) for value in values if value not in (None, ""))
+    if not numbers:
+        return 0.0
+    position = (len(numbers) - 1) * fraction
+    lower = math.floor(position)
+    upper = math.ceil(position)
+    if lower == upper:
+        return numbers[lower]
+    return numbers[lower] + (numbers[upper] - numbers[lower]) * (position - lower)
+
+
+def rank_values(values):
+    order = sorted(range(len(values)), key=lambda index: values[index])
+    ranks = [0.0] * len(values)
+    cursor = 0
+    while cursor < len(order):
+        end = cursor
+        value = values[order[cursor]]
+        while end + 1 < len(order) and values[order[end + 1]] == value:
+            end += 1
+        rank = (cursor + end + 2) / 2
+        for index in order[cursor : end + 1]:
+            ranks[index] = rank
+        cursor = end + 1
+    return ranks
+
+
+def spearman(values_a, values_b):
+    if len(values_a) != len(values_b) or len(values_a) < 2:
+        return 0.0
+    ranks_a = rank_values(values_a)
+    ranks_b = rank_values(values_b)
+    avg_a = mean(ranks_a)
+    avg_b = mean(ranks_b)
+    numerator = sum((a - avg_a) * (b - avg_b) for a, b in zip(ranks_a, ranks_b))
+    denominator = math.sqrt(
+        sum((a - avg_a) ** 2 for a in ranks_a) * sum((b - avg_b) ** 2 for b in ranks_b)
+    )
+    return numerator / denominator if denominator else 0.0
+
+
 def normalize_text(value):
     return re.sub(r"[^a-z0-9]+", " ", str(value or "").lower()).strip()
 
@@ -144,13 +218,13 @@ def short_title(value, limit=110):
 def select_seed_rows(rows, rules):
     selected = []
     recommendation_contains = str(rules.get("seed_recommendation_contains", "Watch"))
-    for row in rows:
+    for rank, row in enumerate(rows, start=1):
         asin = str(row.get("source_asin", "") or "").strip()
         if not asin:
             continue
         if recommendation_contains and recommendation_contains not in str(row.get("recommendation", "")):
             continue
-        selected.append(row)
+        selected.append({**row, "_seed_rank": rank})
     return selected[: int(rules.get("seed_limit", len(selected)))]
 
 
@@ -161,6 +235,15 @@ def by_key(rows, key):
 def product_form_from_title(title):
     text = normalize_text(title)
     rules = [
+        ("magnetic tool mat", ["magnetic tool mat", "magnetic work mat"]),
+        ("card binder", ["card binder", "trading card album", "card collection binder"]),
+        ("tool holster", ["tool holster", "drill holster", "tool belt holder"]),
+        ("duster refill", ["duster refill", "duster refills", "duster replacement"]),
+        ("boat rail cup holder", ["boat rail cup holder", "marine cup holder", "clamp on cup holder"]),
+        ("boat storage bag", ["boat storage bag", "boat gear bag", "boat tote bag"]),
+        ("boat caddy", ["boat caddy", "marine caddy"]),
+        ("digital scale", ["digital gram scale", "digital kitchen scale", "digital scale"]),
+        ("socket organizer", ["socket organizer", "socket holder", "socket tray"]),
         ("beeswax bread bag", ["beeswax bread bag", "beeswax linen", "beeswax sourdough", "waxed bread bag"]),
         ("disposable bakery bread bag", ["bakery bread bag", "bread bag with window", "paper bread bag"]),
         ("bread box", ["bread box", "bread storage container", "bread keeper"]),
@@ -183,12 +266,83 @@ def product_form_from_title(title):
     return " ".join(tokens[:3]) if tokens else "unknown"
 
 
+def product_form_from_category_product(product):
+    title_form = product_form_from_title(product.get("title", ""))
+    if title_form in KNOWN_TITLE_FORMS:
+        return title_form
+    product_category = normalize_text(product.get("product_category", ""))
+    if product_category and product_category != "unknown":
+        return product_category
+    return title_form
+
+
 def active_research_dir(seed_asin, rules):
     root = Path(rules.get("research_root", "research"))
     path = root / seed_asin
     if (path / "top_products.csv").exists() and (path / "product_forms.csv").exists():
         return path
     return None
+
+
+def resolve_discovery_run_dir(rules):
+    runs_root = Path(rules.get("discovery_runs_root", "archive/discovery_runs"))
+    requested_run_id = str(os.environ.get("AMZ_WEEKLY_RUN_ID", "") or rules.get("discovery_run_id", "")).strip()
+    if requested_run_id:
+        requested = runs_root / requested_run_id
+        manifest_path = requested / "run_manifest.json"
+        if manifest_path.exists():
+            manifest = load_json(manifest_path)
+            replay_source = str(manifest.get("replay_source", "") or "").strip()
+            if replay_source:
+                replay_dir = Path(replay_source)
+                if (replay_dir / "raw_category_reports").exists():
+                    return replay_dir
+            if (requested / "raw_category_reports").exists():
+                return requested
+
+    candidates = []
+    if not runs_root.exists():
+        return None
+    for run_dir in runs_root.iterdir():
+        manifest_path = run_dir / "run_manifest.json"
+        raw_dir = run_dir / "raw_category_reports"
+        if not manifest_path.exists() or not raw_dir.exists():
+            continue
+        try:
+            manifest = load_json(manifest_path)
+        except (json.JSONDecodeError, OSError):
+            continue
+        if manifest.get("status") != "success":
+            continue
+        finished_at = str(manifest.get("finished_at", "") or "")
+        candidates.append((finished_at, run_dir.stat().st_mtime, run_dir))
+    return max(candidates, default=("", 0, None))[2]
+
+
+def extract_category_report_products(report):
+    if not isinstance(report, dict):
+        return []
+    data = report.get("data")
+    if isinstance(data, dict) and isinstance(data.get("top100_products"), list):
+        return [row for row in data["top100_products"] if isinstance(row, dict)]
+    if isinstance(report.get("top100_products"), list):
+        return [row for row in report["top100_products"] if isinstance(row, dict)]
+    return []
+
+
+def load_category_report(seed, discovery_run_dir):
+    if not discovery_run_dir:
+        return None
+    category_id = str(seed.get("source_category_id", "") or "").strip()
+    if not category_id:
+        return None
+    report_path = Path(discovery_run_dir) / "raw_category_reports" / f"{category_id}.json"
+    if not report_path.exists():
+        return None
+    try:
+        return load_json(report_path)
+    except (json.JSONDecodeError, OSError):
+        return None
 
 
 def top_counts(values, limit=3):
@@ -229,15 +383,174 @@ def category_metrics(product_rows):
     }
 
 
+def normalized_category_product(product, category_path):
+    seller_origin = str(product.get("seller_origin", "") or "").strip().lower()
+    if "香港" in seller_origin or seller_origin == "hk":
+        seller_code = "HK"
+    elif "中国" in seller_origin or seller_origin in {"cn", "china"}:
+        seller_code = "CN"
+    else:
+        seller_code = seller_origin.upper()
+    delivery_type = str(product.get("delivery_type", "") or "").strip().lower()
+    return {
+        "asin": str(product.get("asin", "") or "").strip(),
+        "title": str(product.get("title", "") or "").strip(),
+        "brand": str(product.get("brand", "") or "").strip(),
+        "bsr_category": category_path,
+        "monthly_sales": to_float(product.get("monthly_sales_volume"), 0),
+        "reviews": to_float(product.get("review_count"), 0),
+        "rating": to_float(product.get("star_rating"), 0),
+        "price": to_float(product.get("price"), 0),
+        "online_date": str(product.get("online_date", "") or "").strip(),
+        "seller_address": seller_code,
+        "is_fba": delivery_type in {"fba", "amzfba"},
+        "product_form": product_form_from_category_product(product),
+    }
+
+
+def sales_share(rows, limit):
+    sales = sorted((to_float(row.get("monthly_sales"), 0) for row in rows), reverse=True)
+    total = sum(sales)
+    return sum(sales[:limit]) / total if total else 0.0
+
+
+def recent_listing_share(rows, months=12):
+    cutoff_days = months * 30.5
+    ages = []
+    now = datetime.now()
+    for row in rows:
+        raw_date = str(row.get("online_date", "") or "").strip()
+        if not raw_date:
+            continue
+        try:
+            listed_at = datetime.strptime(raw_date[:10], "%Y-%m-%d")
+        except ValueError:
+            continue
+        ages.append((now - listed_at).days)
+    return sum(1 for age in ages if age <= cutoff_days) / len(ages) if ages else 0.0
+
+
+def category_market_metrics(rows):
+    metrics = category_metrics(rows)
+    prices = [row.get("price") for row in rows]
+    sales = [to_float(row.get("monthly_sales"), 0) for row in rows]
+    reviews = [to_float(row.get("reviews"), 0) for row in rows]
+    metrics.update(
+        {
+            "category_top10_sales_share": round(sales_share(rows, 10), 3),
+            "category_top20_sales_share": round(sales_share(rows, 20), 3),
+            "category_top50_sales_share": round(sales_share(rows, 50), 3),
+            "category_review_sales_spearman": round(spearman(reviews, sales), 3),
+            "category_new_listing_share_12m": round(recent_listing_share(rows, 12), 3),
+            "category_price_p25": round(percentile(prices, 0.25), 2),
+            "category_price_median": round(percentile(prices, 0.5), 2),
+            "category_price_p75": round(percentile(prices, 0.75), 2),
+        }
+    )
+    return metrics
+
+
+def form_summary_rows(rows):
+    grouped = defaultdict(list)
+    for row in rows:
+        grouped[row.get("product_form") or "unknown"].append(row)
+    category_sales = sum(to_float(row.get("monthly_sales"), 0) for row in rows)
+    summaries = []
+    for product_form, form_products in grouped.items():
+        form_sales = [to_float(row.get("monthly_sales"), 0) for row in form_products]
+        form_reviews = [to_float(row.get("reviews"), 0) for row in form_products]
+        total_sales = sum(form_sales)
+        low_review_high_sales = sum(
+            1
+            for row in form_products
+            if to_float(row.get("reviews"), 0) <= 300 and to_float(row.get("monthly_sales"), 0) >= 500
+        )
+        summaries.append(
+            {
+                "product_form": product_form,
+                "count": len(form_products),
+                "direct_count": len(form_products),
+                "keyword_count": 0,
+                "avg_price": round(avg(row.get("price") for row in form_products), 2),
+                "avg_monthly_sales": round(avg(form_sales), 0),
+                "median_monthly_sales": round(med(form_sales), 0),
+                "total_monthly_sales": round(total_sales, 0),
+                "sales_share": round(total_sales / category_sales, 3) if category_sales else 0,
+                "top3_sales_share": round(sum(sorted(form_sales, reverse=True)[:3]) / total_sales, 3)
+                if total_sales
+                else 0,
+                "median_reviews": round(med(form_reviews), 0),
+                "avg_rating": round(avg(row.get("rating") for row in form_products), 1),
+                "low_review_high_sales_count": low_review_high_sales,
+                "top_materials": "",
+                "top_pack_counts": "",
+                "top_styles": "",
+            }
+        )
+    summaries.sort(key=lambda row: (-to_float(row.get("total_monthly_sales"), 0), row.get("product_form", "")))
+    return summaries
+
+
 def seed_context(seed):
     asin = seed.get("source_asin", "")
     return {
+        "seed_rank": seed.get("_seed_rank", ""),
         "seed_asin": asin,
         "seed_listing_url": seed.get("listing_url") or amazon_listing_url(asin),
         "seed_title": seed.get("product_name", ""),
         "seed_score": seed.get("opportunity_score", ""),
         "seed_recommendation": seed.get("recommendation", ""),
+        "source_category_id": seed.get("source_category_id", ""),
+        "source_category_name": seed.get("source_category_name", ""),
     }
+
+
+def build_rows_from_category_report(seed, report, rules, run_id=""):
+    category_path = seed.get("source_category_path") or seed.get("category", "")
+    raw_products = extract_category_report_products(report)
+    products = [normalized_category_product(product, category_path) for product in raw_products]
+    products = [product for product in products if product.get("asin")]
+    if not products:
+        return []
+
+    metrics = category_market_metrics(products)
+    seed_asin = seed.get("source_asin", "")
+    seed_product = next((row for row in products if row.get("asin") == seed_asin), None)
+    seed_form = (
+        seed_product.get("product_form")
+        if seed_product
+        else product_form_from_title(seed.get("product_name", ""))
+    )
+    rows = []
+    for form in form_summary_rows(products):
+        product_form = form.get("product_form") or "unknown"
+        scope = "seed_form" if normalize_text(product_form) == normalize_text(seed_form) else "adjacent_form"
+        row = {
+            **seed_context(seed),
+            **metrics,
+            "validation_run_id": run_id,
+            "data_quality": "category_top100",
+            "product_form": product_form,
+            "shape_scope": scope,
+            "form_count": form.get("count", 0),
+            "form_direct_count": form.get("direct_count", 0),
+            "form_keyword_count": form.get("keyword_count", 0),
+            "form_avg_price": form.get("avg_price", 0),
+            "form_avg_sales": form.get("avg_monthly_sales", 0),
+            "form_median_sales": form.get("median_monthly_sales", 0),
+            "form_total_sales": form.get("total_monthly_sales", 0),
+            "form_sales_share": form.get("sales_share", 0),
+            "form_top3_sales_share": form.get("top3_sales_share", 0),
+            "form_median_reviews": form.get("median_reviews", 0),
+            "form_avg_rating": form.get("avg_rating", 0),
+            "form_low_review_high_sales_count": form.get("low_review_high_sales_count", 0),
+            "form_top_materials": form.get("top_materials", ""),
+            "form_top_packs": form.get("top_pack_counts", ""),
+            "form_top_styles": form.get("top_styles", ""),
+            "research_page": "",
+        }
+        rows.append(evaluate_shape_row(row, rules))
+    return rows
 
 
 def build_rows_from_research(seed, research_dir, rules):
@@ -431,6 +744,7 @@ def evaluate_shape_row(row, rules):
         "no low-review high-sales gap",
     }
     has_hard_flag = any(flag in hard_flags for flag in flags)
+    has_thin_sample = "thin form sample" in flags
     has_top100 = data_quality == "category_top100"
     is_seed_form = row.get("shape_scope") == "seed_form"
 
@@ -440,6 +754,10 @@ def evaluate_shape_row(row, rules):
         recommendation = "Needs category Top100"
     elif has_hard_flag and form_low_gap < thresholds["form_min_low_review_high_sales"]:
         recommendation = "Reject category/form"
+    elif has_hard_flag:
+        recommendation = "Watch shape" if shape_score >= thresholds["watch_shape_score"] else "Reject category/form"
+    elif has_thin_sample:
+        recommendation = "Watch shape" if shape_score >= thresholds["watch_shape_score"] else "Reject category/form"
     elif is_seed_form and shape_score >= thresholds["shape_opportunity_score"]:
         recommendation = "Shape opportunity"
     elif shape_score >= thresholds["watch_shape_score"]:
@@ -478,17 +796,22 @@ def next_action(row):
     if rec == "Watch shape":
         return "补评论和供应商报价后再判断"
     if rec == "Needs category Top100":
-        return f"运行最小类目 Top100 验证：python3 refresh_product_research.py --asin {row.get('seed_asin')}"
+        return "下次类目扫描补齐该最小类目 Top100；不要为此单独重复调用旧 CLI"
     return "淘汰或仅保留历史追溯"
 
 
-def build_validation_rows(seeds, deep_rows, rules):
+def build_validation_rows(seeds, deep_rows, rules, discovery_run_dir=None):
     deep_by_asin = by_key(deep_rows, "source_asin") if rules.get("allow_deep_dive_fallback") else {}
     rows = []
+    validation_run_id = Path(discovery_run_dir).name if discovery_run_dir else ""
     for seed in seeds:
         asin = seed.get("source_asin", "")
+        category_report = load_category_report(seed, discovery_run_dir)
         research_dir = active_research_dir(asin, rules)
-        if research_dir:
+        if category_report:
+            report_rows = build_rows_from_category_report(seed, category_report, rules, validation_run_id)
+            rows.extend(report_rows or [build_pending_row(seed, rules)])
+        elif research_dir:
             rows.extend(build_rows_from_research(seed, research_dir, rules))
         elif asin in deep_by_asin:
             rows.append(build_row_from_deep_summary(seed, deep_by_asin[asin], rules))
@@ -496,10 +819,9 @@ def build_validation_rows(seeds, deep_rows, rules):
             rows.append(build_pending_row(seed, rules))
     rows.sort(
         key=lambda row: (
-            row.get("shape_recommendation") != "Shape opportunity",
-            row.get("shape_recommendation") != "Watch shape",
+            to_float(row.get("seed_rank"), 999999),
+            row.get("shape_scope") != "seed_form",
             -to_float(row.get("shape_score"), 0),
-            row.get("seed_asin", ""),
             row.get("product_form", ""),
         )
     )
@@ -646,7 +968,8 @@ def main():
 
     seeds = select_seed_rows(read_csv(input_path), rules)
     deep_rows = read_csv(rules["deep_dive_summary"])
-    rows = build_validation_rows(seeds, deep_rows, rules)
+    discovery_run_dir = resolve_discovery_run_dir(rules)
+    rows = build_validation_rows(seeds, deep_rows, rules, discovery_run_dir)
     write_csv(output_csv, rows, OUTPUT_FIELDS)
     write_report(output_report, rows)
     archive_result = None
@@ -655,6 +978,7 @@ def main():
 
     print(f"Validated seeds: {len(seeds)}")
     print(f"Validation rows: {len(rows)}")
+    print(f"Category Top100 source: {discovery_run_dir or 'none'}")
     print(f"CSV: {output_csv}")
     print(f"Report: {output_report}")
     if archive_result:

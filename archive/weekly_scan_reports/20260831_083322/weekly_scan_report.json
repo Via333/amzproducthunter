@@ -1,0 +1,74 @@
+{
+  "run_id": "20260831_083322",
+  "status": "failure",
+  "started_at": "2026-08-31T21:20:49",
+  "finished_at": "2026-08-31T21:20:49",
+  "failed_step": "discover_sorftime_opportunities",
+  "error_summary": "Sorftime API business error 694: Insufficient request quota",
+  "metrics": {
+    "metrics_source": "current_run",
+    "discovery_status": "failure",
+    "selected_categories": 100,
+    "scanned_categories": 0,
+    "empty_categories": 0,
+    "failed_categories": 100,
+    "products_examined": 0,
+    "eligible_candidates_before_dedupe": 0,
+    "eligible_candidates_after_dedupe": 0,
+    "represented_candidate_categories": 0,
+    "ranked_candidates": 0,
+    "new_archived_candidates": 0,
+    "selection_watch_or_go": 0,
+    "validation_rows": 0,
+    "shape_opportunities_latest_validation": 0,
+    "watch_shapes": 0,
+    "needs_category_top100": 0,
+    "manual_review_rows": 0,
+    "active_validated_pool_rows": 0,
+    "total_validated_pool_rows": 2,
+    "seed_reject_reasons": "none",
+    "shape_reject_reasons": "none"
+  },
+  "paths": {
+    "current_discovery_run": "/Users/y33/项目/Codex/2026-05-06/amz-listing/archive/discovery_runs/20260831_083322",
+    "latest_seed_snapshot": "/Users/y33/项目/Codex/2026-05-06/amz-listing/archive/selection_runs/20260831_083322",
+    "latest_category_shape_snapshot": "/Users/y33/项目/Codex/2026-05-06/amz-listing/archive/category_shape_runs/20260831_083322",
+    "dashboard": "/Users/y33/项目/Codex/2026-05-06/amz-listing/web/index.html",
+    "dashboard_mtime": "2026-08-31T21:20:36",
+    "log_path": "/Users/y33/项目/Codex/2026-05-06/amz-listing/logs/weekly_category_scan_20260831_083322.log",
+    "latest_report_json": "/Users/y33/项目/Codex/2026-05-06/amz-listing/reports/weekly_scan_report.json",
+    "latest_report_md": "/Users/y33/项目/Codex/2026-05-06/amz-listing/reports/weekly_scan_report.md"
+  },
+  "health_checks": [
+    {
+      "name": "workflow_failure",
+      "status": "critical",
+      "message": "discover_sorftime_opportunities failed: Sorftime API business error 694: Insufficient request quota"
+    },
+    {
+      "name": "zero_products_examined",
+      "status": "critical",
+      "message": "Selected categories returned 0 products; this run is invalid and must not replace live outputs"
+    },
+    {
+      "name": "dashboard_freshness",
+      "status": "ok",
+      "message": "web/index.html age is 0.0 days"
+    },
+    {
+      "name": "consecutive_zero_pool",
+      "status": "warning",
+      "message": "1 latest scan day(s) have 0 Shape opportunity rows"
+    },
+    {
+      "name": "weekly_success_log",
+      "status": "ok",
+      "message": "Latest successful weekly log: /Users/y33/项目/Codex/2026-05-06/amz-listing/logs/weekly_category_scan.latest.log"
+    },
+    {
+      "name": "current_log",
+      "status": "ok",
+      "message": "Current log path: /Users/y33/项目/Codex/2026-05-06/amz-listing/logs/weekly_category_scan_20260831_083322.log"
+    }
+  ]
+}

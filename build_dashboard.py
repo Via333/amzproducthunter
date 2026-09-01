@@ -282,11 +282,15 @@ def normalize_shape_validation(rows: list[dict[str, str]]) -> list[dict[str, obj
         normalized.append(
             {
                 "rank": index,
+                "seed_rank": to_float(row.get("seed_rank")) or index,
                 "seed_asin": row.get("seed_asin", ""),
                 "seed_title": row.get("seed_title", ""),
                 "seed_title_short": short_title(row.get("seed_title", ""), 95),
                 "seed_listing_url": normalize_url(row, "seed_listing_url"),
                 "seed_score": to_float(row.get("seed_score")),
+                "source_category_id": row.get("source_category_id", ""),
+                "source_category_name": row.get("source_category_name", ""),
+                "validation_run_id": row.get("validation_run_id", ""),
                 "category_path": row.get("category_path", ""),
                 "data_quality": row.get("data_quality", ""),
                 "product_form": row.get("product_form", ""),
@@ -314,8 +318,8 @@ def normalize_shape_validation(rows: list[dict[str, str]]) -> list[dict[str, obj
         )
     normalized.sort(
         key=lambda row: (
-            row["shape_recommendation"] != "Shape opportunity",
-            row["shape_recommendation"] != "Watch shape",
+            row["seed_rank"],
+            row["shape_scope"] != "seed_form",
             -row["shape_score"],
         )
     )
@@ -337,9 +341,7 @@ def primary_shape_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]
 
     primary_rows.sort(
         key=lambda row: (
-            row.get("shape_recommendation") != "Shape opportunity",
-            row.get("shape_recommendation") != "Watch shape",
-            -to_float(row.get("shape_score")),
+            to_float(row.get("seed_rank"), 999999),
         )
     )
     return primary_rows
@@ -1872,7 +1874,7 @@ def build_html() -> str:
     .validation-head,
     .category-group-head {{
       display: grid;
-      grid-template-columns: minmax(260px, 1.4fr) minmax(460px, 2fr);
+      grid-template-columns: minmax(240px, 1.2fr) minmax(0, 2fr);
       gap: 14px;
       padding: 14px;
       background: #fbfcfe;
@@ -1902,7 +1904,7 @@ def build_html() -> str:
 
     .validation-metrics {{
       display: grid;
-      grid-template-columns: 112px 112px 112px 112px minmax(180px, 1fr);
+      grid-template-columns: repeat(4, minmax(72px, 1fr)) minmax(140px, 1.4fr);
       gap: 10px;
       align-items: start;
     }}
@@ -2422,7 +2424,7 @@ def build_html() -> str:
 
     .research-layout {{
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
       gap: 14px;
       align-items: start;
     }}
@@ -2571,7 +2573,7 @@ def build_html() -> str:
     }}
 
     @media (max-width: 1100px) {{
-      .shell {{ grid-template-columns: 1fr; }}
+      .shell {{ grid-template-columns: minmax(0, 1fr); }}
       .sidebar {{
         position: static;
         height: auto;
@@ -2592,7 +2594,7 @@ def build_html() -> str:
       .form-overview-grid,
       .research-layout,
       .form-card-body {{
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }}
       .formula-grid {{
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2601,7 +2603,7 @@ def build_html() -> str:
       .validation-body,
       .category-group-head,
       .pool-item {{
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }}
       .validation-metrics {{
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2640,21 +2642,21 @@ def build_html() -> str:
       .gallery,
       .count-grid,
       .review-strip {{
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }}
       .formula-grid {{
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }}
       .validation-metrics,
       .evidence-row {{
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }}
       .form-card-takeaway {{
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }}
       .form-card-images,
       .form-overview-card {{
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }}
       .form-card-images > div {{
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2832,7 +2834,7 @@ def build_html() -> str:
         <div class="section-head">
           <div>
             <h2>候选产品验证</h2>
-            <p>每个候选 ASIN 只显示一张验证卡。它会先进最小类目看 Top 产品，再把相邻形态作为证据列在卡片里；证据形态不会单独进入机会池，避免同一个类目反复看。</p>
+            <p>按上方种子排名逐项验证。每个候选复用本轮 MCP 已下载的最小类目 Top100，把候选形态和相邻形态放在同一张卡片中；不会重复调用接口，也不会把证据形态单独放进机会池。</p>
           </div>
         </div>
         <div class="controls">
@@ -3440,7 +3442,7 @@ def build_html() -> str:
           .filter(row => row !== primary && row.product_form && row.product_form !== "unknown")
           .sort((a, b) => verdictWeight(a.shape_recommendation) - verdictWeight(b.shape_recommendation) || Number(b.shape_score || 0) - Number(a.shape_score || 0));
         return {{ primary, evidence, rows }};
-      }}).sort((a, b) => verdictWeight(a.primary.shape_recommendation) - verdictWeight(b.primary.shape_recommendation) || Number(b.primary.shape_score || 0) - Number(a.primary.shape_score || 0));
+      }}).sort((a, b) => Number(a.primary.seed_rank || 999999) - Number(b.primary.seed_rank || 999999));
     }}
 
     function validationAction(row) {{
@@ -3487,9 +3489,9 @@ def build_html() -> str:
           <article class="validation-card">
             <div class="validation-head">
               <div class="validation-title">
-                <a href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.product_form || row.seed_title_short || "-")}}</a>
-                <span class="muted-small">${{esc(row.seed_asin)}} · ${{esc(row.seed_title_short || "-")}}</span>
-                <span class="muted-small">${{esc(row.category_path || "-")}}</span>
+                <a href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.seed_title_short || row.product_form || "-")}}</a>
+                <span class="muted-small">种子 #${{fmtInt(row.seed_rank)}} · ${{esc(row.seed_asin)}} · 种子分 ${{fmtOne(row.seed_score)}}</span>
+                <span class="muted-small">${{esc(row.source_category_name || row.category_path || "-")}} · 候选形态：${{esc(row.product_form || "-")}}</span>
                 <div class="validation-status">
                   <span class="pill ${{pillClass(row.shape_recommendation)}}">${{esc(row.shape_recommendation || "-")}}</span>
                   <span class="pill gray">${{esc(row.data_quality || "-")}}</span>

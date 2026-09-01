@@ -1,0 +1,20 @@
+{
+  "run_id": "20260901_214146",
+  "strategy": "category",
+  "data_provider": "mcp",
+  "status": "success",
+  "started_at": "2026-09-01T21:41:46",
+  "finished_at": "2026-09-01T21:42:46",
+  "category_tree_source": "fresh_cache",
+  "selected_categories": 100,
+  "successful_categories": 100,
+  "empty_categories": 0,
+  "failed_categories": 0,
+  "products_examined": 9606,
+  "eligible_candidates_before_dedupe": 715,
+  "eligible_candidates_after_dedupe": 714,
+  "candidate_count": 200,
+  "represented_categories": 62,
+  "failed_category_details": [],
+  "provider_call_count": 100
+}

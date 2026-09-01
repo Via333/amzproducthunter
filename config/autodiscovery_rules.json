@@ -1,6 +1,7 @@
 {
   "domain": "1",
   "marketplace": "US",
+  "data_provider": "mcp",
   "strategy": "category",
   "max_categories": 100,
   "products_per_category": 100,

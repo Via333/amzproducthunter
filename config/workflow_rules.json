@@ -1,6 +1,7 @@
 {
   "auto_top100_research": {
-    "enabled": true,
+    "enabled": false,
+    "disabled_reason": "Weekly discovery now uses MCP; automatic deep research remains manual until its CLI calls are migrated.",
     "max_candidates": 4,
     "minimum_score": 52,
     "recommendations": [

@@ -1,0 +1,32 @@
+{
+  "run_id": "20260831_logic_audit_dryrun",
+  "status": "dry_run",
+  "started_at": "2026-08-31T08:13:49",
+  "finished_at": "2026-08-31T08:13:49",
+  "selected_count": 4,
+  "researched_count": 0,
+  "cached_count": 0,
+  "failed_count": 0,
+  "items": [
+    {
+      "asin": "B0CX979FY1",
+      "score": "61.5",
+      "status": "would_research"
+    },
+    {
+      "asin": "B0GV43R4TJ",
+      "score": "60.7",
+      "status": "would_research"
+    },
+    {
+      "asin": "B0GSZS9TST",
+      "score": "60.2",
+      "status": "would_research"
+    },
+    {
+      "asin": "B0H1C5J3R2",
+      "score": "59.5",
+      "status": "would_research"
+    }
+  ]
+}
