@@ -1,0 +1,27 @@
+{
+  "asin": "B0FXG8J58Q",
+  "search_term": "magnetic tool mat mechanic",
+  "category_report": "archive/discovery_runs/20260901_214146/raw_category_reports/553582.json",
+  "tool_calls": 15,
+  "direct_asins": [
+    "B0FXG8J58Q",
+    "B0CN1PC564",
+    "B0H87DHF7J",
+    "B0GY9FP2H8",
+    "B0GX5HLSF1",
+    "B0GQZLVQ2D",
+    "B0FZBKYDX9",
+    "B0FX3TBKLG",
+    "B0GHC496ZY",
+    "B0GV53CLK9"
+  ],
+  "reviewed_asins": [
+    "B0FXG8J58Q",
+    "B0CN1PC564",
+    "B0H87DHF7J",
+    "B0GY9FP2H8",
+    "B0GX5HLSF1"
+  ],
+  "supplier_match_count": 19,
+  "generated_at": "2026-09-02 06:56:16"
+}

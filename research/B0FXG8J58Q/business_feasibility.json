@@ -1,0 +1,25 @@
+{
+  "status": "needs_supplier_quote",
+  "data_source": "system_estimate",
+  "target_price": 46.99,
+  "unit_cost": 13.16,
+  "landed_non_ad_cost": 35.95,
+  "pre_ad_profit": 11.04,
+  "break_even_acos": 0.235,
+  "target_ad_cost_rate": 0.15,
+  "contribution_profit": 3.99,
+  "contribution_margin": 0.085,
+  "meets_margin_target": false,
+  "moq": null,
+  "initial_inventory_cash": null,
+  "cash_cycle_days": null,
+  "cash_cycle_within_target": null,
+  "missing_evidence": [
+    "supplier quote",
+    "MOQ",
+    "lead time",
+    "packaging",
+    "freight",
+    "certifications"
+  ]
+}

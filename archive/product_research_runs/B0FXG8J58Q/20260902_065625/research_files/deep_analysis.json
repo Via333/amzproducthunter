@@ -1,0 +1,272 @@
+{
+  "verdict": "继续验证，不直接立项",
+  "score": 73,
+  "confidence": "medium",
+  "one_line": "需求和新品增长真实，目标 Listing 占同形态样本销量约 36%；先做样品、磁场运输测试和小预算关键词验证。",
+  "generated_at": "2026-09-02 06:56:16",
+  "data_sources": [
+    "Sorftime MCP product/keyword/review/trend",
+    "archive/discovery_runs/20260901_214146/raw_category_reports/553582.json",
+    "Sorftime 1688 image search"
+  ],
+  "tool_calls": 15,
+  "facts": {
+    "price": 46.99,
+    "coupon": 9.4,
+    "effective_price": 37.59,
+    "monthly_sales": 981.0,
+    "monthly_revenue": 46097.19,
+    "reviews": 153.0,
+    "rating": 4.6,
+    "package_size_cm": "35.51*25.20*2.69",
+    "weight_g": 1628.0,
+    "fba_fee": 7.77,
+    "gross_profit": 25.5,
+    "gross_profit_rate": 67.84,
+    "online_date": "2025-12-17",
+    "subcategory": "Tool Holsters (Rank: 4)"
+  },
+  "market": {
+    "category_top100_sales": 42975.0,
+    "category_top3_share": "Top-3 products monthly sales share: 30.40%",
+    "category_low_review_sales_share": "Products with <300 reviews monthly sales share: 35.31%",
+    "category_return_rate": "Category return rate (last 30 days): 3.19%",
+    "direct_competitor_count": 10,
+    "direct_form_monthly_sales": 2741.0,
+    "seed_share_of_direct_sample": 0.3579,
+    "direct_form_median_reviews": 52.0,
+    "keyword_monthly_search_volume": 30329.0,
+    "keyword_competitor_count": 20565.0,
+    "keyword_cpc": 1.28,
+    "keyword_peak_season": "6月",
+    "keyword_caveat": "搜索结果被工艺磁片、焊接垫、磁性托盘等大量跨形态产品污染，不能把结果数当作直接竞品数。"
+  },
+  "trend": {
+    "sales": [
+      {
+        "period": "2025年12月",
+        "value": 143.0
+      },
+      {
+        "period": "2026年01月",
+        "value": 225.0
+      },
+      {
+        "period": "2026年02月",
+        "value": 348.0
+      },
+      {
+        "period": "2026年03月",
+        "value": 179.0
+      },
+      {
+        "period": "2026年04月",
+        "value": 251.0
+      },
+      {
+        "period": "2026年05月",
+        "value": 499.0
+      },
+      {
+        "period": "2026年06月",
+        "value": 1253.0
+      },
+      {
+        "period": "2026年07月",
+        "value": 646.0
+      },
+      {
+        "period": "2026年08月",
+        "value": 984.0
+      },
+      {
+        "period": "2026年09月",
+        "value": 981.0
+      }
+    ],
+    "price": [
+      {
+        "period": "2025年12月",
+        "value": 39.99
+      },
+      {
+        "period": "2026年01月",
+        "value": 39.99
+      },
+      {
+        "period": "2026年02月",
+        "value": 39.99
+      },
+      {
+        "period": "2026年03月",
+        "value": 39.99
+      },
+      {
+        "period": "2026年04月",
+        "value": 39.99
+      },
+      {
+        "period": "2026年05月",
+        "value": 39.99
+      },
+      {
+        "period": "2026年06月",
+        "value": 44.99
+      },
+      {
+        "period": "2026年07月",
+        "value": 36.25
+      },
+      {
+        "period": "2026年08月",
+        "value": 34.7
+      },
+      {
+        "period": "2026年09月",
+        "value": 35.99
+      }
+    ],
+    "recent_three_month_avg_sales": 870,
+    "summary": "2025-12 上架后从 143 件增长到近期约 981 件；6 月峰值 1,253，7 月回落后 8-9 月恢复。"
+  },
+  "variations": [
+    {
+      "Asin": "B0FXG4771W",
+      "Property": "Size:1Pc Magnetic Mat with Pickup Tool",
+      "SalesAmount": 400,
+      "ItemIndex": 1,
+      "ItemTotal": 2
+    },
+    {
+      "Asin": "B0FXG8J58Q",
+      "Property": "Size:3Pcs Magnetic Mats with Pickup Tool",
+      "SalesAmount": 700,
+      "ItemIndex": 2,
+      "ItemTotal": 2
+    }
+  ],
+  "review_summary": {
+    "reviews_read": 94,
+    "low_star_reviews": 3,
+    "customers_say": "Customers find the magnetic tool mat to be of good quality, with one mentioning it’s a great gift for mechanics. Moreover, the magnets are strong for their price, and customers appreciate its functionality, with one noting it’s excellent for tinkerers and mechanics. Additionally, the mat offers good value for money, and customers like its durability, with one mentioning the material doesn’t rip or tear. They also appreciate the different sizes, with one noting how they allow adjusting to different jobs.",
+    "topics": [
+      {
+        "keyword": "functionality",
+        "content": "Customers find the magnetic mat very handy, with one mentioning it’s excellent for tinkerers and mechanics, while another notes it’s perfect for laying wrenches and tools on a fender.",
+        "mention": 10,
+        "positive": 10,
+        "negative": 0,
+        "update_time": "2026-09-01"
+      },
+      {
+        "keyword": "magnetic strength",
+        "content": "Customers praise the magnetic strength of the tool mat, noting that it stays firmly in place.",
+        "mention": 18,
+        "positive": 15,
+        "negative": 3,
+        "update_time": "2026-09-01"
+      },
+      {
+        "keyword": "quality",
+        "content": "Customers find the magnetic tool mat to be of great quality, with multiple customers mentioning that their husbands and sons love using it.",
+        "mention": 22,
+        "positive": 22,
+        "negative": 0,
+        "update_time": "2026-09-01"
+      },
+      {
+        "keyword": "durability",
+        "content": "Customers find the tool mat durable, with one mentioning that the material didn’t rip or tear during use.",
+        "mention": 8,
+        "positive": 8,
+        "negative": 0,
+        "update_time": "2026-09-01"
+      },
+      {
+        "keyword": "size",
+        "content": "Customers like the size of the tool mat, with one mentioning that the adjustable sizes make it versatile for different jobs.",
+        "mention": 7,
+        "positive": 6,
+        "negative": 1,
+        "update_time": "2026-09-01"
+      },
+      {
+        "keyword": "value for money",
+        "content": "Customers find the magnetic tool mat to be a good value, offering good quality for the money and saying they would buy it again.",
+        "mention": 10,
+        "positive": 10,
+        "negative": 0,
+        "update_time": "2026-09-01"
+      },
+      {
+        "keyword": "size options",
+        "content": "Customers like the size options of the tool mat, with one mentioning that the utility of different sizes allows for adjusting to the job size.",
+        "mention": 6,
+        "positive": 5,
+        "negative": 1,
+        "update_time": "2026-08-26"
+      },
+      {
+        "keyword": "versatility",
+        "content": "Customers find the magnetic tool mat versatile, with one mentioning it’s great for laying wrenches and tools on a fender, while another notes it’s perfect for garage work and tinkerers.",
+        "mention": 5,
+        "positive": 5,
+        "negative": 0,
+        "update_time": "2026-08-26"
+      }
+    ],
+    "core_positive": [
+      "磁力强、可垂直吸附",
+      "工具和紧固件不易丢失",
+      "三种尺寸适配不同工位",
+      "PVC 表面不易刮漆且易清洁"
+    ],
+    "core_negative": [
+      "少量用户认为磁力低于预期",
+      "大垫尺寸和承载面积仍偏小",
+      "原价偏高，转化依赖优惠券",
+      "标题写 25Lb，描述/配件又出现 15Lb，规格表达不一致"
+    ]
+  },
+  "supply": {
+    "image_match_count": 19,
+    "lowest_visible_price_cny": 7.5,
+    "top_match_30d_sales": 2963.0,
+    "top_match_repurchase_rate": 100.0,
+    "assessment": "同图货源很多，说明制造门槛不高、跟卖速度会快；价格仅是图搜展示价，必须核对 3 件套、磁铁等级、拉力、皮面和包装后才能计入利润。"
+  },
+  "opportunities": [
+    "把“垫子”升级为工位系统：零件分区、拆装顺序标记、可擦写标签或模块化拼接。",
+    "优先做单块大尺寸与 3 尺寸套装两条 SKU，避免只复制现有 3 件套。",
+    "用实测承重、垂直吸附、弧面贴合和不伤车漆做视频证据，而不是继续堆 25/40Lb 数字。",
+    "定位汽车维修、设备维护和 DIY 拆装场景，集中投放 exact 关键词，减少泛 magnetic 流量浪费。"
+  ],
+  "risks": [
+    "直接形态只有 10 个有效样本，目标 ASIN 占样本销量约 36%，仍需拆分产品需求与头部 Listing 运营能力。",
+    "关键词 magnetic tool mat 的搜索结果严重跨类目，表面 30k 搜索量不能全部归因于目标形态。",
+    "产品约 1.63kg，FBA 费 $7.77；低价跟进会很快挤压利润。",
+    "磁性货物需做外包装磁场测试；是否属于受限航空磁性材料取决于包装后的实测值。",
+    "嵌入磁铁必须验证跌落、弯折、缝合/热压后不会脱出，并避免儿童/玩具化营销。"
+  ],
+  "next_actions": [
+    "向 3 家供应商索取 3 件套真实阶梯价、磁铁材质/等级、单垫拉力测试、重量和包装尺寸。",
+    "做包装后 7 英尺磁场/指南针偏转测试，并让货代书面确认空运运输条件。",
+    "采购头部款与两个 $23-$34 竞品，实测垂直承载、弧面贴合、刮漆、耐油污和 500 次弯折。",
+    "先用 magnetic tool mat 精确词做 2 周广告验证；目标是非品牌转化能覆盖 $1.28 CPC。",
+    "若样品无法在尺寸、磁力一致性或分区功能上形成明确差异，则停止立项。"
+  ],
+  "compliance": {
+    "level": "medium",
+    "summary": "不是食品接触品，也不是天然需要高门槛认证的类目；主要门槛是磁体脱落安全、一般产品合规和磁性货物运输测试。",
+    "references": [
+      {
+        "label": "CPSC Magnets Business Guidance",
+        "url": "https://www.cpsc.gov/Business--Manufacturing/Business-Education/Business-Guidance/Magnets"
+      },
+      {
+        "label": "USPS Publication 52 - Magnetized Materials",
+        "url": "https://pe.usps.com/text/pub52/pub52c3_028.htm"
+      }
+    ]
+  }
+}

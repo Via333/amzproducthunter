@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import os
 import shutil
 import subprocess
@@ -40,6 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--asin", required=True, help="ASIN to research.")
     parser.add_argument("--domain", default=None, help="Sorftime domain id. Defaults to opportunity research config.")
     parser.add_argument("--register-existing", action="store_true", help="Do not call Sorftime; archive existing research/{ASIN}.")
+    parser.add_argument("--legacy-cli", action="store_true", help="Use the retired CLI research path instead of Sorftime MCP.")
     parser.add_argument("--no-dashboard", action="store_true", help="Skip dashboard rebuild for batch research runs.")
     return parser.parse_args()
 
@@ -54,7 +56,7 @@ def read_csv(path: Path) -> list[dict[str, str]]:
 def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=INDEX_FIELDS, extrasaction="ignore")
+        writer = csv.DictWriter(handle, fieldnames=INDEX_FIELDS, extrasaction="ignore", lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -73,6 +75,9 @@ def seed_product(research_dir: Path) -> dict[str, str]:
 
 
 def top_form(research_dir: Path) -> str:
+    seed = seed_product(research_dir)
+    if seed.get("product_form"):
+        return seed["product_form"]
     forms = read_csv(research_dir / "product_forms.csv")
     return forms[0].get("product_form", "") if forms else ""
 
@@ -96,6 +101,10 @@ def update_index(asin: str, run_id: str) -> dict[str, str]:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     rows = read_csv(INDEX_PATH)
     existing = next((row for row in rows if row.get("asin") == asin), {})
+    summary_path = research_dir / "research_summary.json"
+    deep_path = research_dir / "deep_analysis.json"
+    summary = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.exists() else {}
+    deep = json.loads(deep_path.read_text(encoding="utf-8")) if deep_path.exists() else {}
     snapshot_dir = copy_snapshot(asin, run_id, research_dir, report_path)
     updated = {
         **existing,
@@ -114,8 +123,8 @@ def update_index(asin: str, run_id: str) -> dict[str, str]:
         "reviews_count": str(row_count(research_dir / "reviews.csv")),
         "review_targets_count": str(row_count(research_dir / "review_targets.csv")),
         "top_form": top_form(research_dir),
-        "status": existing.get("status") or "researched",
-        "notes": existing.get("notes", ""),
+        "status": summary.get("archive_status") or deep.get("archive_status") or existing.get("status") or "researched",
+        "notes": summary.get("decision_reason") or deep.get("one_line") or existing.get("notes", ""),
     }
     rows = [row for row in rows if row.get("asin") != asin]
     rows.append(updated)
@@ -130,8 +139,9 @@ def main() -> None:
     run_id = os.environ.get("AMZ_WEEKLY_RUN_ID") or datetime.now().strftime("%Y%m%d_%H%M%S")
 
     if not args.register_existing:
-        command = ["python3", "product_opportunity_research.py", "--asin", asin]
-        if args.domain:
+        script = "product_opportunity_research.py" if args.legacy_cli else "mcp_product_opportunity_research.py"
+        command = ["python3", script, "--asin", asin]
+        if args.domain and args.legacy_cli:
             command.extend(["--domain", args.domain])
         run(command)
 

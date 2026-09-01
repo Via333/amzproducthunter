@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import csv
 import json
+import shutil
 from html import escape
 from pathlib import Path
 
@@ -58,6 +59,8 @@ def short(text: str, limit: int = 92) -> str:
 def asset_path(path_text: str) -> str:
     if not path_text:
         return ""
+    if path_text.startswith(("https://", "http://")):
+        return path_text
     path = Path(path_text)
     if path.is_absolute():
         try:
@@ -119,7 +122,7 @@ def render_demand(rows: list[dict[str, str]]) -> str:
         <tr>
           <td><b>{form}</b><span>{dtype} · {sentiment}</span></td>
           <td>{theme}</td><td class="num">{count}</td><td>{profiles}</td><td>{scenes}</td>
-          <td>{excerpt}<span>{asins}</span></td>
+          <td>{excerpt}<span>同主题涉及 ASIN：{asins}</span></td>
         </tr>
         """.format(
             form=escape(row.get("product_form", "")),
@@ -164,7 +167,7 @@ def render_review_targets(rows: list[dict[str, str]]) -> str:
 def render_gallery(products: list[dict[str, str]]) -> str:
     html = []
     for row in products[:36]:
-        image = asset_path(row.get("image_file", ""))
+        image = row.get("web_image_url", "") or asset_path(row.get("image_file", ""))
         html.append(
             """
             <article class="tile">
@@ -188,6 +191,98 @@ def render_gallery(products: list[dict[str, str]]) -> str:
     return "\n".join(html)
 
 
+def render_summary_list(items: list[object]) -> str:
+    return "".join(f"<li>{escape(str(item))}</li>" for item in items)
+
+
+def prepare_web_assets(asin: str, products: list[dict[str, str]], research_dir: Path) -> str:
+    asset_dir = WEB_RESEARCH_DIR / "assets" / asin
+    asset_dir.mkdir(parents=True, exist_ok=True)
+    for row in products:
+        source_text = row.get("image_file", "")
+        if not source_text:
+            continue
+        source = Path(source_text)
+        if not source.is_absolute():
+            source = ROOT / source
+        if not source.exists():
+            continue
+        destination = asset_dir / source.name
+        shutil.copyfile(source, destination)
+        row["web_image_url"] = f"assets/{asin}/{destination.name}"
+    contact_source = research_dir / "image_contact_sheet.jpg"
+    if not contact_source.exists():
+        return ""
+    contact_destination = asset_dir / "image_contact_sheet.jpg"
+    shutil.copyfile(contact_source, contact_destination)
+    return f"assets/{asin}/{contact_destination.name}"
+
+
+def render_bullets(items: list[object]) -> str:
+    return "".join(f"<li>{escape(str(item))}</li>" for item in items)
+
+
+def render_deep_analysis(deep: dict) -> str:
+    if not deep:
+        return ""
+    facts = deep.get("facts") or {}
+    market = deep.get("market") or {}
+    trend = deep.get("trend") or {}
+    review = deep.get("review_summary") or {}
+    supply = deep.get("supply") or {}
+    compliance = deep.get("compliance") or {}
+    references = "".join(
+        f'<a href="{escape(str(row.get("url", "")))}" target="_blank" rel="noreferrer">{escape(str(row.get("label", "参考")))}</a>'
+        for row in compliance.get("references", [])
+        if isinstance(row, dict) and row.get("url")
+    )
+    recent_sales = trend.get("recent_three_month_avg_sales") or 0
+    return f"""
+    <section class="verdict-panel">
+      <div>
+        <span class="eyebrow">深度研究结论</span>
+        <h2>{escape(str(deep.get('verdict', '待复核')))}</h2>
+        <p>{escape(str(deep.get('one_line', '')))}</p>
+      </div>
+      <div class="score-box"><span>机会分</span><strong>{fmt_int(deep.get('score'))}</strong><small>置信度 {escape(str(deep.get('confidence', '-')))}</small></div>
+    </section>
+
+    <section>
+      <h2>产品与趋势</h2>
+      <div class="kpis">
+        <div class="kpi"><span>优惠后售价</span><strong>{fmt_money(facts.get('effective_price'))}</strong></div>
+        <div class="kpi"><span>当前月销</span><strong>{fmt_int(facts.get('monthly_sales'))}</strong></div>
+        <div class="kpi"><span>近 3 月均销</span><strong>{fmt_int(recent_sales)}</strong></div>
+        <div class="kpi"><span>FBA 费 / 重量</span><strong>{fmt_money(facts.get('fba_fee'))} / {fmt_int(facts.get('weight_g'))}g</strong></div>
+      </div>
+      <p class="subtle">{escape(str(trend.get('summary', '')))}</p>
+    </section>
+
+    <section>
+      <h2>真实竞争结构</h2>
+      <div class="kpis">
+        <div class="kpi"><span>同形态样本</span><strong>{fmt_int(market.get('direct_competitor_count'))}</strong></div>
+        <div class="kpi"><span>同形态样本月销</span><strong>{fmt_int(market.get('direct_form_monthly_sales'))}</strong></div>
+        <div class="kpi"><span>目标 ASIN 占样本销量</span><strong>{to_float(market.get('seed_share_of_direct_sample')) * 100:.1f}%</strong></div>
+        <div class="kpi"><span>关键词搜索量 / CPC</span><strong>{fmt_int(market.get('keyword_monthly_search_volume'))} / {fmt_money(market.get('keyword_cpc'))}</strong></div>
+      </div>
+      <p class="warning">{escape(str(market.get('keyword_caveat', '')))}</p>
+    </section>
+
+    <section class="analysis-grid">
+      <article><h2>可切入点</h2><ul>{render_bullets(deep.get('opportunities', []))}</ul></article>
+      <article><h2>主要风险</h2><ul>{render_bullets(deep.get('risks', []))}</ul></article>
+      <article><h2>评论结论</h2><p>{escape(str(review.get('customers_say', '')))}</p><ul>{render_bullets(review.get('core_negative', []))}</ul></article>
+      <article><h2>供应链与合规</h2><p>{escape(str(supply.get('assessment', '')))}</p><p>{escape(str(compliance.get('summary', '')))}</p><div class="reference-links">{references}</div></article>
+    </section>
+
+    <section>
+      <h2>下一步验证</h2>
+      <ol class="action-list">{render_bullets(deep.get('next_actions', []))}</ol>
+    </section>
+    """
+
+
 def build_page(index_row: dict[str, str]) -> str:
     asin = index_row.get("asin", "")
     research_dir = ROOT / (index_row.get("research_dir") or f"research/{asin}")
@@ -199,11 +294,18 @@ def build_page(index_row: dict[str, str]) -> str:
     price_bands = read_csv(research_dir / "price_bands.csv")
     market = read_json(research_dir / "market_structure.json")
     business = read_json(research_dir / "business_feasibility.json")
+    summary = read_json(research_dir / "research_summary.json")
+    contact_sheet = prepare_web_assets(asin, products, research_dir)
+    deep = read_json(research_dir / "deep_analysis.json")
     seed = next((row for row in products if row.get("competitor_type") == "seed"), products[0] if products else {})
     title = index_row.get("title") or seed.get("title") or asin
     listing_url = index_row.get("listing_url") or seed.get("listing_url") or f"https://www.amazon.com/dp/{asin}"
     report_link = "../../" + (index_row.get("report_path") or f"reports/product_opportunity_research_{asin}.md")
-    contact_sheet = asset_path(str(research_dir / "image_contact_sheet.jpg"))
+    contact_html = (
+        f'<section><h2>主图总览</h2><img class="contact" src="{escape(contact_sheet)}" alt="{escape(asin)} image contact sheet"></section>'
+        if contact_sheet
+        else ""
+    )
     low_reviews = sum(1 for row in reviews if 0 < to_float(row.get("rating")) <= 3)
     high_reviews = sum(1 for row in reviews if to_float(row.get("rating")) >= 4)
     generated = index_row.get("last_researched", "")
@@ -218,6 +320,15 @@ def build_page(index_row: dict[str, str]) -> str:
             '<section class="decision rejected"><strong>当前结论：已淘汰</strong>'
             f'<span>{escape(archive_notes or "未通过当前风险规则")}</span></section>'
         )
+    elif summary:
+        decision_html = (
+            '<section class="decision"><strong>当前结论：{decision}（{score}/100）</strong>'
+            '<span>{reason}</span></section>'
+        ).format(
+            decision=escape(str(summary.get("decision", "已研究，待复核"))),
+            score=escape(str(summary.get("decision_score", "-"))),
+            reason=escape(str(summary.get("decision_reason", ""))),
+        )
     else:
         decision_html = (
             '<section class="decision"><strong>档案状态：已研究，待结合当前机会池复核</strong>'
@@ -228,7 +339,7 @@ def build_page(index_row: dict[str, str]) -> str:
     else:
         listing_action = f'<a class="pill" href="{escape(listing_url)}" target="_blank" rel="noreferrer">打开 Listing</a>'
 
-    return f"""<!doctype html>
+    html = f"""<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -273,7 +384,32 @@ def build_page(index_row: dict[str, str]) -> str:
     .decision span {{ color: #657184; }}
     .decision.rejected {{ border-left-color: #c83d3d; background: #fff8f7; }}
     .decision.rejected strong {{ color: #a62828; }}
-    @media (max-width: 900px) {{ .top {{ display: block; }} .kpis, .gallery {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }} }}
+    .summary-grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }}
+    .summary-grid article {{ border-left: 3px solid #d9dee8; padding-left: 14px; }}
+    .summary-grid h3 {{ margin: 0 0 8px; font-size: 15px; }}
+    .summary-grid ul {{ margin: 0; padding-left: 18px; }}
+    .summary-grid li {{ margin: 0 0 7px; color: #405066; }}
+    .verdict-panel {{ display: flex; justify-content: space-between; gap: 24px; border-left: 4px solid #d99a18; }}
+    .eyebrow {{ color: #657184; font-size: 12px; font-weight: 750; }}
+    .score-box {{ min-width: 120px; text-align: right; }}
+    .score-box span, .score-box small {{ display: block; color: #657184; }}
+    .score-box strong {{ display: block; font-size: 40px; line-height: 1.1; }}
+    .analysis-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; padding: 0; overflow: hidden; }}
+    .analysis-grid article {{ padding: 18px; border-right: 1px solid #d9dee8; border-bottom: 1px solid #d9dee8; }}
+    .analysis-grid article:nth-child(2n) {{ border-right: 0; }}
+    .analysis-grid ul, .action-list {{ margin: 8px 0 0; padding-left: 20px; }}
+    .analysis-grid li, .action-list li {{ margin: 6px 0; }}
+    .warning {{ padding: 10px 12px; border-left: 3px solid #d99a18; background: #fff8e8; color: #6d4a06; }}
+    .reference-links {{ display: flex; gap: 10px; flex-wrap: wrap; }}
+    @media (max-width: 900px) {{
+      .top {{ display: block; }}
+      .kpis, .gallery {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+      .analysis-grid, .summary-grid {{ grid-template-columns: minmax(0, 1fr); }}
+      .analysis-grid article {{ border-right: 0; }}
+      .verdict-panel {{ display: block; }}
+      .score-box {{ text-align: left; margin-top: 12px; }}
+    }}
+    @media (max-width: 560px) {{ .kpis, .gallery {{ grid-template-columns: minmax(0, 1fr); }} }}
   </style>
 </head>
 <body>
@@ -291,6 +427,17 @@ def build_page(index_row: dict[str, str]) -> str:
     </div>
 
     {decision_html}
+
+    {f'''<section>
+      <h2>研究结论与行动</h2>
+      <div class="summary-grid">
+        <article><h3>成立信号</h3><ul>{render_summary_list(summary.get("signals", []))}</ul></article>
+        <article><h3>核心风险</h3><ul>{render_summary_list(summary.get("risks", []))}</ul></article>
+        <article><h3>切入方案</h3><ul>{render_summary_list(summary.get("entry_strategy", []))}</ul></article>
+      </div>
+    </section>''' if summary else ''}
+
+    {render_deep_analysis(deep)}
 
     <section>
       <div class="kpis">
@@ -364,14 +511,12 @@ def build_page(index_row: dict[str, str]) -> str:
       <div class="gallery">{render_gallery(products)}</div>
     </section>
 
-    <section>
-      <h2>主图总览</h2>
-      <img class="contact" src="{escape(contact_sheet)}" alt="{escape(asin)} image contact sheet">
-    </section>
+    {contact_html}
   </main>
 </body>
 </html>
 """
+    return "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 
 
 def main() -> None:
