@@ -9,6 +9,10 @@ from datetime import datetime
 from pathlib import Path
 
 from product_risk import has_valid_category, infer_compliance_risk, infer_fragile_risk, infer_oversize_risk
+from product_exclusions import (
+    brand_moat_reason as configured_brand_moat_reason,
+    hard_exclusion_reason as configured_hard_exclusion_reason,
+)
 
 
 NUMERIC_FIELDS = {
@@ -211,6 +215,9 @@ def starts_with_brand(title, brand):
 
 
 def brand_moat_reason(row, config):
+    reason = configured_brand_moat_reason(row)
+    if reason:
+        return reason
     cfg = config.get("brand_moat", {})
     if not cfg.get("enabled", False):
         return ""
@@ -234,6 +241,9 @@ def text_contains_any(value, terms):
 
 
 def hard_exclusion_reason(row, config):
+    reason = configured_hard_exclusion_reason(row)
+    if reason:
+        return reason
     cfg = config.get("hard_exclusions", {})
     if cfg.get("require_valid_category", False) and not has_valid_category(row.get("category", "")):
         return "missing or invalid category evidence"

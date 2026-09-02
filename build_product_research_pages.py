@@ -168,9 +168,14 @@ def render_gallery(products: list[dict[str, str]]) -> str:
     html = []
     for row in products[:36]:
         image = row.get("web_image_url", "") or asset_path(row.get("image_file", ""))
+        form = row.get("visual_product_form") or row.get("product_form", "")
+        search_text = " ".join(
+            str(row.get(field) or "")
+            for field in ("asin", "title", "visual_product_form", "product_form", "visual_material_signal", "material")
+        ).lower()
         html.append(
             """
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="{form_attr}" data-search="{search_attr}">
               <a href="{url}" target="_blank" rel="noreferrer">
                 {image_html}
                 <b>{asin}</b>
@@ -183,12 +188,25 @@ def render_gallery(products: list[dict[str, str]]) -> str:
                 image_html=f'<img src="{escape(image)}" alt="{escape(row.get("asin", ""))}">' if image else '<div class="image-empty">无图</div>',
                 asin=escape(row.get("asin", "")),
                 title=escape(short(row.get("title", ""), 72)),
-                form=escape(row.get("visual_product_form") or row.get("product_form", "")),
+                form=escape(form),
+                form_attr=escape(form),
+                search_attr=escape(search_text),
                 material=escape(row.get("visual_material_signal") or row.get("material", "")),
                 pack=escape(str(row.get("visual_pack_count") or row.get("pack_count") or "-")),
             )
         )
     return "\n".join(html)
+
+
+def render_gallery_form_options(products: list[dict[str, str]]) -> str:
+    forms = []
+    seen = set()
+    for row in products[:36]:
+        form = str(row.get("visual_product_form") or row.get("product_form") or "").strip()
+        if form and form not in seen:
+            forms.append(form)
+            seen.add(form)
+    return "".join(f'<option value="{escape(form)}">{escape(form)}</option>' for form in forms)
 
 
 def render_summary_list(items: list[object]) -> str:
@@ -296,7 +314,9 @@ def build_page(index_row: dict[str, str]) -> str:
     business = read_json(research_dir / "business_feasibility.json")
     summary = read_json(research_dir / "research_summary.json")
     contact_sheet = prepare_web_assets(asin, products, research_dir)
-    deep = read_json(research_dir / "deep_analysis.json")
+    # research_summary.json is the current generic MCP format. deep_analysis.json
+    # may be a legacy, product-specific artifact from an older research engine.
+    deep = {} if summary else read_json(research_dir / "deep_analysis.json")
     seed = next((row for row in products if row.get("competitor_type") == "seed"), products[0] if products else {})
     title = index_row.get("title") or seed.get("title") or asin
     listing_url = index_row.get("listing_url") or seed.get("listing_url") or f"https://www.amazon.com/dp/{asin}"
@@ -370,6 +390,11 @@ def build_page(index_row: dict[str, str]) -> str:
     td span {{ display: block; font-size: 12px; margin-top: 2px; }}
     .num {{ text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }}
     .gallery {{ display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }}
+    .gallery-toolbar {{ display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr) auto; gap: 10px; align-items: center; margin-bottom: 14px; }}
+    .gallery-toolbar select, .gallery-toolbar input {{ width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #cbd3df; border-radius: 7px; padding: 10px 11px; background: #fff; color: #172033; font: inherit; }}
+    .gallery-count {{ color: #657184; white-space: nowrap; font-variant-numeric: tabular-nums; }}
+    .gallery-empty {{ padding: 28px 12px; border: 1px dashed #cbd3df; border-radius: 8px; text-align: center; color: #657184; background: #f9fafb; }}
+    [hidden] {{ display: none !important; }}
     .tile {{ border: 1px solid #d9dee8; border-radius: 8px; background: #fff; overflow: hidden; }}
     .tile img, .image-empty {{ display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #f7f8fa; border-bottom: 1px solid #d9dee8; }}
     .image-empty {{ display: grid; place-items: center; color: #657184; }}
@@ -407,7 +432,10 @@ def build_page(index_row: dict[str, str]) -> str:
       .analysis-grid, .summary-grid {{ grid-template-columns: minmax(0, 1fr); }}
       .analysis-grid article {{ border-right: 0; }}
       .verdict-panel {{ display: block; }}
+      .decision {{ display: block; }}
+      .decision span {{ display: block; margin-top: 6px; }}
       .score-box {{ text-align: left; margin-top: 12px; }}
+      .gallery-toolbar {{ grid-template-columns: minmax(0, 1fr); }}
     }}
     @media (max-width: 560px) {{ .kpis, .gallery {{ grid-template-columns: minmax(0, 1fr); }} }}
   </style>
@@ -508,11 +536,48 @@ def build_page(index_row: dict[str, str]) -> str:
 
     <section>
       <h2>代表产品图片</h2>
-      <div class="gallery">{render_gallery(products)}</div>
+      <div class="gallery-toolbar">
+        <select id="galleryForm" aria-label="按产品形态筛选">
+          <option value="">全部产品形态</option>
+          {render_gallery_form_options(products)}
+        </select>
+        <input id="gallerySearch" type="search" placeholder="搜索 ASIN / 标题 / 材质" aria-label="搜索代表产品">
+        <span class="gallery-count" id="galleryCount"></span>
+      </div>
+      <div class="gallery" id="productGallery">{render_gallery(products)}</div>
+      <div class="gallery-empty" id="galleryEmpty" hidden>没有匹配的产品。</div>
     </section>
 
     {contact_html}
   </main>
+  <script>
+    (() => {{
+      const formSelect = document.getElementById("galleryForm");
+      const searchInput = document.getElementById("gallerySearch");
+      const count = document.getElementById("galleryCount");
+      const empty = document.getElementById("galleryEmpty");
+      const tiles = Array.from(document.querySelectorAll("[data-gallery-item]"));
+
+      function filterGallery() {{
+        const selectedForm = formSelect.value;
+        const query = searchInput.value.trim().toLowerCase();
+        let visible = 0;
+        tiles.forEach(tile => {{
+          const matchesForm = !selectedForm || tile.dataset.form === selectedForm;
+          const matchesQuery = !query || tile.dataset.search.includes(query);
+          const show = matchesForm && matchesQuery;
+          tile.hidden = !show;
+          if (show) visible += 1;
+        }});
+        count.textContent = `显示 ${{visible}} / ${{tiles.length}} 个`;
+        empty.hidden = visible !== 0;
+      }}
+
+      formSelect.addEventListener("change", filterGallery);
+      searchInput.addEventListener("input", filterGallery);
+      filterGallery();
+    }})();
+  </script>
 </body>
 </html>
 """

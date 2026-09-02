@@ -79,14 +79,73 @@ def file_age_days(path: Path) -> float | None:
     return round(max(0.0, age_seconds / 86400), 2)
 
 
+# Flags that describe the evidence state but never cause a rejection. Counting
+# them as "reject reasons" made the weekly report claim that "supplier quote
+# required" was the top reason 182 candidates were rejected.
+INFORMATIONAL_FLAGS = (
+    "supplier quote required",
+    "estimated profit is not a rejection gate",
+    "clean early risk profile",
+    "no listing-age data",
+)
+
+
+def is_informational_flag(flag: str) -> bool:
+    lowered = flag.lower()
+    return any(marker in lowered for marker in INFORMATIONAL_FLAGS)
+
+
+def seed_reject_reason(row: dict[str, str]) -> str:
+    """Single best explanation for why an initial-screen candidate was rejected."""
+
+    hard_stop = str(row.get("hard_stop_reason") or "").strip()
+    if hard_stop:
+        return hard_stop
+    moat = str(row.get("brand_moat_reason") or "").strip()
+    if moat:
+        return moat
+    gating = [
+        part.strip()
+        for part in str(row.get("key_flags") or "").split(";")
+        if part.strip() and not is_informational_flag(part)
+    ]
+    # Flags that map to an explicit Watch gate in product_selection.recommend().
+    for flag in gating:
+        if flag.startswith("review count above") or flag.startswith("oversize risk"):
+            return flag
+        if flag.startswith("evidence confidence"):
+            return "evidence confidence below watch threshold"
+    return "score below watch threshold"
+
+
 def top_reject_reasons(path: Path, recommendation_key: str, reject_value: str, flags_key: str) -> str:
     counter: Counter[str] = Counter()
     for row in read_csv_rows(path):
         if row.get(recommendation_key) != reject_value:
             continue
+        if flags_key == "key_flags":
+            counter[seed_reject_reason(row)] += 1
+            continue
         flags = str(row.get(flags_key) or "")
-        counter.update(part.strip() for part in flags.split(";") if part.strip())
+        counter.update(part.strip() for part in flags.split(";") if part.strip() and not is_informational_flag(part))
     return ", ".join(f"{reason}:{count}" for reason, count in counter.most_common(5)) or "none"
+
+
+def top_categories_by_health(path: Path, limit: int = 5) -> str:
+    rows = [row for row in read_csv_rows(path) if row.get("category_health_score")]
+    if not rows:
+        return "none"
+    rows.sort(key=lambda row: -to_float_safe(row.get("category_health_score")))
+    return "; ".join(
+        f"{row.get('name') or row.get('path')}({row.get('category_health_score')})" for row in rows[:limit]
+    )
+
+
+def to_float_safe(value: object) -> float:
+    try:
+        return float(str(value or "0").replace(",", ""))
+    except ValueError:
+        return 0.0
 
 
 def latest_selection_run_id(root: Path) -> str:
@@ -257,13 +316,10 @@ def health_checks(
 
 def collect_metrics(root: Path, run_id: str) -> dict[str, Any]:
     discovery_dir = root / "archive" / "discovery_runs" / run_id
-    selection_dir = root / "archive" / "selection_runs" / run_id
     shape_dir = root / "archive" / "category_shape_runs" / run_id
     discovery_manifest_path = discovery_dir / "run_manifest.json"
-    selection_path = selection_dir / "selection_ranked.csv"
     validation_path = shape_dir / "category_shape_validation.csv"
     shape_library_path = root / "archive" / "shape_opportunity_library.csv"
-    opportunity_library_path = root / "archive" / "opportunity_library.csv"
     discovery_manifest = {}
     if discovery_manifest_path.exists():
         try:
@@ -271,14 +327,22 @@ def collect_metrics(root: Path, run_id: str) -> dict[str, Any]:
         except json.JSONDecodeError:
             discovery_manifest = {}
 
-    opportunity_rows = read_csv_rows(opportunity_library_path)
-    new_archived_candidates = sum(
+    validation_rows = read_csv_rows(validation_path)
+    shape_library_rows = read_csv_rows(shape_library_path)
+    new_pool_shapes = sum(
         1
-        for row in opportunity_rows
-        if row.get("archive_last_run_id") == run_id and str(row.get("archive_seen_count") or "") == "1"
+        for row in shape_library_rows
+        if row.get("archive_last_run_id") == run_id
+        and row.get("archive_status") == "active_in_latest_run"
+        and str(row.get("archive_seen_count") or "") == "1"
     )
-
-    shape_opportunities = count_matching(validation_path, "shape_recommendation", "Shape opportunity")
+    shape_opportunity_rows = [row for row in validation_rows if row.get("shape_recommendation") == "Shape opportunity"]
+    reference_asin_count = sum(
+        len([part for part in str(row.get("form_reference_asins", "") or "").split(";") if part.strip()])
+        for row in shape_opportunity_rows
+    )
+    validated_categories = len({row.get("category_path", "") for row in validation_rows if row.get("category_path")})
+    active_pool_rows = sum(1 for row in shape_library_rows if row.get("archive_status") == "active_in_latest_run")
 
     return {
         "metrics_source": "current_run",
@@ -288,32 +352,22 @@ def collect_metrics(root: Path, run_id: str) -> dict[str, Any]:
         "empty_categories": int(discovery_manifest.get("empty_categories") or 0),
         "failed_categories": int(discovery_manifest.get("failed_categories") or 0),
         "products_examined": int(discovery_manifest.get("products_examined") or 0),
-        "eligible_candidates_before_dedupe": int(
-            discovery_manifest.get("eligible_candidates_before_dedupe") or 0
-        ),
-        "eligible_candidates_after_dedupe": int(
-            discovery_manifest.get("eligible_candidates_after_dedupe") or 0
-        ),
-        "represented_candidate_categories": int(discovery_manifest.get("represented_categories") or 0),
-        "ranked_candidates": csv_count(selection_path),
-        "new_archived_candidates": new_archived_candidates,
-        "selection_watch_or_go": count_in(
-            selection_path,
-            "recommendation",
-            {"Go to supplier validation", "Watch or collect more data"},
-        ),
-        "validation_rows": csv_count(validation_path),
-        "shape_opportunities_latest_validation": shape_opportunities,
+        "validated_categories": validated_categories,
+        "validation_rows": len(validation_rows),
+        "shape_opportunities_latest_validation": len(shape_opportunity_rows),
         "watch_shapes": count_matching(validation_path, "shape_recommendation", "Watch shape"),
+        "rejected_shapes": count_matching(validation_path, "shape_recommendation", "Reject category/form"),
         "needs_category_top100": count_matching(validation_path, "shape_recommendation", "Needs category Top100"),
         "manual_review_rows": count_in(
             validation_path,
             "shape_recommendation",
             {"Watch shape", "Needs category Top100"},
         ),
-        "active_validated_pool_rows": shape_opportunities,
-        "total_validated_pool_rows": csv_count(shape_library_path),
-        "seed_reject_reasons": top_reject_reasons(selection_path, "recommendation", "Reject", "key_flags"),
+        "new_pool_shapes": new_pool_shapes,
+        "reference_asin_count": reference_asin_count,
+        "active_validated_pool_rows": active_pool_rows,
+        "total_validated_pool_rows": len(shape_library_rows),
+        "top_categories_by_health": top_categories_by_health(root / "reports" / "discovered_categories.csv"),
         "shape_reject_reasons": top_reject_reasons(
             validation_path,
             "shape_recommendation",
@@ -336,10 +390,8 @@ def build_report(
     zero_pool_weeks: int = 3,
     stale_days: int = 8,
 ) -> dict[str, Any]:
-    current_seed = root / "archive" / "selection_runs" / run_id
     current_shape = root / "archive" / "category_shape_runs" / run_id
     current_discovery = root / "archive" / "discovery_runs" / run_id
-    latest_seed = current_seed if current_seed.exists() else None
     latest_shape = current_shape if current_shape.exists() else None
     finished_at = finished_at or now_iso()
     metrics = collect_metrics(root, run_id)
@@ -373,7 +425,6 @@ def build_report(
         "metrics": metrics,
         "paths": {
             "current_discovery_run": str(current_discovery if current_discovery.exists() else ""),
-            "latest_seed_snapshot": str(latest_seed or ""),
             "latest_category_shape_snapshot": str(latest_shape or ""),
             "dashboard": str(root / "web" / "index.html"),
             "dashboard_mtime": file_mtime(root / "web" / "index.html"),
@@ -398,15 +449,13 @@ def report_markdown(report: dict[str, Any]) -> str:
         f"- 数据口径：本次运行，不混用历史输出",
         f"- 计划/成功/空返回/失败类目：{metrics['selected_categories']}/{metrics['scanned_categories']}/{metrics['empty_categories']}/{metrics['failed_categories']}",
         f"- 本次查看产品数：{metrics['products_examined']}",
-        f"- 合格候选（去重前/后）：{metrics['eligible_candidates_before_dedupe']}/{metrics['eligible_candidates_after_dedupe']}",
-        f"- 进入评分候选：{metrics['ranked_candidates']}（覆盖 {metrics['represented_candidate_categories']} 个类目）",
-        f"- 新增候选入档数：{metrics['new_archived_candidates']}",
-        f"- 通过验证进入机会池：{metrics['active_validated_pool_rows']}",
-        f"- 本次验证 Shape opportunity：{metrics['shape_opportunities_latest_validation']}",
+        f"- 验证类目数：{metrics['validated_categories']}",
+        f"- 形态数：{metrics['validation_rows']}（Shape opportunity {metrics['shape_opportunities_latest_validation']} / Watch {metrics['watch_shapes']} / Reject {metrics['rejected_shapes']}）",
+        f"- 新增入池形态：{metrics['new_pool_shapes']}，当前有效机会池：{metrics['active_validated_pool_rows']}",
+        f"- 参考 ASIN 总数：{metrics['reference_asin_count']}",
         f"- 人工复核/补数据：{metrics['manual_review_rows']}（Watch shape {metrics['watch_shapes']}，Needs Top100 {metrics['needs_category_top100']}）",
-        f"- 初筛淘汰主要原因：{metrics['seed_reject_reasons']}",
+        f"- 类目健康度 Top5：{metrics.get('top_categories_by_health', 'none')}",
         f"- 形态淘汰主要原因：{metrics['shape_reject_reasons']}",
-        f"- 最新初筛快照：`{paths['latest_seed_snapshot'] or 'none'}`",
         f"- 最新类目/形态快照：`{paths['latest_category_shape_snapshot'] or 'none'}`",
         f"- Dashboard：`{paths['dashboard']}`（mtime {paths['dashboard_mtime'] or 'missing'}）",
         f"- 日志：`{paths['log_path'] or 'none'}`",
@@ -429,12 +478,14 @@ def issue_comment(report: dict[str, Any]) -> str:
         f"每周选品扫描：{report['status']}（Run `{report['run_id']}`）",
         "",
         f"- 计划/成功/失败类目：{metrics['selected_categories']}/{metrics['scanned_categories']}/{metrics['failed_categories']}",
-        f"- 候选产品：{metrics['ranked_candidates']}，覆盖 {metrics['represented_candidate_categories']} 个类目（新增入档 {metrics['new_archived_candidates']}）",
-        f"- 入机会池：{metrics['active_validated_pool_rows']}（本次 Shape opportunity {metrics['shape_opportunities_latest_validation']}）",
+        f"- 验证类目/形态：{metrics['validated_categories']}/{metrics['validation_rows']}",
+        f"- 入机会池：{metrics['active_validated_pool_rows']}（本次新增 {metrics['new_pool_shapes']}）",
+        f"- Shape opportunity / Watch / Reject：{metrics['shape_opportunities_latest_validation']}/{metrics['watch_shapes']}/{metrics['rejected_shapes']}",
+        f"- 参考 ASIN：{metrics['reference_asin_count']}",
         f"- 人工复核/补数据：{metrics['manual_review_rows']}",
-        f"- 淘汰主因：{metrics['seed_reject_reasons']}",
+        f"- 形态淘汰主因：{metrics['shape_reject_reasons']}",
         f"- Dashboard mtime：{report['paths']['dashboard_mtime'] or 'missing'}",
-        f"- 最新快照：{report['paths']['latest_seed_snapshot'] or 'none'} / {report['paths']['latest_category_shape_snapshot'] or 'none'}",
+        f"- 最新快照：{report['paths']['latest_category_shape_snapshot'] or 'none'}",
         f"- 日志：{report['paths']['log_path'] or 'none'}",
     ]
     if report.get("failed_step"):

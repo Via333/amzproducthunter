@@ -29,6 +29,11 @@
     td span { display: block; font-size: 12px; margin-top: 2px; }
     .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .gallery { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    .gallery-toolbar { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr) auto; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .gallery-toolbar select, .gallery-toolbar input { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #cbd3df; border-radius: 7px; padding: 10px 11px; background: #fff; color: #172033; font: inherit; }
+    .gallery-count { color: #657184; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .gallery-empty { padding: 28px 12px; border: 1px dashed #cbd3df; border-radius: 8px; text-align: center; color: #657184; background: #f9fafb; }
+    [hidden] { display: none !important; }
     .tile { border: 1px solid #d9dee8; border-radius: 8px; background: #fff; overflow: hidden; }
     .tile img, .image-empty { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #f7f8fa; border-bottom: 1px solid #d9dee8; }
     .image-empty { display: grid; place-items: center; color: #657184; }
@@ -43,7 +48,35 @@
     .decision span { color: #657184; }
     .decision.rejected { border-left-color: #c83d3d; background: #fff8f7; }
     .decision.rejected strong { color: #a62828; }
-    @media (max-width: 900px) { .top { display: block; } .kpis, .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .summary-grid article { border-left: 3px solid #d9dee8; padding-left: 14px; }
+    .summary-grid h3 { margin: 0 0 8px; font-size: 15px; }
+    .summary-grid ul { margin: 0; padding-left: 18px; }
+    .summary-grid li { margin: 0 0 7px; color: #405066; }
+    .verdict-panel { display: flex; justify-content: space-between; gap: 24px; border-left: 4px solid #d99a18; }
+    .eyebrow { color: #657184; font-size: 12px; font-weight: 750; }
+    .score-box { min-width: 120px; text-align: right; }
+    .score-box span, .score-box small { display: block; color: #657184; }
+    .score-box strong { display: block; font-size: 40px; line-height: 1.1; }
+    .analysis-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; padding: 0; overflow: hidden; }
+    .analysis-grid article { padding: 18px; border-right: 1px solid #d9dee8; border-bottom: 1px solid #d9dee8; }
+    .analysis-grid article:nth-child(2n) { border-right: 0; }
+    .analysis-grid ul, .action-list { margin: 8px 0 0; padding-left: 20px; }
+    .analysis-grid li, .action-list li { margin: 6px 0; }
+    .warning { padding: 10px 12px; border-left: 3px solid #d99a18; background: #fff8e8; color: #6d4a06; }
+    .reference-links { display: flex; gap: 10px; flex-wrap: wrap; }
+    @media (max-width: 900px) {
+      .top { display: block; }
+      .kpis, .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analysis-grid, .summary-grid { grid-template-columns: minmax(0, 1fr); }
+      .analysis-grid article { border-right: 0; }
+      .verdict-panel { display: block; }
+      .decision { display: block; }
+      .decision span { display: block; margin-top: 6px; }
+      .score-box { text-align: left; margin-top: 12px; }
+      .gallery-toolbar { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 560px) { .kpis, .gallery { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body>
@@ -61,6 +94,10 @@
     </div>
 
     <section class="decision rejected"><strong>当前结论：已淘汰</strong><span>淘汰：类目数据缺失，Listing 有效性需复核；形态已修正为 wall-mounted storage box</span></section>
+
+
+
+
 
     <section>
       <div class="kpis">
@@ -107,7 +144,7 @@
               <td class="num">287</td>
               <td>plastic:1<span>1:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>caddy</b><span>需要供应商和评论验证</span></td>
@@ -133,210 +170,210 @@
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>ease_of_use</td><td class="num">8</td><td>older_adult; professional</td><td>storage; travel</td>
-          <td>Wonderful for the remotes in the bedroom. I painted mine with flowers 🌺 to match the room. Easy to use acrylic paint or...<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>Wonderful for the remotes in the bedroom. I painted mine with flowers 🌺 to match the room. Easy to use acrylic paint or...<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>expected · positive</span></td>
           <td>ease_of_use</td><td class="num">7</td><td>older_adult; professional</td><td>daily_home; storage</td>
-          <td>It was exactly what I needed, easy to use<span>B0DDPQNDWR</span></td>
+          <td>It was exactly what I needed, easy to use<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>uncategorized · positive</span></td>
           <td>other</td><td class="num">7</td><td>family; older_adult</td><td>-</td>
-          <td>Super convient and really handy<span>B0DDPV261N; B0DRNP5ZJX</span></td>
+          <td>Super convient and really handy<span>同主题涉及 ASIN：B0DDPV261N; B0DRNP5ZJX</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>uncategorized · positive</span></td>
           <td>other</td><td class="num">6</td><td>-</td><td>-</td>
-          <td>👍<span>B0DDPQNDWR</span></td>
+          <td>👍<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>delight · positive</span></td>
           <td>other</td><td class="num">4</td><td>older_adult</td><td>-</td>
-          <td>Housing the AC remote, TV remote, &amp; a vape(keep losing it)<span>B0DDPQNDWR</span></td>
+          <td>Housing the AC remote, TV remote, &amp; a vape(keep losing it)<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>instructions_setup</td><td class="num">4</td><td>professional</td><td>-</td>
-          <td>Easy to install and very functional.<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>Easy to install and very functional.<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>other</td><td class="num">4</td><td>-</td><td>-</td>
-          <td>Great<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>Great<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>expected · positive</span></td>
           <td>instructions_setup</td><td class="num">3</td><td>older_adult; professional</td><td>storage</td>
-          <td>This is a great option for keeping remotes organized and easy to find. It was simple to install, doesn’t look cheap on...<span>B0DDPQNDWR</span></td>
+          <td>This is a great option for keeping remotes organized and easy to find. It was simple to install, doesn’t look cheap on...<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>delight · positive</span></td>
           <td>performance</td><td class="num">3</td><td>older_adult; professional</td><td>travel</td>
-          <td>Worked perfect in my rv<span>B0DDPQNDWR</span></td>
+          <td>Worked perfect in my rv<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>material_quality</td><td class="num">3</td><td>family</td><td>-</td>
-          <td>This item was perfect. The double sided tape actually does the job. Holds my 3 remotes with no issues. Thx<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>This item was perfect. The double sided tape actually does the job. Holds my 3 remotes with no issues. Thx<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>size_fit</td><td class="num">3</td><td>older_adult</td><td>storage; travel</td>
-          <td>Good value for price. Nice size. Three across fit all my remotes, my phone, and eye glass cleaning supplies and case. A...<span>B0DDPV261N</span></td>
+          <td>Good value for price. Nice size. Three across fit all my remotes, my phone, and eye glass cleaning supplies and case. A...<span>同主题涉及 ASIN：B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>delight · positive</span></td>
           <td>ease_of_use</td><td class="num">2</td><td>-</td><td>gift</td>
-          <td>I love it, super easy installation, and keeps the remotes high up from the little ones.<span>B0DDPQNDWR</span></td>
+          <td>I love it, super easy installation, and keeps the remotes high up from the little ones.<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>expected · positive</span></td>
           <td>material_quality</td><td class="num">2</td><td>-</td><td>-</td>
-          <td>Extremely good product. Very good quality.<span>B0DDPQNDWR</span></td>
+          <td>Extremely good product. Very good quality.<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>expected · positive</span></td>
           <td>performance</td><td class="num">2</td><td>older_adult; professional</td><td>daily_home; storage</td>
-          <td>Works great! Easy to setup, easy to install. Fits well into the space I had in mind for it. Now my remotes are in an ea...<span>B0DDPQNDWR</span></td>
+          <td>Works great! Easy to setup, easy to install. Fits well into the space I had in mind for it. Now my remotes are in an ea...<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>uncategorized · negative</span></td>
           <td>size_fit</td><td class="num">2</td><td>-</td><td>-</td>
-          <td>The dividers that separate the sections for each remote are push in place but they fall out when remote is removed then...<span>B0DDPQNDWR</span></td>
+          <td>The dividers that separate the sections for each remote are push in place but they fall out when remote is removed then...<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>delight · positive</span></td>
           <td>size_fit</td><td class="num">2</td><td>-</td><td>gift; storage</td>
-          <td>This was exactly what I needed to mount on the side of my nightstand. It will hold five normal size remotes, which you...<span>B0DDPQNDWR</span></td>
+          <td>This was exactly what I needed to mount on the side of my nightstand. It will hold five normal size remotes, which you...<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>uncategorized · positive</span></td>
           <td>value_quantity</td><td class="num">2</td><td>-</td><td>-</td>
-          <td>I wanted to get the cheapest one, but I was not sure if it came with those separations and the holes on the bottom as I...<span>B0DDPQNDWR</span></td>
+          <td>I wanted to get the cheapest one, but I was not sure if it came with those separations and the holes on the bottom as I...<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>cleaning_maintenance</td><td class="num">2</td><td>older_adult</td><td>storage; travel</td>
-          <td>Good value for price. Nice size. Three across fit all my remotes, my phone, and eye glass cleaning supplies and case. A...<span>B0DDPV261N</span></td>
+          <td>Good value for price. Nice size. Three across fit all my remotes, my phone, and eye glass cleaning supplies and case. A...<span>同主题涉及 ASIN：B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>durability</td><td class="num">2</td><td>older_adult</td><td>storage; travel</td>
-          <td>Good value for price. Nice size. Three across fit all my remotes, my phone, and eye glass cleaning supplies and case. A...<span>B0DDPV261N</span></td>
+          <td>Good value for price. Nice size. Three across fit all my remotes, my phone, and eye glass cleaning supplies and case. A...<span>同主题涉及 ASIN：B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>uncategorized · positive</span></td>
           <td>durability</td><td class="num">2</td><td>older_adult</td><td>travel</td>
-          <td>I ordered this set of remote holders for my bedroom after moving into a new apartment where there are several remotes f...<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>I ordered this set of remote holders for my bedroom after moving into a new apartment where there are several remotes f...<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>durability</td><td class="num">2</td><td>family</td><td>-</td>
-          <td>Great set for $19. These caddies are well made and sturdy. Screws and anchors were included but I didn‘t use them. They...<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>Great set for $19. These caddies are well made and sturdy. Screws and anchors were included but I didn‘t use them. They...<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>uncategorized · positive</span></td>
           <td>instructions_setup</td><td class="num">2</td><td>older_adult</td><td>travel</td>
-          <td>I ordered this set of remote holders for my bedroom after moving into a new apartment where there are several remotes f...<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>I ordered this set of remote holders for my bedroom after moving into a new apartment where there are several remotes f...<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>material_quality</td><td class="num">2</td><td>older_adult</td><td>storage; travel</td>
-          <td>This plastic remote holder comes with two divider slots that can be removed to just make one opening to hold your remot...<span>B0DDPV261N</span></td>
+          <td>This plastic remote holder comes with two divider slots that can be removed to just make one opening to hold your remot...<span>同主题涉及 ASIN：B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>uncategorized · negative</span></td>
           <td>other</td><td class="num">2</td><td>-</td><td>-</td>
-          <td>Not good<span>B0DDPV261N; B0DRNP5ZJX</span></td>
+          <td>Not good<span>同主题涉及 ASIN：B0DDPV261N; B0DRNP5ZJX</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>performance</td><td class="num">2</td><td>professional</td><td>-</td>
-          <td>Simple idea, put them on the back of the TV they work great just need a flat surface for them<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>Simple idea, put them on the back of the TV they work great just need a flat surface for them<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>uncategorized · positive</span></td>
           <td>size_fit</td><td class="num">2</td><td>older_adult</td><td>travel</td>
-          <td>I ordered this set of remote holders for my bedroom after moving into a new apartment where there are several remotes f...<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>I ordered this set of remote holders for my bedroom after moving into a new apartment where there are several remotes f...<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>size_fit</td><td class="num">2</td><td>family</td><td>-</td>
-          <td>Great set for $19. These caddies are well made and sturdy. Screws and anchors were included but I didn‘t use them. They...<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>Great set for $19. These caddies are well made and sturdy. Screws and anchors were included but I didn‘t use them. They...<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>uncategorized · positive</span></td>
           <td>value_quantity</td><td class="num">2</td><td>older_adult</td><td>travel</td>
-          <td>I ordered this set of remote holders for my bedroom after moving into a new apartment where there are several remotes f...<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>I ordered this set of remote holders for my bedroom after moving into a new apartment where there are several remotes f...<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>value_quantity</td><td class="num">2</td><td>family</td><td>-</td>
-          <td>Great set for $19. These caddies are well made and sturdy. Screws and anchors were included but I didn‘t use them. They...<span>B0DDPK4PBW; B0DDPV261N</span></td>
+          <td>Great set for $19. These caddies are well made and sturdy. Screws and anchors were included but I didn‘t use them. They...<span>同主题涉及 ASIN：B0DDPK4PBW; B0DDPV261N</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>caddy</b><span>expected · positive</span></td>
           <td>cleaning_maintenance</td><td class="num">1</td><td>-</td><td>storage</td>
-          <td>This is a great option for keeping remotes organized and easy to find. It was simple to install, doesn’t look cheap on...<span>B0DDPQNDWR</span></td>
+          <td>This is a great option for keeping remotes organized and easy to find. It was simple to install, doesn’t look cheap on...<span>同主题涉及 ASIN：B0DDPQNDWR</span></td>
         </tr>
         </tbody>
         </table>
@@ -368,7 +405,7 @@
               <td class="num">287</td>
               <td class="num">5</td>
             </tr>
-            
+
 
             <tr>
               <td><a href="https://www.amazon.com/dp/B0DDPQNDWR" target="_blank" rel="noreferrer">B0DDPQNDWR</a><span>3 Slot Adjustable Remote Control Holder Wall Mount, TV Remote Box Hol...</span></td>
@@ -384,68 +421,76 @@
 
     <section>
       <h2>代表产品图片</h2>
-      <div class="gallery">
-            <article class="tile">
+      <div class="gallery-toolbar">
+        <select id="galleryForm" aria-label="按产品形态筛选">
+          <option value="">全部产品形态</option>
+          <option value="wall-mounted storage box">wall-mounted storage box</option><option value="caddy">caddy</option><option value="combo storage drawer">combo storage drawer</option><option value="wall-mounted shelf">wall-mounted shelf</option><option value="combo clothes hanger">combo clothes hanger</option><option value="wall-mounted caddy">wall-mounted caddy</option><option value="shelf">shelf</option><option value="storage hook">storage hook</option><option value="drinking straw">drinking straw</option><option value="combo caddy">combo caddy</option><option value="remote control">remote control</option><option value="clothes rack">clothes rack</option><option value="item container">item container</option><option value="combo shelf">combo shelf</option><option value="storage box">storage box</option><option value="combo furniture cart">combo furniture cart</option><option value="furniture cart">furniture cart</option><option value="toilet paper holder">toilet paper holder</option><option value="stainless steel clothes rack">stainless steel clothes rack</option><option value="storage drawer">storage drawer</option><option value="combo storage hook">combo storage hook</option><option value="silicone portable electronic device mount">silicone portable electronic device mount</option>
+        </select>
+        <input id="gallerySearch" type="search" placeholder="搜索 ASIN / 标题 / 材质" aria-label="搜索代表产品">
+        <span class="gallery-count" id="galleryCount"></span>
+      </div>
+      <div class="gallery" id="productGallery">
+            <article class="tile" data-gallery-item data-form="wall-mounted storage box" data-search="b0drn24xd6 1pcs wall-mounted storage box space-saving wall organizer for phone remote small items creative hanging storage easy install no electricity needed(white)  wall-mounted storage box  plastic">
               <a href="https://www.amazon.com/dp/B0DRN24XD6" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/01_B0DRN24XD6.jpg" alt="B0DRN24XD6">
+                <img src="assets/B0DRN24XD6/01_B0DRN24XD6.jpg" alt="B0DRN24XD6">
                 <b>B0DRN24XD6</b>
                 <span>1Pcs Wall-Mounted Storage Box Space-Saving Wall Organizer for Phone Rem...</span>
               </a>
               <p>wall-mounted storage box · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="caddy" data-search="b0ddpqndwr 3 slot adjustable remote control holder wall mount, tv remote box hollow bottom slot easy phone charging, self adhesive remote holder,wall pen holder storage accessories for home office school (black)  caddy  wood/bamboo">
               <a href="https://www.amazon.com/dp/B0DDPQNDWR" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/02_B0DDPQNDWR.jpg" alt="B0DDPQNDWR">
+                <img src="assets/B0DRN24XD6/02_B0DDPQNDWR.jpg" alt="B0DDPQNDWR">
                 <b>B0DDPQNDWR</b>
                 <span>3 Slot Adjustable Remote Control Holder Wall Mount, TV Remote Box Hollo...</span>
               </a>
               <p>caddy · wood/bamboo · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo storage drawer" data-search="b0cgjjjc4m upgraded closet organizers and storage, stackable closet organizer basket | 5 pack foldable closet storage bins for bathroom laundry room wardrobe storage, space-saving clothes drawer organizer  combo storage drawer  plastic">
               <a href="https://www.amazon.com/dp/B0CGJJJC4M" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/03_B0CGJJJC4M.jpg" alt="B0CGJJJC4M">
+                <img src="assets/B0DRN24XD6/03_B0CGJJJC4M.jpg" alt="B0CGJJJC4M">
                 <b>B0CGJJJC4M</b>
                 <span>Upgraded Closet Organizers and Storage, Stackable Closet Organizer Bask...</span>
               </a>
               <p>combo storage drawer · plastic · 5 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="caddy" data-search="b0dcnhb5ft xyofun magnetic remote control holder wall mount - 4 pcs multicolor | no drill self-adhesive organizer, for air conditioner &amp; tv remotes, storage caddy for televisions backside  caddy  silicone">
               <a href="https://www.amazon.com/dp/B0DCNHB5FT" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/04_B0DCNHB5FT.jpg" alt="B0DCNHB5FT">
+                <img src="assets/B0DRN24XD6/04_B0DCNHB5FT.jpg" alt="B0DCNHB5FT">
                 <b>B0DCNHB5FT</b>
                 <span>XYOFUN Magnetic Remote Control Holder Wall Mount - 4 Pcs Multicolor | N...</span>
               </a>
               <p>caddy · silicone · 4 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="caddy" data-search="b0d97jxlb2 aecsze 2 pcs remote control holders wall mount, self adhesive tv air conditioner remote control holder, wall mount storage box organizer wall pen holder storage for home office school (black, 2)  caddy  plastic">
               <a href="https://www.amazon.com/dp/B0D97JXLB2" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/05_B0D97JXLB2.jpg" alt="B0D97JXLB2">
+                <img src="assets/B0DRN24XD6/05_B0D97JXLB2.jpg" alt="B0D97JXLB2">
                 <b>B0D97JXLB2</b>
                 <span>Aecsze 2 PCS Remote Control Holders Wall Mount, Self Adhesive TV Air Co...</span>
               </a>
               <p>caddy · plastic · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="wall-mounted shelf" data-search="b0bjzp3lh4 richer house 5-set floating shelves with lip, black wall mounted wood shelf | display picture ledge shelf, anti-drop lip shelf for room wall decor, bedroom bathroom storage nursery books, easy setup 16in  wall-mounted shelf  wood/bamboo">
               <a href="https://www.amazon.com/dp/B0BJZP3LH4" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/06_B0BJZP3LH4.jpg" alt="B0BJZP3LH4">
+                <img src="assets/B0DRN24XD6/06_B0BJZP3LH4.jpg" alt="B0BJZP3LH4">
                 <b>B0BJZP3LH4</b>
                 <span>RICHER HOUSE 5-Set Floating Shelves with Lip, Black Wall Mounted Wood S...</span>
               </a>
               <p>wall-mounted shelf · wood/bamboo · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo storage drawer" data-search="b0cbdf4smk sevenblue 3-pack 2-tier under sink organizers with sliding drawers | multi-use kitchen &amp; bathroom storage, 12.8 inch black cabinet organizer, space-saving sliding drawer design.  combo storage drawer  plastic">
               <a href="https://www.amazon.com/dp/B0CBDF4SMK" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0CBDF4SMK</b>
@@ -453,79 +498,79 @@
               </a>
               <p>combo storage drawer · plastic · 3 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo clothes hanger" data-search="b0cb8b1m41 pants hangers with clips,space saving hanging closet organizer-6 tiers skirt hangers with 360° swivel hook,closet organizer-clothes hangers- college dorm essentials apartment essentials-2 pack  combo clothes hanger  plastic">
               <a href="https://www.amazon.com/dp/B0CB8B1M41" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/08_B0CB8B1M41.jpg" alt="B0CB8B1M41">
+                <img src="assets/B0DRN24XD6/08_B0CB8B1M41.jpg" alt="B0CB8B1M41">
                 <b>B0CB8B1M41</b>
                 <span>Pants Hangers with Clips,Space Saving Hanging Closet Organizer-6 Tiers...</span>
               </a>
               <p>combo clothes hanger · plastic · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo clothes hanger" data-search="b0bzcbj7rl volnamal legging organizer for closet,2 pack metal yoga pants hangers w/10 clips hold 20 leggings,space saving hanging closet organizer clothes hanger college dorm essentials apartment essential,black  combo clothes hanger  metal">
               <a href="https://www.amazon.com/dp/B0BZCBJ7RL" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/09_B0BZCBJ7RL.jpg" alt="B0BZCBJ7RL">
+                <img src="assets/B0DRN24XD6/09_B0BZCBJ7RL.jpg" alt="B0BZCBJ7RL">
                 <b>B0BZCBJ7RL</b>
                 <span>Volnamal Legging Organizer for Closet,2 Pack Metal Yoga Pants Hangers w...</span>
               </a>
               <p>combo clothes hanger · metal · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="wall-mounted caddy" data-search="b0cj56m8d4 veken shower caddy 6-pack, bathroom organizers and storage shelves, black | advanced rustproof design, large capacity, no drilling, adhesive rack with soap holder, wall-mounted kitchen &amp; home decor  wall-mounted caddy  paper">
               <a href="https://www.amazon.com/dp/B0CJ56M8D4" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/10_B0CJ56M8D4.jpg" alt="B0CJ56M8D4">
+                <img src="assets/B0DRN24XD6/10_B0CJ56M8D4.jpg" alt="B0CJ56M8D4">
                 <b>B0CJ56M8D4</b>
                 <span>Veken Shower Caddy 6-Pack, Bathroom Organizers and Storage Shelves, Bla...</span>
               </a>
               <p>wall-mounted caddy · paper · 6 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo clothes hanger" data-search="b0brkhclgz closet organizers and storage, 3 pack pants hangers space saving | organization and storage, velvet hanger for dorm room for college students girls boys guys hanging jean scarf  combo clothes hanger  unknown">
               <a href="https://www.amazon.com/dp/B0BRKHCLGZ" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/11_B0BRKHCLGZ.jpg" alt="B0BRKHCLGZ">
+                <img src="assets/B0DRN24XD6/11_B0BRKHCLGZ.jpg" alt="B0BRKHCLGZ">
                 <b>B0BRKHCLGZ</b>
                 <span>Closet Organizers and Storage, 3 Pack Pants Hangers Space Saving | Orga...</span>
               </a>
               <p>combo clothes hanger · unknown · 3 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="caddy" data-search="b0c89stmfk jarlink over the door organizer for bedroom, pantry, bathroom, 5 shelf grey | anti-tilt design, 44 lb load capacity, hanging door organizer with 5 large capacity pockets, behind door storage for nursery  caddy  metal">
               <a href="https://www.amazon.com/dp/B0C89STMFK" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/12_B0C89STMFK.jpg" alt="B0C89STMFK">
+                <img src="assets/B0DRN24XD6/12_B0C89STMFK.jpg" alt="B0C89STMFK">
                 <b>B0C89STMFK</b>
                 <span>JARLINK Over the Door Organizer for Bedroom, Pantry, Bathroom, 5 Shelf...</span>
               </a>
               <p>caddy · metal · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="shelf" data-search="b09yv7b6yw upsimples 4 pcs 15“ acrylic shelves for wall storage and organizer, clear | transparent design highlights skincare, perfume, easy-to-find versatile floating shelves for bathroom, bedroom and playroom  shelf  plastic">
               <a href="https://www.amazon.com/dp/B09YV7B6YW" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/13_B09YV7B6YW.jpg" alt="B09YV7B6YW">
+                <img src="assets/B0DRN24XD6/13_B09YV7B6YW.jpg" alt="B09YV7B6YW">
                 <b>B09YV7B6YW</b>
                 <span>upsimples 4 Pcs 15“ Acrylic Shelves for Wall Storage and Organizer, Cle...</span>
               </a>
               <p>shelf · plastic · 4 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="storage hook" data-search="b01g1y42h0 command large white broom grippers, 2 broom grippers, 4 strips | damage-free hanging wall mount broom and mop holder, no tools holiday cleaning organizer, holds up to 4 lb  storage hook  plastic">
               <a href="https://www.amazon.com/dp/B01G1Y42H0" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/14_B01G1Y42H0.jpg" alt="B01G1Y42H0">
+                <img src="assets/B0DRN24XD6/14_B01G1Y42H0.jpg" alt="B01G1Y42H0">
                 <b>B01G1Y42H0</b>
                 <span>Command Large White Broom Grippers, 2 Broom Grippers, 4 Strips | Damage...</span>
               </a>
               <p>storage hook · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="drinking straw" data-search="b0fb931gxg upgraded 9.5‘‘ large acrylic straw holder for cabinet door, adjustable space-saving straw organizer storage dispenser for cabinet with ultra sticky adhesive strips, 2-part rack, drainage holes  drinking straw  silicone">
               <a href="https://www.amazon.com/dp/B0FB931GXG" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FB931GXG</b>
@@ -533,149 +578,149 @@
               </a>
               <p>drinking straw · silicone · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo caddy" data-search="b0d22lpm7p heavy duty over the door organizer 5 tiers, extra large behind door storage of 10 big front &amp; 10 mesh pockets, 80lb weight capacity, hanging doors storage organizer for closet bedroom nursery, grey  combo caddy  unknown">
               <a href="https://www.amazon.com/dp/B0D22LPM7P" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/16_B0D22LPM7P.jpg" alt="B0D22LPM7P">
+                <img src="assets/B0DRN24XD6/16_B0D22LPM7P.jpg" alt="B0D22LPM7P">
                 <b>B0D22LPM7P</b>
                 <span>Heavy Duty Over The Door Organizer 5 Tiers, Extra Large Behind Door Sto...</span>
               </a>
               <p>combo caddy · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo caddy" data-search="b0d46gxkyf lifewit 1 pack over the door organizer 5 section hanging storage, dark gray | clear window behind door store with 4 side pockets, sturdy anti tilt 40 lbs load for closet, bedroom, bathroom, nursery, dorm  combo caddy  plastic">
               <a href="https://www.amazon.com/dp/B0D46GXKYF" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/17_B0D46GXKYF.jpg" alt="B0D46GXKYF">
+                <img src="assets/B0DRN24XD6/17_B0D46GXKYF.jpg" alt="B0D46GXKYF">
                 <b>B0D46GXKYF</b>
                 <span>Lifewit 1 Pack Over the Door Organizer 5 Section Hanging Storage, Dark...</span>
               </a>
               <p>combo caddy · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="remote control" data-search="b07vsjy4lp totalmount drop-free remote holder – removable adhesive strips – black | designed in the usa – simply put the remotes in – no tricky magnet alignment needed (holds 2 or 3 remote controls)  remote control  unknown">
               <a href="https://www.amazon.com/dp/B07VSJY4LP" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/18_B07VSJY4LP.jpg" alt="B07VSJY4LP">
+                <img src="assets/B0DRN24XD6/18_B07VSJY4LP.jpg" alt="B07VSJY4LP">
                 <b>B07VSJY4LP</b>
                 <span>TotalMount Drop-Free Remote Holder – Removable Adhesive Strips – Black...</span>
               </a>
               <p>remote control · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="shelf" data-search="b0cn11479k chenyaoai bedside shelf accessories organizer, wall mount self stick on, cute room decor aesthetic, girls room decor, cool stuff for bedroom storage and organization  shelf  paper">
               <a href="https://www.amazon.com/dp/B0CN11479K" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/19_B0CN11479K.jpg" alt="B0CN11479K">
+                <img src="assets/B0DRN24XD6/19_B0CN11479K.jpg" alt="B0CN11479K">
                 <b>B0CN11479K</b>
                 <span>CHENYAOAI Bedside Shelf Accessories Organizer, Wall Mount Self Stick On...</span>
               </a>
               <p>shelf · paper · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="clothes rack" data-search="b0cn1ffnsh hat rack for hat storage (4-pack), multi-purpose hat organizer, strong adhesive hat hooks for wall organizer for baseball caps, two mounting options hook, black  clothes rack  plastic">
               <a href="https://www.amazon.com/dp/B0CN1FFNSH" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/20_B0CN1FFNSH.jpg" alt="B0CN1FFNSH">
+                <img src="assets/B0DRN24XD6/20_B0CN1FFNSH.jpg" alt="B0CN1FFNSH">
                 <b>B0CN1FFNSH</b>
                 <span>Hat Rack for Hat Storage (4-Pack), Multi-Purpose Hat Organizer, Strong...</span>
               </a>
               <p>clothes rack · plastic · 4 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="item container" data-search="b082wnqnvd totalmount drop-free remote holder – removable adhesive strips – white | designed in the usa – simply put the remote in – no tricky magnet alignment needed  item container  unknown">
               <a href="https://www.amazon.com/dp/B082WNQNVD" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/21_B082WNQNVD.jpg" alt="B082WNQNVD">
+                <img src="assets/B0DRN24XD6/21_B082WNQNVD.jpg" alt="B082WNQNVD">
                 <b>B082WNQNVD</b>
                 <span>TotalMount Drop-Free Remote Holder – Removable Adhesive Strips – White...</span>
               </a>
               <p>item container · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="caddy" data-search="b0c5xdnkpx sibrant 2 pcs remote control holder wall mount, tv controller holder, self adhesive remote holder, wall pen holder storage accessories for home office school (white)  caddy  wood/bamboo">
               <a href="https://www.amazon.com/dp/B0C5XDNKPX" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/22_B0C5XDNKPX.jpg" alt="B0C5XDNKPX">
+                <img src="assets/B0DRN24XD6/22_B0C5XDNKPX.jpg" alt="B0C5XDNKPX">
                 <b>B0C5XDNKPX</b>
                 <span>SIBRANT 2 Pcs Remote Control Holder Wall Mount, TV Controller Holder, S...</span>
               </a>
               <p>caddy · wood/bamboo · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo caddy" data-search="b0d3lstzhv lifewit 6 tier over the door shoe organizer with 11 large deep pockets, fabric hanging shoes shelf for closet, dorm storage, fit up to 12 pair shoe rack holder for sneakers, boots, gray  combo caddy  unknown">
               <a href="https://www.amazon.com/dp/B0D3LSTZHV" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/23_B0D3LSTZHV.jpg" alt="B0D3LSTZHV">
+                <img src="assets/B0DRN24XD6/23_B0D3LSTZHV.jpg" alt="B0D3LSTZHV">
                 <b>B0D3LSTZHV</b>
                 <span>Lifewit 6 Tier Over the Door Shoe Organizer with 11 Large Deep Pockets,...</span>
               </a>
               <p>combo caddy · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo shelf" data-search="b09dx34yb6 awtatos 12 cube storage organizer, closet organizer storage shelves, white  combo shelf  plastic">
               <a href="https://www.amazon.com/dp/B09DX34YB6" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/24_B09DX34YB6.jpg" alt="B09DX34YB6">
+                <img src="assets/B0DRN24XD6/24_B09DX34YB6.jpg" alt="B09DX34YB6">
                 <b>B09DX34YB6</b>
                 <span>AWTATOS 12 Cube Storage Organizer, Closet Organizer Storage Shelves, Wh...</span>
               </a>
               <p>combo shelf · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo storage drawer" data-search="b0bfg36dxh cube storage organizer with storage bins included - the perfect closet organizers and storage solution. includes 9 storage cubes, great for toy storage, closet storage, clothes storage (grey)  combo storage drawer  plastic">
               <a href="https://www.amazon.com/dp/B0BFG36DXH" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/25_B0BFG36DXH.jpg" alt="B0BFG36DXH">
+                <img src="assets/B0DRN24XD6/25_B0BFG36DXH.jpg" alt="B0BFG36DXH">
                 <b>B0BFG36DXH</b>
                 <span>Cube Storage Organizer with Storage Bins Included - The Perfect Closet...</span>
               </a>
               <p>combo storage drawer · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="storage box" data-search="b0chrp96ms 4 tier plastic storage bins with lid 23qt, stackable storage bins  storage box  plastic">
               <a href="https://www.amazon.com/dp/B0CHRP96MS" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/26_B0CHRP96MS.jpg" alt="B0CHRP96MS">
+                <img src="assets/B0DRN24XD6/26_B0CHRP96MS.jpg" alt="B0CHRP96MS">
                 <b>B0CHRP96MS</b>
                 <span>4 Tier Plastic Storage Bins with Lid 23QT, Stackable Storage Bins</span>
               </a>
               <p>storage box · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo furniture cart" data-search="b0d147f5fb spacekeeper slim rolling storage cart, 4 tier bathroom cart organizer,green  combo furniture cart  plastic">
               <a href="https://www.amazon.com/dp/B0D147F5FB" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/27_B0D147F5FB.jpg" alt="B0D147F5FB">
+                <img src="assets/B0DRN24XD6/27_B0D147F5FB.jpg" alt="B0D147F5FB">
                 <b>B0D147F5FB</b>
                 <span>SPACEKEEPER Slim Rolling Storage Cart, 4 Tier Bathroom Cart Organizer,G...</span>
               </a>
               <p>combo furniture cart · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo caddy" data-search="b0c1rf6bgt magnetic remote control holder wall mount 4 pack  combo caddy  plastic">
               <a href="https://www.amazon.com/dp/B0C1RF6BGT" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/28_B0C1RF6BGT.jpg" alt="B0C1RF6BGT">
+                <img src="assets/B0DRN24XD6/28_B0C1RF6BGT.jpg" alt="B0C1RF6BGT">
                 <b>B0C1RF6BGT</b>
                 <span>Magnetic Remote Control Holder Wall Mount 4 Pack</span>
               </a>
               <p>combo caddy · plastic · 4 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="storage box" data-search="b0dp76rzdr molutsody under bed storage with wheels, 2-pack underbed storage containers with clear lids, under bed shoe storage organizer, rolling under the bed storage bins for clothes shoes blankets (black)  storage box  paper">
               <a href="https://www.amazon.com/dp/B0DP76RZDR" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/29_B0DP76RZDR.jpg" alt="B0DP76RZDR">
+                <img src="assets/B0DRN24XD6/29_B0DP76RZDR.jpg" alt="B0DP76RZDR">
                 <b>B0DP76RZDR</b>
                 <span>Molutsody Under Bed Storage with Wheels, 2-Pack Underbed Storage Contai...</span>
               </a>
               <p>storage box · paper · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="furniture cart" data-search="b0d12p57gc okzest slim laundry room organization cart with upgraded metal hub casters | fits between washer &amp; dryer, 4-tier space-saving narrow rolling cart, premium wood top &amp; metal mesh shelf, with handle &amp; hook  furniture cart  wood/bamboo">
               <a href="https://www.amazon.com/dp/B0D12P57GC" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0D12P57GC</b>
@@ -683,29 +728,29 @@
               </a>
               <p>furniture cart · wood/bamboo · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="toilet paper holder" data-search="b09vld3f3p aojezor toilet paper holder stand: small space bathroom storage for renters  toilet paper holder  paper">
               <a href="https://www.amazon.com/dp/B09VLD3F3P" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/31_B09VLD3F3P.jpg" alt="B09VLD3F3P">
+                <img src="assets/B0DRN24XD6/31_B09VLD3F3P.jpg" alt="B09VLD3F3P">
                 <b>B09VLD3F3P</b>
                 <span>AOJEZOR Toilet Paper Holder Stand: Small Space Bathroom Storage for Ren...</span>
               </a>
               <p>toilet paper holder · paper · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="stainless steel clothes rack" data-search="b0c4h3z6k7 durmmur stainless steel hat organizer, hat rack for wall,each holds 15 hats | 2p strong adhesive/wall drilled hat holder, hat hooks, hat hanger baseball cap organizer for door,bedroom,closet(black 6 in)  stainless steel clothes rack  stainless steel">
               <a href="https://www.amazon.com/dp/B0C4H3Z6K7" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/32_B0C4H3Z6K7.jpg" alt="B0C4H3Z6K7">
+                <img src="assets/B0DRN24XD6/32_B0C4H3Z6K7.jpg" alt="B0C4H3Z6K7">
                 <b>B0C4H3Z6K7</b>
                 <span>Durmmur Stainless Steel Hat Organizer, Hat Rack for Wall,Each Holds 15...</span>
               </a>
               <p>stainless steel clothes rack · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="item container" data-search="b0djvysjz9 drq 2-pack remote control holder, adhesive wall-mount remote holder, black  item container  plastic">
               <a href="https://www.amazon.com/dp/B0DJVYSJZ9" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DJVYSJZ9</b>
@@ -713,9 +758,9 @@
               </a>
               <p>item container · plastic · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="storage drawer" data-search="b0fbg5w85j kmiectse clear storage bins with lids - 4 tier 23qt plastic stackable bins  storage drawer  plastic">
               <a href="https://www.amazon.com/dp/B0FBG5W85J" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FBG5W85J</b>
@@ -723,33 +768,59 @@
               </a>
               <p>storage drawer · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="combo storage hook" data-search="b0b7rrgjcm virfin key holder for wall with 2 self-adhesive tapes, no damage key holder rack for wall with 3 key hooks for entryway, door, bathroom, kitchen(black)  combo storage hook  paper">
               <a href="https://www.amazon.com/dp/B0B7RRGJCM" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/35_B0B7RRGJCM.jpg" alt="B0B7RRGJCM">
+                <img src="assets/B0DRN24XD6/35_B0B7RRGJCM.jpg" alt="B0B7RRGJCM">
                 <b>B0B7RRGJCM</b>
                 <span>VIRFIN Key Holder for Wall with 2 Self-Adhesive Tapes, No Damage Key Ho...</span>
               </a>
               <p>combo storage hook · paper · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="silicone portable electronic device mount" data-search="b0dy754p7k 6 pack magnetic remote control holder, silicone, self-adhesive no-drill  silicone portable electronic device mount  silicone">
               <a href="https://www.amazon.com/dp/B0DY754P7K" target="_blank" rel="noreferrer">
-                <img src="../../research/B0DRN24XD6/images/36_B0DY754P7K.jpg" alt="B0DY754P7K">
+                <img src="assets/B0DRN24XD6/36_B0DY754P7K.jpg" alt="B0DY754P7K">
                 <b>B0DY754P7K</b>
                 <span>6 Pack Magnetic Remote Control Holder, Silicone, Self-Adhesive No-Drill</span>
               </a>
               <p>silicone portable electronic device mount · silicone · 6 pack</p>
             </article>
             </div>
+      <div class="gallery-empty" id="galleryEmpty" hidden>没有匹配的产品。</div>
     </section>
 
-    <section>
-      <h2>主图总览</h2>
-      <img class="contact" src="../../research/B0DRN24XD6/image_contact_sheet.jpg" alt="B0DRN24XD6 image contact sheet">
-    </section>
+
   </main>
+  <script>
+    (() => {
+      const formSelect = document.getElementById("galleryForm");
+      const searchInput = document.getElementById("gallerySearch");
+      const count = document.getElementById("galleryCount");
+      const empty = document.getElementById("galleryEmpty");
+      const tiles = Array.from(document.querySelectorAll("[data-gallery-item]"));
+
+      function filterGallery() {
+        const selectedForm = formSelect.value;
+        const query = searchInput.value.trim().toLowerCase();
+        let visible = 0;
+        tiles.forEach(tile => {
+          const matchesForm = !selectedForm || tile.dataset.form === selectedForm;
+          const matchesQuery = !query || tile.dataset.search.includes(query);
+          const show = matchesForm && matchesQuery;
+          tile.hidden = !show;
+          if (show) visible += 1;
+        });
+        count.textContent = `显示 ${visible} / ${tiles.length} 个`;
+        empty.hidden = visible !== 0;
+      }
+
+      formSelect.addEventListener("change", filterGallery);
+      searchInput.addEventListener("input", filterGallery);
+      filterGallery();
+    })();
+  </script>
 </body>
 </html>

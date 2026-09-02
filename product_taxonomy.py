@@ -25,11 +25,18 @@ def normalize(value: object) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
 
 
-def first_match(text: str, entries: list[dict]) -> str:
+def first_match_entry(text: str, entries: list[dict]) -> dict:
     for entry in entries:
-        if any(normalize(term) in text for term in entry.get("terms", []) if normalize(term)):
-            return str(entry.get("label") or "").strip()
-    return ""
+        any_match = any(normalize(term) in text for term in entry.get("terms", []) if normalize(term))
+        required_terms = [normalize(term) for term in entry.get("all_terms", []) if normalize(term)]
+        all_match = bool(required_terms) and all(term in text for term in required_terms)
+        if any_match or all_match:
+            return entry
+    return {}
+
+
+def first_match(text: str, entries: list[dict]) -> str:
+    return str(first_match_entry(text, entries).get("label") or "").strip()
 
 
 def category_leaf(category: object) -> str:
@@ -39,7 +46,8 @@ def category_leaf(category: object) -> str:
 
 def generic_base(title: str, category: str, product_type: str, taxonomy: dict) -> str:
     product_type_text = normalize(product_type)
-    if product_type_text and product_type_text not in {"product", "unknown", "other"}:
+    generic_product_types = {normalize(value) for value in taxonomy.get("generic_product_types", [])}
+    if product_type_text and product_type_text not in {"product", "unknown", "other"} | generic_product_types:
         return product_type_text
     title_tokens = normalize(title).split()
     terms = taxonomy.get("generic_product_terms", [])
@@ -62,6 +70,8 @@ def classify_product_form(
     category: object = "",
     product_type: object = "",
     taxonomy_path: str = "config/product_taxonomy.json",
+    brand: object = "",
+    category_brands: object = None,
 ) -> str:
     taxonomy = load_taxonomy(taxonomy_path)
     title_text = str(title or "")
@@ -77,12 +87,23 @@ def classify_product_form(
         title_text,
         flags=re.IGNORECASE,
     )
-    text = normalize(" ".join(str(value or "") for value in (signal_title, category, product_type_text)))
+    normalized_title = normalize(signal_title)
+    brands = [brand, *(category_brands or [])]
+    for brand_name in sorted({normalize(value) for value in brands if normalize(value)}, key=len, reverse=True):
+        normalized_title = re.sub(rf"\b{re.escape(brand_name)}\b", " ", normalized_title)
+    normalized_title = re.sub(r"\s+", " ", normalized_title).strip()
+    text = normalize(" ".join(str(value or "") for value in (normalized_title, product_type_text)))
     override = first_match(text, taxonomy.get("overrides", []))
     if override:
         return override
-    modifier = first_match(text, taxonomy.get("modifiers", []))
-    base = generic_base(title_text, str(category or ""), product_type_text, taxonomy)
-    if modifier and modifier not in base:
+    modifier_entry = first_match_entry(text, taxonomy.get("modifiers", []))
+    modifier = str(modifier_entry.get("label") or "").strip() if modifier_entry.get("include_in_key", True) else ""
+    base = generic_base(normalized_title, str(category or ""), product_type_text, taxonomy)
+    generic_product_types = {normalize(value) for value in taxonomy.get("generic_product_types", [])}
+    product_type_is_specific = bool(
+        normalize(product_type_text)
+        and normalize(product_type_text) not in {"product", "unknown", "other"} | generic_product_types
+    )
+    if modifier and not product_type_is_specific and modifier not in base:
         return f"{modifier} {base}".strip()
     return base or "unknown"

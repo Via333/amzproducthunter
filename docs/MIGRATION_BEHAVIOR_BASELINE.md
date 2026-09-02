@@ -6,16 +6,16 @@
 
 | 项目 | 迁移前既有行为 | 迁移后验收口径 |
 | --- | --- | --- |
-| 周扫入口 | `python3 refresh_selection_workflow.py` | 入口保持不变；执行 `discover_sorftime_opportunities.py --strategy category --score`、`category_shape_validation.py`、`build_dashboard.py` |
+| 周扫入口 | `python3 refresh_selection_workflow.py` | 入口保持不变；执行 `discover_sorftime_opportunities.py --strategy category`、`category_shape_validation.py`、`build_product_research_pages.py`、`build_dashboard.py` |
 | 本机定时入口 | `automation/run_weekly_category_scan.sh` | 入口保持不变；同日完整快照存在时默认不重复调用 Sorftime，`--force` 必须先在 Issue 说明 |
 | 单品研究入口 | `python3 refresh_product_research.py --asin ASIN` | 入口保持不变；只登记本地既有研究时使用 `--register-existing` |
 | Sorftime 数据边界 | 通过 Sorftime CLI / 现有脚本获取数据 | 不直接爬 Amazon 前台；离线验证使用 fixture / report-only / smoke test，不消耗 Sorftime 额度 |
-| 初筛产出 | `reports/selection_ranked.csv`、`reports/selection_report.md` | 路径保持；候选评分字段和推荐结论可用 CSV 对账 |
+| 初筛产出 | `reports/selection_ranked.csv`、`reports/selection_report.md` | 手动 ASIN/关键词排序工具保留；周扫不再产出或依赖它们 |
 | 类目/形态验证产出 | `data/category_shape_validation.csv`、`reports/category_shape_validation.md` | 路径保持；只有 `shape_recommendation=Shape opportunity` 可进入形态机会池 |
 | 网页报告 | `web/index.html` | `python3 build_dashboard.py` 生成同一路径；页面读取当前 reports/data/archive live 文件 |
 | 周扫汇报 | 无或依赖日志人工判断 | `reports/weekly_scan_report.json`、`reports/weekly_scan_report.md`、`archive/weekly_scan_reports/RUN_ID/` 可对账 |
-| 初筛归档 | `archive/selection_runs/YYYYMMDD_HHMMSS/` | 每次初筛快照保留 `selection_ranked.csv`、`selection_report.md`、`source_candidates.csv`、`run_meta.json` |
-| 初筛机会档案 | `archive/opportunity_library.csv` | 不覆盖历史机会；未在最新扫描出现的旧机会只改 `archive_status=not_in_latest_run` |
+| 初筛归档 | `archive/selection_runs/YYYYMMDD_HHMMSS/` | 仅手动评分时生成；不属于周扫验收产出 |
+| 初筛机会档案 | `archive/opportunity_library.csv` | legacy 手动候选档案；不再由周扫更新，不等于正式形态机会池 |
 | 形态验证归档 | `archive/category_shape_runs/YYYYMMDD_HHMMSS/` | 每次验证快照保留 `category_shape_validation.csv`、`latest_category_shape_validation.csv`、`category_shape_validation.md`、`source_selection_ranked.csv` |
 | 形态机会池 | `archive/shape_opportunity_library.csv` | 只收通过类目/形态验证的 Shape opportunity；相同类目/形态用 `shape_archive_key=shape:{category}|{form}` 归并 |
 | 单品研究归档 | `archive/product_research_runs/ASIN/YYYYMMDD_HHMMSS/`、`archive/product_research_index.csv` | 保留每次研究报告和 research files；索引更新最近研究时间和次数，不删除旧研究 |
@@ -35,7 +35,8 @@
 
 - 种子：`seed_asin`、`seed_listing_url`、`seed_title`、`seed_score`、`seed_recommendation`
 - 类目：`category_path`、`data_quality`、`category_sample_count`、`category_total_sales`、`category_median_reviews`、`category_top10_median_reviews`、`category_top_brand`、`category_top_brand_share`
-- 形态：`product_form`、`shape_scope`、`shape_score`、`shape_recommendation`、`form_count`、`form_avg_price`、`form_avg_sales`、`form_median_reviews`、`form_low_review_high_sales_count`
+- 形态：`product_form`、`shape_scope`（`seed_form` / `adjacent_form` / `category_form`）、`shape_score`、`shape_recommendation`、`form_count`、`form_avg_price`、`form_avg_sales`、`form_median_reviews`、`form_low_review_high_sales_count`、`form_new_entrant_count`、`form_new_entrant_success_count`、`form_new_entrant_success_rate`、`form_brand_dependent_share`、`form_reference_asins`
+- 种子聚合：`seed_asins`、`seed_count`（同一最小类目的所有种子）
 - 结论：`validation_flags`、`opportunity_thesis`、`next_action`、`research_page`
 
 `archive/shape_opportunity_library.csv` 应额外保留：
@@ -62,13 +63,15 @@
 
 类目/形态验证来自 `config/category_shape_validation_rules.json`：
 
-- 每次最多验证 12 个种子，默认只取推荐语包含 `Watch` 的初筛候选。
+- 周扫参数 `seed_limit=0`、`category_limit=0`、`category_ranking_limit=0`：不读初筛种子，对本轮所有成功扫描且有原始 Top100 的类目做形态验证。
 - 类目评论墙：类目评论中位数 `>= 1000`，Top10 评论中位数 `>= 1500`。
 - 品牌集中：Top 品牌份额 `>= 35%`。
-- 形态样本：`form_count >= 2`。
-- 形态需求：形态月销均值 `>= 500`。
-- 形态评论：形态评论中位数 `<= 300`；若超过 300，则必须有至少 3 个低评高销样本。
-- 形态机会：`shape_score >= 65` 且为种子形态。
+- 形态样本：`form_count >= 2`；相邻/类目形态入池需要 `>= 3`。
+- 形态需求：形态月销均值 `>= 150` 或形态总月销 `>= 800`。
+- 形态评论：形态评论中位数 `<= 300`；若超过 300，则必须有至少 2 个低评高销样本。
+- 新进入者：`online_date` 在 18 个月内；成功 = 月销 `>= 200`；至少 2 个新进入者才算完整证据；参考 ASIN 取评论 `<= 300` 的前 5 个。
+- 品牌依赖：形态内 `>= 50%` listing 为其他品牌的兼容件/替换件时必淘汰。
+- 形态机会：`shape_score >= 65`，无硬 flag（种子形态或样本 `>= 3` 的相邻/类目形态）。
 - 观察形态：`shape_score >= 55`。
 
 ## 行为验收命令
@@ -79,13 +82,7 @@
 python3 tests/smoke_selection_workflow.py
 ```
 
-预期结果：
-
-- 固定 fixture 初筛 3 个候选。
-- 1 个候选进入 Watch，2 个候选被 Reject。
-- 类目/形态验证生成 1 条记录。
-- `Shape opportunity=1`。
-- 临时形态机会池 `tmp/smoke_selection_workflow/<run_id>/archive/shape_opportunity_library.csv` 中 `active_in_latest_run=1`。
+预期结果：验证 2 个成功类目、3 个形态；`Shape opportunity=1`、`Watch shape=1`、`Reject category/form=1`；参考 ASIN 非空；临时形态机会池 `active_in_latest_run=1`。
 
 不调用 Sorftime 的 report-only 验证：
 

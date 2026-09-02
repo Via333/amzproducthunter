@@ -1,0 +1,217 @@
+{
+  "generated_on": "2026-09-02",
+  "decision": "有条件进入供应商验证，不直接立项",
+  "decision_score": 50,
+  "decision_reason": "需求、增长和低评高销样本成立，但利润受包装体积/FBA 费影响，且流量高度依赖 Swiffer 兼容词。",
+  "product": {
+    "asin": "B0G34LYYWP",
+    "title": "80 Count Duster Refills Compatible with Swiffer Duster, 180° Disposable Multi-Surface Microfiber Cleaning Dusters, Unscented",
+    "price": 26.99,
+    "monthly_sales": 1362.0,
+    "reviews": 89,
+    "rating": 4.4,
+    "fba_fee": 8.6,
+    "fba_fee_share": 0.318636532048907,
+    "package_size_cm": "34.11*22.71*15.80",
+    "package_volume_l": 12.24,
+    "weight_g": 839.0,
+    "online_date": "2026-02-02",
+    "variation_count": 4
+  },
+  "shape": {
+    "name": "compatible disposable refill",
+    "count": 5,
+    "total_monthly_sales": 19771.0,
+    "sales_share": 0.0582,
+    "median_reviews": 2077.0,
+    "low_review_high_sales_count": 1
+  },
+  "same_pack_benchmark": {
+    "asin": "",
+    "title": "",
+    "price": 0,
+    "monthly_sales": 0,
+    "reviews": 0,
+    "fba_fee": 0,
+    "package_size": ""
+  },
+  "category": {
+    "node_id": "2245498011",
+    "top100_monthly_sales": "342259",
+    "average_price": "Top-80% products average price: 16.700875",
+    "median_price": "Top-80% products median price: 8.99",
+    "first_brand": "#1 brand: Swiffer",
+    "top3_brand_share": "Top-3 brands monthly sales share: 45.45%",
+    "return_rate": "Category return rate (last 30 days): 1.86%"
+  },
+  "trend": {
+    "monthly_sales": [
+      {
+        "month": "2026年02月",
+        "value": 8.0
+      },
+      {
+        "month": "2026年03月",
+        "value": 186.0
+      },
+      {
+        "month": "2026年04月",
+        "value": 178.0
+      },
+      {
+        "month": "2026年05月",
+        "value": 734.0
+      },
+      {
+        "month": "2026年06月",
+        "value": 712.0
+      },
+      {
+        "month": "2026年07月",
+        "value": 1443.0
+      },
+      {
+        "month": "2026年08月",
+        "value": 1376.0
+      },
+      {
+        "month": "2026年09月",
+        "value": 1362.0
+      }
+    ],
+    "price": [
+      {
+        "month": "2026年02月",
+        "value": 29.99
+      },
+      {
+        "month": "2026年03月",
+        "value": 29.05
+      },
+      {
+        "month": "2026年04月",
+        "value": 28.99
+      },
+      {
+        "month": "2026年05月",
+        "value": 29.09
+      },
+      {
+        "month": "2026年06月",
+        "value": 30.66
+      },
+      {
+        "month": "2026年07月",
+        "value": 28.64
+      },
+      {
+        "month": "2026年08月",
+        "value": 28.83
+      },
+      {
+        "month": "2026年09月",
+        "value": 26.99
+      }
+    ],
+    "latest_mom_growth": -0.0102
+  },
+  "variations": [
+    {
+      "Asin": "B0G34LYYWP",
+      "Property": "Scent:Unscented,Size:80P",
+      "SalesAmount": 700,
+      "ItemIndex": 1,
+      "ItemTotal": 4
+    },
+    {
+      "Asin": "B0G34NMRCG",
+      "Property": "Scent:Unscented,Size:40P",
+      "SalesAmount": 200,
+      "ItemIndex": 2,
+      "ItemTotal": 4
+    },
+    {
+      "Asin": "B0H55FQHBC",
+      "Property": "Scent:Unscented,Size:120P",
+      "SalesAmount": 100,
+      "ItemIndex": 3,
+      "ItemTotal": 4
+    },
+    {
+      "Asin": "B0H55MSN9L",
+      "Property": "Scent:Unscented,Size:60P",
+      "SalesAmount": -1,
+      "ItemIndex": 4,
+      "ItemTotal": 4
+    }
+  ],
+  "customer_voice": {
+    "summary": "Customers find the dust removal tool effective, with one mentioning it works as well as expensive brand name sweepers. They also consider it good value for money.",
+    "topics": [
+      {
+        "keyword": "dust retention",
+        "content": "Customers find that the dusters effectively remove dust, with one customer noting they work as well as branded alternatives.",
+        "mention": 19,
+        "positive": 15,
+        "negative": 4,
+        "update_time": "2026-08-30"
+      },
+      {
+        "keyword": "value for money",
+        "content": "Customers find the duster refills to be good value for money and say they would purchase them again.",
+        "mention": 12,
+        "positive": 9,
+        "negative": 3,
+        "update_time": "2026-08-30"
+      },
+      {
+        "keyword": "fit",
+        "content": "Customers find that the duster refills fit perfectly on their swiffer duster handle.",
+        "mention": 5,
+        "positive": 4,
+        "negative": 1,
+        "update_time": "2026-08-30"
+      }
+    ]
+  },
+  "unit_economics_gate": {
+    "assumed_referral_rate": 0.15,
+    "assumed_ad_rate": 0.15,
+    "target_contribution_margin": 0.2,
+    "max_landed_cost": 4.89,
+    "note": "未含退货、仓储和促销；供应商完税到仓成本超过此值时不建议进入。"
+  },
+  "signals": [
+    "新品从 2026-02 的 8 件爬升到最近 1362 件/月。",
+    "目标细分形态有 5 个 Top100 样本，形态总月销 19,771。",
+    "低评高销样本 1 个，说明并非只有老链接能卖。",
+    "80P 在当前父体可见变体销量中占主导。",
+    "评论主题中 dust retention 正向 15 / 负向 4。",
+    "同规格对标样本待补。"
+  ],
+  "risks": [
+    "FBA 费 $8.60，占售价 31.9%；包装压缩直接决定利润。",
+    "前 20 个流量词中 13 个含 Swiffer，存在商标依赖与广告合规复核要求。",
+    "耗材形态同质化高，供应链和价格容易被复制，不能只靠大包装。",
+    "Sorftime 评论接口对新链接返回正文有限，需用 10 个代表竞品的评论共同验证痛点。",
+    "同规格价格压力待补。"
+  ],
+  "entry_strategy": [
+    "优先做 80P 核心款，并保留 40P 试用装、120P 家庭/商用补充装；先验证父体变体结构再开模备货。",
+    "把防掉毛、静电吸附、插柄牢固度和不散尘作为硬指标，样品需与品牌原装做盲测。",
+    "压缩包装厚度，目标把同为 80P 的 FBA 费从当前 $8.60 压到约 $7.20 水平。",
+    "标题可做兼容性说明，但主品牌、包装视觉和广告素材不得让消费者误认为 Swiffer 原厂。",
+    "增加清洁公司/办公室场景的耗材补充叙事，弱化纯低价竞争。"
+  ],
+  "validation_gates": [
+    "80P 完税到仓成本不高于 $4.89（按 15% 广告费和 20% 贡献毛利倒推）。",
+    "完成至少 3 家供应商报价，确认单片克重、纤维密度、插柄尺寸公差和压缩包装尺寸。",
+    "30 次装卸适配测试、10 次抖落测试和标准粉尘吸附对比中不得明显弱于主流竞品。",
+    "由商标/平台合规人员审核 Compatible with Swiffer 的标题、包装和广告用法。",
+    "若售价降到 $24.99 后仍无法满足利润门槛，则淘汰。"
+  ],
+  "provenance": {
+    "category_source": "archive/discovery_runs/20260901_214146/raw_category_reports/2245498011.json",
+    "mcp_tool_calls": 21
+  }
+}

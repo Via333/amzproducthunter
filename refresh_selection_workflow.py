@@ -73,7 +73,6 @@ def workflow_steps(run_id: str, replay_source_run: str = "") -> list[tuple[str, 
         "discover_sorftime_opportunities.py",
         "--strategy",
         "category",
-        "--score",
         "--run-id",
         run_id,
     ]
@@ -84,7 +83,6 @@ def workflow_steps(run_id: str, replay_source_run: str = "") -> list[tuple[str, 
             "discover_sorftime_opportunities",
             discovery_command,
         ),
-        ("auto_research_shortlist", ["python3", "auto_research_shortlist.py", "--run-id", run_id]),
         ("category_shape_validation", ["python3", "category_shape_validation.py"]),
         ("build_product_research_pages", ["python3", "build_product_research_pages.py"]),
         ("build_dashboard", ["python3", "build_dashboard.py"]),
@@ -95,12 +93,10 @@ def required_outputs(run_id: str) -> list[Path]:
     return [
         ROOT / "web" / "index.html",
         ROOT / "reports" / "discovered_categories.csv",
-        ROOT / "reports" / "selection_ranked.csv",
         ROOT / "archive" / "category_scan_state.csv",
         ROOT / "data" / "category_shape_validation.csv",
         ROOT / "archive" / "shape_opportunity_library.csv",
         ROOT / "archive" / "discovery_runs" / run_id / "run_manifest.json",
-        ROOT / "archive" / "auto_research_runs" / run_id / "run_manifest.json",
     ]
 
 
@@ -115,6 +111,21 @@ def validate_required_outputs(run_id: str) -> None:
         raise RuntimeError(f"Discovery manifest is not successful: {manifest.get('status') or 'unknown'}")
     if int(manifest.get("successful_categories") or 0) <= 0 or int(manifest.get("products_examined") or 0) <= 0:
         raise RuntimeError("Discovery returned zero product records; live outputs must not be published")
+
+    category_report_path = ROOT / "reports" / "discovered_categories.csv"
+    with category_report_path.open("r", encoding="utf-8-sig", newline="") as handle:
+        category_reader = csv.DictReader(handle)
+        if "category_health_score" not in (category_reader.fieldnames or []):
+            raise RuntimeError("Discovered category report is missing category_health_score")
+
+    validation_path = ROOT / "data" / "category_shape_validation.csv"
+    with validation_path.open("r", encoding="utf-8-sig", newline="") as handle:
+        validation_rows = list(csv.DictReader(handle))
+    if not validation_rows:
+        raise RuntimeError("Category/form validation returned zero rows")
+    wrong_run_ids = sorted({row.get("validation_run_id", "") for row in validation_rows if row.get("validation_run_id") != run_id})
+    if wrong_run_ids:
+        raise RuntimeError(f"Category/form validation contains rows from another run: {', '.join(wrong_run_ids)}")
 
 
 def existing_report_status(run_id: str) -> tuple[str, str, str]:
@@ -153,18 +164,16 @@ def write_and_post_report(args: argparse.Namespace, report: dict) -> None:
 def print_legacy_summary() -> None:
     """Keep the old stdout lines for existing log readers."""
 
-    candidates = csv_count(ROOT / "reports" / "selection_ranked.csv")
     archived = csv_count(ROOT / "archive" / "shape_opportunity_library.csv")
     validations = csv_count(ROOT / "data" / "category_shape_validation.csv")
-    seed_snapshots = sorted((ROOT / "archive" / "selection_runs").glob("*"))
+    with (ROOT / "data" / "category_shape_validation.csv").open("r", encoding="utf-8-sig", newline="") as handle:
+        validated_categories = len({row.get("category_path", "") for row in csv.DictReader(handle) if row.get("category_path")})
     shape_snapshots = sorted((ROOT / "archive" / "category_shape_runs").glob("*"))
-    latest_seed_snapshot = seed_snapshots[-1] if seed_snapshots else ""
     latest_shape_snapshot = shape_snapshots[-1] if shape_snapshots else ""
 
-    print(f"Seed candidates: {candidates}")
+    print(f"Validated categories: {validated_categories}")
     print(f"Category/form validations: {validations}")
     print(f"Shape opportunity library: {archived}")
-    print(f"Latest seed snapshot: {latest_seed_snapshot}")
     print(f"Latest category/form snapshot: {latest_shape_snapshot}")
     print(f"Dashboard: {ROOT / 'web' / 'index.html'}")
 

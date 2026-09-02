@@ -1,6 +1,6 @@
 # AMZ 选品自动化系统
 
-这个项目用于维护 Amazon US 选品自动化流程：从 Sorftime 类目/产品池获取候选品，按评分规则做初筛，再用类目/形态验证过滤机会，最终把通过验证的产品沉淀进机会池和网页工作台。
+这个项目用于维护 Amazon US 选品自动化流程：轮换扫描最小类目的完整 Top100，计算类目健康度，再按产品形态验证需求、竞争、新进入者、价格带和产品风险，最终只把通过的形态沉淀进机会池和网页工作台。
 
 当前项目定位是执行系统，不是最终选品审核系统。它负责持续扫描、归档、生成报告和辅助研究；是否打样、询价或进入供应商验证，需要人工或项目审核环节确认。
 
@@ -25,9 +25,9 @@ python3 refresh_selection_workflow.py
 它依次执行：
 
 ```text
-1. discover_sorftime_opportunities.py --strategy category --score
-2. auto_research_shortlist.py（MCP 迁移期间关闭自动调用，候选保留人工深挖入口）
-3. category_shape_validation.py
+1. discover_sorftime_opportunities.py --strategy category
+2. category_shape_validation.py
+3. build_product_research_pages.py
 4. build_dashboard.py
 ```
 
@@ -55,7 +55,7 @@ python3 build_dashboard.py
 config/                              筛选、评分、导入和深挖规则
 data/discovered_candidates.csv       最新一轮 Sorftime 发现候选
 data/category_shape_validation.csv   最新类目/形态验证结果
-reports/selection_ranked.csv         最新初筛评分结果
+reports/selection_ranked.csv         手动 ASIN/关键词排序结果（周扫不依赖）
 reports/category_shape_validation.md 最新类目/形态验证报告
 reports/product_opportunity_*.md     单品研究报告
 archive/selection_runs/              每次初筛扫描快照
@@ -64,12 +64,15 @@ archive/opportunity_library.csv      初筛候选长期档案
 archive/shape_opportunity_library.csv 通过验证的形态机会池
 archive/product_research_runs/       单品研究历史快照
 archive/product_research_index.csv   单品研究索引
+archive/category_research_index.csv  类目深度研究索引
 archive/category_scan_state.csv      类目轮换状态，记录上次扫描和累计次数
 archive/keyword_search_runs/         每次关键词搜索完整快照
 archive/keyword_search_index.csv     关键词搜索历史索引
 research/ASIN/                       最新单品研究数据
+research/category_NODE_ID_1688_quotes.csv 类目形态的 1688 报价证据
 web/index.html                       本地网页工作台
 web/research/ASIN.html               单品研究页面
+web/category/NODE_ID.html            类目深度研究页面
 automation/                          每周类目扫描定时任务配置
 logs/                                定时任务运行日志
 ```
@@ -83,13 +86,17 @@ automation/com.amz-selection.weekly.plist
 automation/run_weekly_category_scan.sh
 ```
 
-默认通过 macOS launchd 每周一 08:30 本地时间运行一次统一入口。运行日志写入 `logs/weekly_category_scan.latest.log` 和对应时间戳日志。脚本会检查 `web/index.html`、初筛结果、类目/形态验证结果和形态机会池是否生成。
+默认通过 macOS launchd 每周一 08:30 本地时间运行一次统一入口。运行日志写入 `logs/weekly_category_scan.latest.log` 和对应时间戳日志。脚本会检查类目扫描清单、类目/形态验证结果、形态机会池和 `web/index.html` 是否生成。
 
 安装、重载和人工检查命令见 [automation/README.md](automation/README.md)。
 
-## 评分和验证
+## 形态验证与手动评分
 
-初筛评分由 `product_selection.py` 和 `config/scoring_rules.json` 控制：
+每周自动链路不再给单个 listing 打机会分。`category_shape_validation.py` 会验证本轮所有成功扫描类目下的全部形态；只有 `Shape opportunity` 写入 `archive/shape_opportunity_library.csv`。`Watch shape` 只表示需要补证，不入池。
+
+形态分按需求、可进入性、低评高销、新进入者成功率和品牌集中度计算；同时对形态内产品执行统一的大件、易碎、强合规、品牌护城河和食品接触排除。具体阈值以 `config/category_shape_validation_rules.json` 为准。
+
+`product_selection.py` 和以下公式只用于手动指定一批 ASIN/关键词结果时的排序，不参与周扫：
 
 ```text
 机会分 = 需求分 * 15%
@@ -104,8 +111,6 @@ automation/run_weekly_category_scan.sh
 - `Go to supplier validation`: 分数、毛利和风险初步达标，进入供应商验证候选。
 - `Watch or collect more data`: 有机会，但需要补竞品、成本、合规或形态证据。
 - `Reject`: 利润、竞争、风险或硬排除规则不达标。
-
-类目/形态验证由 `category_shape_validation.py` 和 `config/category_shape_validation_rules.json` 控制。只有验证结果为 `Shape opportunity` 或值得继续观察的形态，才会进入 `archive/shape_opportunity_library.csv`，并在网页的机会池中展示。
 
 评分同时输出 `evidence_confidence` 和 `evidence_grade`。采购成本、头程或 FBA 费仍为默认估算时，页面必须显示 `estimated`；估算利润只用于排序，不能替代供应商报价。
 
@@ -129,7 +134,7 @@ data/sorftime_response.example.json
 这才是真正的选品自动化入口：
 
 ```bash
-python3 discover_sorftime_opportunities.py --score
+python3 discover_sorftime_opportunities.py --strategy category
 ```
 
 它会做五步：
@@ -139,7 +144,7 @@ python3 discover_sorftime_opportunities.py --score
 2. 按 config/autodiscovery_rules.json 和 config/category_exclusions.json 永久跳过高合规、高物流、强专利/品牌垄断类目
 3. 优先扫描从未扫描的最小类目；全部覆盖后按最久未扫描轮换
 4. 对每个类目调用一次 MCP `category_report`，每类目最多查看 100 个 Top 产品
-5. 抓取候选并生成评分和网页
+5. 对全部成功类目拆分形态、验证机会并生成网页
 ```
 
 输出：
@@ -149,10 +154,10 @@ reports/discovered_categories.csv
 archive/category_scan_state.csv
 archive/discovery_runs/RUN_ID/raw_category_reports/
 data/discovered_candidates.csv
-reports/selection_ranked.csv
-reports/selection_report.md
-archive/selection_runs/YYYYMMDD_HHMMSS/
-archive/opportunity_library.csv
+data/category_shape_validation.csv
+reports/category_shape_validation.md
+archive/category_shape_runs/RUN_ID/
+archive/shape_opportunity_library.csv
 ```
 
 MCP 密钥只保存在用户级 `~/.codex/config.toml`，不能写入仓库。每次真实周扫的
@@ -165,7 +170,7 @@ python3 refresh_selection_workflow.py \
   --run-id NEW_RUN_ID
 ```
 
-### 更新和归档机制
+### 手动评分的更新和归档机制
 
 每次运行 `product_selection.py` 都会自动做两层保存：
 
@@ -193,7 +198,7 @@ python3 product_selection.py --input data/discovered_candidates.csv --no-archive
 python3 refresh_selection_workflow.py
 ```
 
-它会依次完成 Sorftime 扫描、评分归档和网页重建。
+它会依次完成 Sorftime 类目扫描、类目健康度计算、全形态验证、机会归档和网页重建。
 
 ## 单品研究入口和归档
 

@@ -29,6 +29,11 @@
     td span { display: block; font-size: 12px; margin-top: 2px; }
     .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .gallery { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    .gallery-toolbar { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr) auto; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .gallery-toolbar select, .gallery-toolbar input { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #cbd3df; border-radius: 7px; padding: 10px 11px; background: #fff; color: #172033; font: inherit; }
+    .gallery-count { color: #657184; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .gallery-empty { padding: 28px 12px; border: 1px dashed #cbd3df; border-radius: 8px; text-align: center; color: #657184; background: #f9fafb; }
+    [hidden] { display: none !important; }
     .tile { border: 1px solid #d9dee8; border-radius: 8px; background: #fff; overflow: hidden; }
     .tile img, .image-empty { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #f7f8fa; border-bottom: 1px solid #d9dee8; }
     .image-empty { display: grid; place-items: center; color: #657184; }
@@ -66,7 +71,10 @@
       .analysis-grid, .summary-grid { grid-template-columns: minmax(0, 1fr); }
       .analysis-grid article { border-right: 0; }
       .verdict-panel { display: block; }
+      .decision { display: block; }
+      .decision span { display: block; margin-top: 6px; }
       .score-box { text-align: left; margin-top: 12px; }
+      .gallery-toolbar { grid-template-columns: minmax(0, 1fr); }
     }
     @media (max-width: 560px) { .kpis, .gallery { grid-template-columns: minmax(0, 1fr); } }
   </style>
@@ -531,8 +539,16 @@
 
     <section>
       <h2>代表产品图片</h2>
-      <div class="gallery">
-            <article class="tile">
+      <div class="gallery-toolbar">
+        <select id="galleryForm" aria-label="按产品形态筛选">
+          <option value="">全部产品形态</option>
+          <option value="flexible magnetic tool mat set">flexible magnetic tool mat set</option><option value="rigid magnetic parts tray">rigid magnetic parts tray</option><option value="magnetic wristband">magnetic wristband</option><option value="magnetic tool holder/organizer">magnetic tool holder/organizer</option><option value="electronics repair magnetic mat">electronics repair magnetic mat</option><option value="magnetic pickup tool">magnetic pickup tool</option>
+        </select>
+        <input id="gallerySearch" type="search" placeholder="搜索 ASIN / 标题 / 材质" aria-label="搜索代表产品">
+        <span class="gallery-count" id="galleryCount"></span>
+      </div>
+      <div class="gallery" id="productGallery">
+            <article class="tile" data-gallery-item data-form="flexible magnetic tool mat set" data-search="b0fxg8j58q tooleague 3pcs magnetic tool mat with 25lb telescoping magnetic pickup pen flexible magnetic tool mat set flexible magnetic tool mat set pvc leather + embedded magnets pvc leather + embedded magnets">
               <a href="https://www.amazon.com/dp/B0FXG8J58Q" target="_blank" rel="noreferrer">
                 <img src="https://m.media-amazon.com/images/I/81Pmff+ruQL.jpg" alt="B0FXG8J58Q">
                 <b>B0FXG8J58Q</b>
@@ -542,7 +558,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="flexible magnetic tool mat set" data-search="b0cn1pc564 magnetic tool mat set flexible heavy duty non slip magnet pad auto repair | holds metallic parts &amp; fasteners secure on curved surfaces. anti-scratch rubberized backing protects mechanics work space. flexible magnetic tool mat set flexible magnetic tool mat set pvc leather + embedded magnets pvc leather + embedded magnets">
               <a href="https://www.amazon.com/dp/B0CN1PC564" target="_blank" rel="noreferrer">
                 <img src="https://images-na.ssl-images-amazon.com/images/I/616HxHtN0HL._AC_UL600_SR600,400_.jpg" alt="B0CN1PC564">
                 <b>B0CN1PC564</b>
@@ -552,7 +568,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="flexible magnetic tool mat set" data-search="b0h87dhf7j foldable magnetic tool mat, non-slip flexible magnetic pad with pvc | scratchproof &amp; waterproof surface, holds up to 44 lbs tools &amp; metal parts, 11.02’’x9.25’’ for garage, workshop &amp; auto repair flexible magnetic tool mat set flexible magnetic tool mat set pvc leather + embedded magnets pvc leather + embedded magnets">
               <a href="https://www.amazon.com/dp/B0H87DHF7J" target="_blank" rel="noreferrer">
                 <img src="https://images-na.ssl-images-amazon.com/images/I/71dh5wx+bzL._AC_UL300_SR300,200_.jpg" alt="B0H87DHF7J">
                 <b>B0H87DHF7J</b>
@@ -562,7 +578,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="flexible magnetic tool mat set" data-search="b0gy9fp2h8 magnetic tool mat, 40 lbs flexible magnetic mat, magnetic tool holder flexible magnetic tool mat set flexible magnetic tool mat set pvc leather + embedded magnets pvc leather + embedded magnets">
               <a href="https://www.amazon.com/dp/B0GY9FP2H8" target="_blank" rel="noreferrer">
                 <img src="https://m.media-amazon.com/images/I/41kR2BTFoIL.jpg" alt="B0GY9FP2H8">
                 <b>B0GY9FP2H8</b>
@@ -572,7 +588,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="flexible magnetic tool mat set" data-search="b0gx5hlsf1 magnetic tool mat set,40lb flexible magnetic mat, 4 size magnetic tool pads flexible magnetic tool mat set flexible magnetic tool mat set pvc leather + embedded magnets pvc leather + embedded magnets">
               <a href="https://www.amazon.com/dp/B0GX5HLSF1" target="_blank" rel="noreferrer">
                 <img src="https://m.media-amazon.com/images/I/71Ii1eP56cL.jpg" alt="B0GX5HLSF1">
                 <b>B0GX5HLSF1</b>
@@ -582,7 +598,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="flexible magnetic tool mat set" data-search="b0gqzlvq2d magnetic tool mat&amp;holder,40 lbs heavy duty magnetic parts holder with pvc protection layer,flexible magnetic pads,non-slip tool organizer for garage, workshop &amp; auto repair,12.6&#x27; x 9.76&#x27; flexible magnetic tool mat set flexible magnetic tool mat set pvc leather + embedded magnets pvc leather + embedded magnets">
               <a href="https://www.amazon.com/dp/B0GQZLVQ2D" target="_blank" rel="noreferrer">
                 <img src="https://m.media-amazon.com/images/I/51SQRe6zRML.jpg" alt="B0GQZLVQ2D">
                 <b>B0GQZLVQ2D</b>
@@ -592,7 +608,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="flexible magnetic tool mat set" data-search="b0fzbkydx9 grenpro magnetic tool mat, 2-pack, telescoping pickup tool, parts organizer flexible magnetic tool mat set flexible magnetic tool mat set pvc leather + embedded magnets pvc leather + embedded magnets">
               <a href="https://www.amazon.com/dp/B0FZBKYDX9" target="_blank" rel="noreferrer">
                 <img src="https://m.media-amazon.com/images/I/71QJ8abgMRL.jpg" alt="B0FZBKYDX9">
                 <b>B0FZBKYDX9</b>
@@ -602,7 +618,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="flexible magnetic tool mat set" data-search="b0fx3tbklg magnetic tool mat, 40 lbs magnetic tool holder flexible magnetic tool mat set flexible magnetic tool mat set pvc leather + embedded magnets pvc leather + embedded magnets">
               <a href="https://www.amazon.com/dp/B0FX3TBKLG" target="_blank" rel="noreferrer">
                 <img src="https://m.media-amazon.com/images/I/41ELTjdB5vL.jpg" alt="B0FX3TBKLG">
                 <b>B0FX3TBKLG</b>
@@ -612,7 +628,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="flexible magnetic tool mat set" data-search="b0ghc496zy c&amp;t magnetic tool mat set, 4 sizes magnetic mats, 25lb magnetic pickup tool flexible magnetic tool mat set flexible magnetic tool mat set pvc leather + embedded magnets pvc leather + embedded magnets">
               <a href="https://www.amazon.com/dp/B0GHC496ZY" target="_blank" rel="noreferrer">
                 <img src="https://m.media-amazon.com/images/I/51RO9xlG8QL.jpg" alt="B0GHC496ZY">
                 <b>B0GHC496ZY</b>
@@ -622,7 +638,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="flexible magnetic tool mat set" data-search="b0gv53clk9 vnkesno 3 pcs flexible magnetic tool mat, 40lb strong magnetic mat for tool flexible magnetic tool mat set flexible magnetic tool mat set pvc leather + embedded magnets pvc leather + embedded magnets">
               <a href="https://www.amazon.com/dp/B0GV53CLK9" target="_blank" rel="noreferrer">
                 <img src="https://m.media-amazon.com/images/I/81V8qfCS6vL.jpg" alt="B0GV53CLK9">
                 <b>B0GV53CLK9</b>
@@ -632,7 +648,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="rigid magnetic parts tray" data-search="b07bc6t5xr horusdy magnetic tray | 3-piece | round magnetic parts tray | 3 inch 4 inch 6 inch magnetic tray for mechanic‘s | stainless steel rigid magnetic parts tray rigid magnetic parts tray mixed mixed">
               <a href="https://www.amazon.com/dp/B07BC6T5XR" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B07BC6T5XR</b>
@@ -642,7 +658,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="magnetic wristband" data-search="b01hrcu3sw rak magnetic wristband for tools - premium tool belt for holding screws nails with powerful magnets, birthday gifts for men, cool gadgets stuff gifts for dad, husband, grandpa, handyman, him magnetic wristband magnetic wristband mixed mixed">
               <a href="https://www.amazon.com/dp/B01HRCU3SW" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B01HRCU3SW</b>
@@ -652,7 +668,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="magnetic tool holder/organizer" data-search="b0dcz5x7rp dehoyi 48 pcs premium magnetic modular wrench organizer system- wrench rack with metric&amp;sae labels, tool storage holder. gift for mechanics (black) magnetic tool holder/organizer magnetic tool holder/organizer mixed mixed">
               <a href="https://www.amazon.com/dp/B0DCZ5X7RP" target="_blank" rel="noreferrer">
                 <img src="https://m.media-amazon.com/images/I/71I8blyW+dL.jpg" alt="B0DCZ5X7RP">
                 <b>B0DCZ5X7RP</b>
@@ -662,7 +678,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="magnetic tool holder/organizer" data-search="b0dhwmd745 workpro magnetic screwdriver and wrench organizer set, 36-slot tool holders | 3-pack aluminum rails, magnetic force, flexible high-tension tool clips, for tool box drawer &amp; wall-mount storage magnetic tool holder/organizer magnetic tool holder/organizer mixed mixed">
               <a href="https://www.amazon.com/dp/B0DHWMD745" target="_blank" rel="noreferrer">
                 <img src="https://images-na.ssl-images-amazon.com/images/I/81k6vADXOWL._AC_UL600_SR600,400_.jpg" alt="B0DHWMD745">
                 <b>B0DHWMD745</b>
@@ -672,7 +688,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="electronics repair magnetic mat" data-search="b073rfkhd6 kaisi s160 soldering mat insulation silicone magnetic repair work mat electronics repair magnetic mat electronics repair magnetic mat mixed mixed">
               <a href="https://www.amazon.com/dp/B073RFKHD6" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B073RFKHD6</b>
@@ -682,7 +698,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="electronics repair magnetic mat" data-search="b09yv4z91b pafowo silicone soldering mat for electronic repair, 17.7 x 11.8 in electronics repair magnetic mat electronics repair magnetic mat mixed mixed">
               <a href="https://www.amazon.com/dp/B09YV4Z91B" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B09YV4Z91B</b>
@@ -692,7 +708,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="magnetic pickup tool" data-search="b0c2c28cvl telescoping magnetic pickup tool set, inspection mirror telescoping, led flashlight, cool gadgets for men, stocking stuffers, gifts for dad, husband, kids, boyfriend, magnet stick(red) magnetic pickup tool magnetic pickup tool mixed mixed">
               <a href="https://www.amazon.com/dp/B0C2C28CVL" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0C2C28CVL</b>
@@ -702,7 +718,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="magnetic tool holder/organizer" data-search="b0d3tcvjpk magnetic socket holder organizer set: 9-piece detachable 1/4, 3/8, 1/2 socket trays socket organizer for tool box drawer holds 120-piece standard size sockets for automotive garage(blue red green) magnetic tool holder/organizer magnetic tool holder/organizer mixed mixed">
               <a href="https://www.amazon.com/dp/B0D3TCVJPK" target="_blank" rel="noreferrer">
                 <img src="https://m.media-amazon.com/images/I/51AwwkHVwnL.jpg" alt="B0D3TCVJPK">
                 <b>B0D3TCVJPK</b>
@@ -712,7 +728,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="electronics repair magnetic mat" data-search="b0fr7pfbk8 strebito soldering mat large, solder mat 932°f heat resistant 21.7&#x27;x15.8’’ electronics repair magnetic mat electronics repair magnetic mat mixed mixed">
               <a href="https://www.amazon.com/dp/B0FR7PFBK8" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FR7PFBK8</b>
@@ -722,7 +738,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="electronics repair magnetic mat" data-search="b0d8t21vsn premium heat resistant 932°f magnetic soldering mat, 17.3’’ x 11.8’’ electronics repair work mat for soldering, electronics computer cellphone repair, bga soldering gun iron workbench protection electronics repair magnetic mat electronics repair magnetic mat mixed mixed">
               <a href="https://www.amazon.com/dp/B0D8T21VSN" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0D8T21VSN</b>
@@ -732,7 +748,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="magnetic tool holder/organizer" data-search="b0h3pvzrwh waenlir wardenix 48 tool magnetic modular wrench organizer set - tool drawer storage rack with metric &amp; sae labels, wrench holder with magnet, gift for men, diyers&amp;mechanics red and blue magnetic tool holder/organizer magnetic tool holder/organizer mixed mixed">
               <a href="https://www.amazon.com/dp/B0H3PVZRWH" target="_blank" rel="noreferrer">
                 <img src="https://images-na.ssl-images-amazon.com/images/I/71yiZ8kI3RL._AC_UL600_SR600,400_.jpg" alt="B0H3PVZRWH">
                 <b>B0H3PVZRWH</b>
@@ -742,7 +758,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="magnetic tool holder/organizer" data-search="b0dj3rm73j magmaster | the original magnetic tool holder - super strong - clip-on any belt, tool bags or pocket - assembled in usa magnetic tool holder/organizer magnetic tool holder/organizer mixed mixed">
               <a href="https://www.amazon.com/dp/B0DJ3RM73J" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DJ3RM73J</b>
@@ -751,9 +767,38 @@
               <p>magnetic tool holder/organizer · mixed · 1 pack</p>
             </article>
             </div>
+      <div class="gallery-empty" id="galleryEmpty" hidden>没有匹配的产品。</div>
     </section>
 
 
   </main>
+  <script>
+    (() => {
+      const formSelect = document.getElementById("galleryForm");
+      const searchInput = document.getElementById("gallerySearch");
+      const count = document.getElementById("galleryCount");
+      const empty = document.getElementById("galleryEmpty");
+      const tiles = Array.from(document.querySelectorAll("[data-gallery-item]"));
+
+      function filterGallery() {
+        const selectedForm = formSelect.value;
+        const query = searchInput.value.trim().toLowerCase();
+        let visible = 0;
+        tiles.forEach(tile => {
+          const matchesForm = !selectedForm || tile.dataset.form === selectedForm;
+          const matchesQuery = !query || tile.dataset.search.includes(query);
+          const show = matchesForm && matchesQuery;
+          tile.hidden = !show;
+          if (show) visible += 1;
+        });
+        count.textContent = `显示 ${visible} / ${tiles.length} 个`;
+        empty.hidden = visible !== 0;
+      }
+
+      formSelect.addEventListener("change", filterGallery);
+      searchInput.addEventListener("input", filterGallery);
+      filterGallery();
+    })();
+  </script>
 </body>
 </html>

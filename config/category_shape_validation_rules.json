@@ -7,7 +7,7 @@
   "output_csv": "data/category_shape_validation.csv",
   "output_report": "reports/category_shape_validation.md",
   "archive_dir": "archive",
-  "seed_limit": 12,
+  "seed_limit": 0,
   "seed_recommendation_contains": "Watch",
   "thresholds": {
     "category_review_wall_median": 1000,
@@ -25,6 +25,21 @@
     "form_concentration_min_count": 6,
     "form_min_low_review_high_sales": 2,
     "shape_opportunity_score": 65,
-    "watch_shape_score": 55
-  }
+    "watch_shape_score": 55,
+    "form_min_count_adjacent": 3,
+    "new_entrant_months": 18,
+    "new_entrant_min_sales": 200,
+    "new_entrant_max_reviews": 300,
+    "new_entrant_min_count": 2,
+    "reference_asin_limit": 5,
+    "brand_dependent_share": 0.5,
+    "form_excluded_share": 0.5,
+    "price_min": 12,
+    "price_max": 80
+  },
+  "category_limit": 0,
+  "allow_adjacent_shape_opportunity": true,
+  "scoring_rules_path": "config/scoring_rules.json",
+  "category_ranking": "",
+  "category_ranking_limit": 0
 }

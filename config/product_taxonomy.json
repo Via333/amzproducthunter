@@ -1,5 +1,24 @@
 {
   "overrides": [
+    {"label": "wall-mounted ball holder", "terms": ["ball holder wall mount", "wall mount basketball holder", "wall mounted ball display", "baseball wall mount holder"], "all_terms": ["ball", "wall mount"]},
+    {"label": "floor sports equipment organizer", "terms": ["sports equipment organizer", "golf bag storage rack", "rolling ball storage cart", "ball storage cage", "ball cart"]},
+    {"label": "magnetic tool mat", "terms": ["magnetic tool mat", "magnetic work mat"]},
+    {"label": "card binder", "terms": ["card binder", "trading card album", "card collection binder"]},
+    {"label": "tool holster", "terms": ["tool holster", "drill holster", "tool belt holder"]},
+    {"label": "duster refill", "terms": ["duster refill", "duster replacement"]},
+    {"label": "boat rail cup holder", "terms": ["boat rail cup holder", "marine cup holder", "clamp on cup holder"]},
+    {"label": "boat storage bag", "terms": ["boat storage bag", "boat gear bag", "boat tote bag"]},
+    {"label": "boat caddy", "terms": ["boat caddy", "marine caddy"]},
+    {"label": "digital scale", "terms": ["digital gram scale", "digital kitchen scale", "digital scale"]},
+    {"label": "socket organizer", "terms": ["socket organizer", "socket holder", "socket tray"]},
+    {"label": "toilet brush holder", "terms": ["toilet brush and holder", "toilet bowl brush and holder", "toilet brush holder"]},
+    {"label": "toilet plunger brush combo", "terms": ["plunger and bowl brush", "plunger and toilet brush", "plunger brush combo"]},
+    {"label": "under-rim toilet brush", "terms": ["under rim", "under-rim"]},
+    {"label": "silicone toilet brush", "terms": ["silicone toilet brush"]},
+    {"label": "disposable toilet brush refill", "terms": ["disposable toilet brush", "toilet wand refill", "refill heads"]},
+    {"label": "bike air pump", "terms": ["bike air pump", "electric bike pump", "bicycle pump"]},
+    {"label": "salt grinder", "terms": ["salt mill", "salt grinder", "pepper grinder", "peppermill"]},
+    {"label": "solar pathway lights", "terms": ["solar pathway lights", "solar walkway lights", "landscape lights"]},
     {"label": "wall-mounted storage box", "terms": ["wall mounted storage box", "wall-mounted storage box", "wall organizer for phone remote"]},
     {"label": "4-way hose splitter", "terms": ["4 way hose splitter", "4-way hose splitter", "four way hose splitter"]},
     {"label": "3-way hose splitter", "terms": ["3 way hose splitter", "3-way hose splitter"]},
@@ -23,10 +42,14 @@
     {"label": "disposable", "terms": ["disposable", "single use"]},
     {"label": "reusable", "terms": ["reusable", "washable"]},
     {"label": "wall-mounted", "terms": ["wall mounted", "wall-mounted", "adhesive mount"]},
-    {"label": "combo", "terms": ["combo", "with holder", "with accessories", "kit", "set"]},
+    {"label": "combo", "terms": ["combo", "with holder", "with accessories", "kit", "set"], "include_in_key": false},
     {"label": "foldable", "terms": ["foldable", "collapsible"]},
-    {"label": "portable", "terms": ["portable", "travel", "compact"]},
-    {"label": "extra-large", "terms": ["extra large", "oversized", "xl"]}
+    {"label": "portable", "terms": ["portable", "travel", "compact"], "include_in_key": false},
+    {"label": "extra-large", "terms": ["extra large", "oversized", "xl"], "include_in_key": false}
+  ],
+  "generic_product_types": [
+    "sporting goods", "home organizers and storage", "home kitchen", "sports outdoors",
+    "office products", "patio lawn garden", "tools home improvement"
   ],
   "generic_product_terms": [
     "brush", "holder", "organizer", "rack", "bag", "box", "container", "cover", "tray",

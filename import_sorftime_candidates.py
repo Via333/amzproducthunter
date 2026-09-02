@@ -452,54 +452,6 @@ def infer_oversize_risk(item, defaults, category_override=None):
     text = " ".join(
         str(part) for part in [title, category, brand, package_size]
     ).lower()
-    hard_oversize_terms = [
-        "air mover",
-        "blower fan",
-        "ventilator",
-        "exhaust fan",
-        "flexible duct",
-        "steam cleaner",
-        "steam mop",
-        "handheld steam",
-        "portable steamer",
-        "vacuum",
-        "solar pathway lights",
-        "solar lights",
-        "solar powered",
-        "electric bike pump",
-        "bike air pump",
-        "hand rail",
-        "railing",
-        "computer desk",
-        "office desk",
-        "area rug",
-        "patio rug",
-        "deck box",
-        "laundry basket",
-        "pet couch cover",
-        "dog grass pad",
-        "memory foam pillow",
-        "bed pillows",
-        "queen pillow",
-        "industrial",
-        "floor care",
-        "furniture",
-        "80qt rolling cooler",
-        "rolling cooler cart",
-        "cooler cart with wheels",
-    ]
-    soft_oversize_terms = [
-        "garage light",
-        "garage lights",
-        "with hose",
-        "16ft hose",
-        "accessories",
-        "multi-purpose cleaner",
-    ]
-    if any(term in text for term in hard_oversize_terms):
-        score = max(score, 85)
-    elif any(term in text for term in soft_oversize_terms):
-        score = max(score, 65)
     weight = to_float(item.get("Weight"), 0)
     if weight >= 5000:
         score = max(score, 85)

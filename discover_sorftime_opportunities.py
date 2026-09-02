@@ -19,7 +19,9 @@ from import_sorftime_candidates import (
     write_candidates,
     run_scoring,
 )
+from category_health import CATEGORY_HEALTH_FIELDS, category_health_from_records, rank_categories_by_health
 from product_risk import has_valid_category
+from product_exclusions import hard_exclusion_reason as configured_hard_exclusion_reason
 from sorftime_mcp_client import SorftimeMcpClient
 
 
@@ -84,6 +86,7 @@ CATEGORY_REPORT_FIELDS = [
     "scan_completed_at",
     "scan_status",
     "scan_error",
+    *CATEGORY_HEALTH_FIELDS,
 ]
 
 
@@ -415,14 +418,7 @@ def replace_placeholders(value, category, page):
 
 
 def product_passes_filters(candidate, product_filters):
-    title = str(candidate["product_name"]).lower()
-    category = str(candidate["category"]).lower()
-    brand = candidate_brand(candidate)
-    if any(term.lower() in title for term in product_filters.get("exclude_title_contains", [])):
-        return False
-    if any(term.lower() in brand for term in product_filters.get("exclude_brand_contains", [])):
-        return False
-    if any(term.lower() in category for term in product_filters.get("exclude_category_contains", [])):
+    if configured_hard_exclusion_reason(candidate, require_valid_category=False):
         return False
     price = to_float(candidate["target_price"])
     sales = to_float(candidate["est_monthly_sales"])
@@ -592,6 +588,13 @@ def collect_products_from_category_report(category, rules, defaults, report):
     records = extract_category_report_products(report)
     max_products = int(rules["products_per_category"])
     page_records = records[:max_products]
+    # Category health is computed on the full Top100, before candidate filters,
+    # so a category is ranked on its market structure rather than on how many
+    # products happened to pass the single-listing filters.
+    try:
+        category.update(category_health_from_records(page_records, category.get("path", ""), rules.get("category_health")))
+    except Exception as exc:  # noqa: BLE001 - health scoring must never break the scan
+        category["category_health_flags"] = f"health scoring failed: {exc}"[:200]
     products = []
     for item in page_records:
         candidate = build_candidate(item, defaults, category["path"])
@@ -870,6 +873,20 @@ def main():
             print(f"Category rotation state: {args.scan_state} ({scanned_state_count} scanned categories)")
         else:
             print(f"Replayed archived MCP reports without advancing category rotation: {args.replay_run_dir}")
+
+    if strategy == "category":
+        ranked = rank_categories_by_health(categories)
+        if ranked:
+            print("Top categories by health score:")
+            for category in ranked[:10]:
+                print(
+                    "  {rank:>2}. {score:>5} {path} ({flags})".format(
+                        rank=category.get("category_health_rank"),
+                        score=category.get("category_health_score"),
+                        path=category.get("path"),
+                        flags=category.get("category_health_flags") or "no flags",
+                    )
+                )
 
     eligible_candidates = dedupe_candidates(candidates)
     candidates = balanced_candidate_sample(eligible_candidates, int(rules["max_candidates"]))

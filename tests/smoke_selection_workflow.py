@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Run a fixed-fixture smoke test for the AMZ selection workflow.
+"""Run a fixed-fixture smoke test for the shape-first weekly workflow.
 
 The test writes only under tmp/smoke_selection_workflow/<run_id>/ and never calls
-Sorftime. It exercises scoring, initial opportunity archiving, shape validation,
-and shape opportunity archiving with deterministic fixture data.
+Sorftime. It validates every successful category, product-form conclusions, and
+shape opportunity archiving with deterministic fixture data.
 """
 
 from __future__ import annotations
@@ -57,6 +57,133 @@ def count(rows: list[dict[str, str]], key: str, value: str) -> int:
 def write_json(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def shape_product(asin: str, title: str, product_category: str, sales: int, reviews: int, brand: str, date: str, price: float) -> dict:
+    return {
+        "asin": asin,
+        "title": title,
+        "product_category": product_category,
+        "monthly_sales_volume": sales,
+        "review_count": reviews,
+        "star_rating": 4.3,
+        "price": price,
+        "brand": brand,
+        "delivery_type": "FBA",
+        "seller_origin": "China",
+        "online_date": date,
+    }
+
+
+def run_shape_first_smoke(args: argparse.Namespace) -> int:
+    run_id = args.run_id or f"smoke_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
+    run_dir = Path(args.output_root) / run_id
+    discovery_root = run_dir / "archive" / "discovery_runs"
+    discovery_run = discovery_root / "smoke_run"
+    raw_dir = discovery_run / "raw_category_reports"
+    validation_csv = run_dir / "data" / "category_shape_validation.csv"
+    validation_md = run_dir / "reports" / "category_shape_validation.md"
+    archive_dir = run_dir / "archive"
+    result_json = run_dir / "smoke_result.json"
+
+    try:
+        raw_dir.mkdir(parents=True, exist_ok=False)
+        write_json(discovery_run / "run_manifest.json", {"status": "success", "run_id": "smoke_run"})
+        with (discovery_run / "categories.csv").open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=["category_id", "name", "path", "scan_status", "category_health_score", "category_health_rank"],
+            )
+            writer.writeheader()
+            writer.writerows(
+                [
+                    {"category_id": "A", "name": "Magnetic Parts Trays", "path": "Tools > Magnetic Parts Trays", "scan_status": "success", "category_health_score": 82, "category_health_rank": 1},
+                    {"category_id": "B", "name": "Feather Dusters", "path": "Home > Cleaning > Feather Dusters", "scan_status": "success", "category_health_score": 65, "category_health_rank": 2},
+                    {"category_id": "C", "name": "Failed", "path": "Home > Failed", "scan_status": "failed", "category_health_score": "", "category_health_rank": ""},
+                ]
+            )
+
+        write_json(
+            raw_dir / "A.json",
+            {"data": {"top100_products": [
+                shape_product("A1", "Magnetic Parts Tray", "MAGNETIC PARTS TRAY", 700, 80, "Maker A", "2026-01-10", 24),
+                shape_product("A2", "Flexible Magnetic Parts Tray", "MAGNETIC PARTS TRAY", 600, 60, "Maker B", "2025-12-05", 28),
+                shape_product("A3", "Magnetic Parts Holder Tray", "MAGNETIC PARTS TRAY", 450, 45, "Maker C", "2025-11-02", 26),
+                shape_product("A4", "Mechanic Magnetic Parts Tray", "MAGNETIC PARTS TRAY", 300, 120, "Maker D", "2023-01-01", 22),
+            ]}},
+        )
+        write_json(
+            raw_dir / "B.json",
+            {"data": {"top100_products": [
+                shape_product("B1", "Duster Refills Compatible with Swiffer", "DUSTER REFILL", 1500, 100, "Maker E", "2026-01-01", 20),
+                shape_product("B2", "Refills for Swiffer Duster", "DUSTER REFILL", 1200, 80, "Maker F", "2025-12-01", 21),
+                shape_product("B3", "Replacement Duster Refills for Swiffer", "DUSTER REFILL", 1000, 60, "Maker G", "2025-11-01", 22),
+                shape_product("B4", "Premium Telescoping Microfiber Duster", "DUSTER", 700, 70, "Maker H", "2026-01-01", 140),
+                shape_product("B5", "Professional Extendable Microfiber Duster", "DUSTER", 650, 50, "Maker I", "2025-12-01", 160),
+            ]}},
+        )
+
+        rules = json.loads((ROOT / "config" / "category_shape_validation_rules.json").read_text(encoding="utf-8"))
+        rules.update(
+            {
+                "discovery_runs_root": str(discovery_root),
+                "discovery_run_id": "smoke_run",
+                "category_ranking": "",
+                "category_ranking_limit": 0,
+                "category_limit": 0,
+                "seed_limit": 0,
+                "allow_deep_dive_fallback": False,
+                "output_csv": str(validation_csv),
+                "output_report": str(validation_md),
+                "archive_dir": str(archive_dir),
+            }
+        )
+        rules_path = run_dir / "category_shape_validation_rules.smoke.json"
+        write_json(rules_path, rules)
+        validation = run(["python3", "category_shape_validation.py", "--rules", str(rules_path)])
+
+        validation_rows = read_csv(validation_csv)
+        shape_rows = read_csv(archive_dir / "shape_opportunity_library.csv")
+        recommendations = {row.get("shape_recommendation") for row in validation_rows}
+        failures: list[str] = []
+        assert_equal(len({row.get("category_path") for row in validation_rows}), 2, "validated categories", failures)
+        assert_equal(count(validation_rows, "shape_recommendation", "Shape opportunity"), 1, "Shape opportunity rows", failures)
+        assert_equal(count(validation_rows, "shape_recommendation", "Watch shape"), 1, "Watch shape rows", failures)
+        if "Reject category/form" not in recommendations:
+            failures.append("Reject category/form: expected at least one")
+        assert_equal(count(shape_rows, "archive_status", "active_in_latest_run"), 1, "active shape pool", failures)
+        opportunity = next((row for row in validation_rows if row.get("shape_recommendation") == "Shape opportunity"), {})
+        if not opportunity.get("form_reference_asins"):
+            failures.append("reference ASINs: expected non-empty")
+
+        summary = {
+            "status": "pass" if not failures else "fail",
+            "run_id": run_id,
+            "run_dir": str(run_dir),
+            "metrics": {
+                "validated_categories": len({row.get("category_path") for row in validation_rows}),
+                "validated_shapes": len(validation_rows),
+                "shape_opportunities": count(validation_rows, "shape_recommendation", "Shape opportunity"),
+                "watch_shapes": count(validation_rows, "shape_recommendation", "Watch shape"),
+                "rejected_shapes": count(validation_rows, "shape_recommendation", "Reject category/form"),
+                "active_shape_pool": count(shape_rows, "archive_status", "active_in_latest_run"),
+            },
+            "failures": failures,
+            "command": validation.stdout.strip(),
+        }
+        write_json(result_json, summary)
+        print(f"Shape-first workflow smoke: {summary['status'].upper()}")
+        print(f"Run dir: {run_dir}")
+        print(json.dumps(summary["metrics"], ensure_ascii=False))
+        if failures:
+            for failure in failures:
+                print(f"FAIL: {failure}", file=sys.stderr)
+            return 1
+        return 0
+    except Exception as exc:  # noqa: BLE001
+        write_json(result_json, {"status": "error", "run_id": run_id, "run_dir": str(run_dir), "error": str(exc)})
+        print(f"Shape-first workflow smoke: ERROR\n{exc}", file=sys.stderr)
+        return 1
 
 
 def build_validation_rules(run_dir: Path, selection_csv: Path, validation_csv: Path, validation_md: Path, archive_dir: Path) -> Path:
@@ -205,4 +332,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(run_shape_first_smoke(parse_args()))

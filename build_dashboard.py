@@ -92,7 +92,27 @@ def web_path(path_text: str) -> str:
             path = path.relative_to(ROOT)
         except ValueError:
             return path.as_posix()
+    try:
+        return path.relative_to("web").as_posix()
+    except ValueError:
+        pass
     return f"../{path.as_posix()}"
+
+
+def dashboard_product_image(row: dict[str, str]) -> str:
+    image_file = str(row.get("image_file", "") or "").strip()
+    if not image_file:
+        return ""
+    if image_file.startswith(("https://", "http://")):
+        return image_file
+
+    asin = str(row.get("asin", "") or "").strip()
+    if not asin:
+        return ""
+    published = WEB_DIR / "research" / "assets" / asin / Path(image_file).name
+    if not published.is_file():
+        return ""
+    return published.relative_to(WEB_DIR).as_posix()
 
 
 def short_title(title: str, limit: int = 118) -> str:
@@ -169,7 +189,7 @@ def normalize_category_scan_state(rows: list[dict[str, str]]) -> list[dict[str, 
 
 
 def normalize_category_report(rows: list[dict[str, str]]) -> list[dict[str, object]]:
-    return [
+    normalized = [
         {
             "category_id": row.get("category_id", ""),
             "name": row.get("name", ""),
@@ -182,9 +202,30 @@ def normalize_category_report(rows: list[dict[str, str]]) -> list[dict[str, obje
             "scan_completed_at": row.get("scan_completed_at", ""),
             "scan_status": row.get("scan_status", ""),
             "scan_error": row.get("scan_error", ""),
+            "category_health_score": to_float(row.get("category_health_score")),
+            "category_health_rank": to_float(row.get("category_health_rank")),
+            "category_health_flags": row.get("category_health_flags", ""),
+            "category_sample_count": to_float(row.get("category_sample_count")),
+            "category_total_sales": to_float(row.get("category_total_sales")),
+            "category_median_reviews": to_float(row.get("category_median_reviews")),
+            "category_top10_median_reviews": to_float(row.get("category_top10_median_reviews")),
+            "category_top_brand": row.get("category_top_brand", ""),
+            "category_top_brand_share": as_percent(row.get("category_top_brand_share")),
+            "category_low_review_high_sales_count": to_float(row.get("category_low_review_high_sales_count")),
+            "category_new_entrant_count": to_float(row.get("category_new_entrant_count")),
+            "category_new_entrant_sales": to_float(row.get("category_new_entrant_sales")),
         }
         for row in rows
     ]
+    normalized.sort(
+        key=lambda row: (
+            row["scan_status"] != "success",
+            row["category_health_rank"] or 999999,
+            -row["category_health_score"],
+            row["path"],
+        )
+    )
+    return normalized
 
 
 def normalize_exclusion_rules(discovery_cfg: dict, exclusion_cfg: dict) -> list[dict[str, str]]:
@@ -262,6 +303,7 @@ def normalize_archive(rows: list[dict[str, str]]) -> list[dict[str, object]]:
                 "latest_recommendation": row.get("archive_latest_recommendation") or row.get("recommendation", ""),
                 "archive_status": row.get("archive_status", ""),
                 "research_status": row.get("research_status", ""),
+                "archive_notes": row.get("archive_notes", ""),
                 "first_seen": row.get("archive_first_seen", ""),
                 "last_seen": row.get("archive_last_seen", ""),
                 "seen_count": to_float(row.get("archive_seen_count")),
@@ -292,6 +334,8 @@ def normalize_shape_validation(rows: list[dict[str, str]]) -> list[dict[str, obj
                 "source_category_name": row.get("source_category_name", ""),
                 "validation_run_id": row.get("validation_run_id", ""),
                 "category_path": row.get("category_path", ""),
+                "category_health_score": to_float(row.get("category_health_score")),
+                "category_health_rank": to_float(row.get("category_health_rank")),
                 "data_quality": row.get("data_quality", ""),
                 "product_form": row.get("product_form", ""),
                 "shape_scope": row.get("shape_scope", ""),
@@ -305,11 +349,20 @@ def normalize_shape_validation(rows: list[dict[str, str]]) -> list[dict[str, obj
                 "category_top_brand_share": as_percent(row.get("category_top_brand_share")),
                 "form_count": to_float(row.get("form_count")),
                 "form_avg_price": to_float(row.get("form_avg_price")),
+                "form_price_median": to_float(row.get("form_price_median")),
                 "form_avg_sales": to_float(row.get("form_avg_sales")),
                 "form_median_reviews": to_float(row.get("form_median_reviews")),
                 "form_low_review_high_sales_count": to_float(row.get("form_low_review_high_sales_count")),
                 "form_top_materials": row.get("form_top_materials", ""),
                 "form_top_packs": row.get("form_top_packs", ""),
+                "form_excluded_share": as_percent(row.get("form_excluded_share")),
+                "form_excluded_reasons": row.get("form_excluded_reasons", ""),
+                "form_new_entrant_count": to_float(row.get("form_new_entrant_count")),
+                "form_new_entrant_success_count": to_float(row.get("form_new_entrant_success_count")),
+                "form_new_entrant_success_rate": as_percent(row.get("form_new_entrant_success_rate")),
+                "form_new_entrant_median_sales": to_float(row.get("form_new_entrant_median_sales")),
+                "form_brand_dependent_share": as_percent(row.get("form_brand_dependent_share")),
+                "reference_asins": row.get("form_reference_asins", ""),
                 "validation_flags": row.get("validation_flags", ""),
                 "opportunity_thesis": row.get("opportunity_thesis", ""),
                 "next_action": row.get("next_action", ""),
@@ -318,9 +371,9 @@ def normalize_shape_validation(rows: list[dict[str, str]]) -> list[dict[str, obj
         )
     normalized.sort(
         key=lambda row: (
-            row["seed_rank"],
-            row["shape_scope"] != "seed_form",
+            row["category_health_rank"] or 999999,
             -row["shape_score"],
+            row["product_form"],
         )
     )
     return normalized
@@ -329,19 +382,31 @@ def normalize_shape_validation(rows: list[dict[str, str]]) -> list[dict[str, obj
 def primary_shape_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     grouped: dict[str, list[dict[str, object]]] = defaultdict(list)
     for row in rows:
-        key = str(row.get("seed_asin") or row.get("seed_title") or row.get("category_path") or row.get("rank"))
+        key = str(row.get("category_path") or row.get("source_category_id") or row.get("seed_asin") or row.get("rank"))
         grouped[key].append(row)
 
     primary_rows: list[dict[str, object]] = []
     for group_rows in grouped.values():
-        primary = next((row for row in group_rows if row.get("shape_scope") == "seed_form"), None)
-        if primary is None:
-            primary = next((row for row in group_rows if row.get("shape_recommendation") == "Shape opportunity"), None)
-        primary_rows.append(primary or group_rows[0])
+        verdict_order = {
+            "Shape opportunity": 0,
+            "Watch shape": 1,
+            "Needs category Top100": 2,
+            "Reject category/form": 3,
+        }
+        primary_rows.append(
+            min(
+                group_rows,
+                key=lambda row: (
+                    verdict_order.get(str(row.get("shape_recommendation")), 9),
+                    -to_float(row.get("shape_score")),
+                ),
+            )
+        )
 
     primary_rows.sort(
         key=lambda row: (
-            to_float(row.get("seed_rank"), 999999),
+            to_float(row.get("category_health_rank"), 999999) or 999999,
+            -to_float(row.get("shape_score")),
         )
     )
     return primary_rows
@@ -368,6 +433,7 @@ def normalize_shape_archive(rows: list[dict[str, str]]) -> list[dict[str, object
                 "archive_last_seen": row.get("archive_last_seen", ""),
                 "archive_seen_count": to_float(row.get("archive_seen_count")),
                 "research_status": row.get("research_status", ""),
+                "archive_notes": row.get("archive_notes", ""),
                 "form_avg_sales": to_float(row.get("form_avg_sales")),
                 "form_median_reviews": to_float(row.get("form_median_reviews")),
                 "form_low_review_high_sales_count": to_float(row.get("form_low_review_high_sales_count")),
@@ -447,6 +513,7 @@ def normalize_product_research_archive(
                 "decision_reason": reason,
             }
         )
+    normalized.sort(key=lambda row: str(row.get("last_researched", "")), reverse=True)
     return normalized
 
 
@@ -589,7 +656,7 @@ def normalize_top_products(rows: list[dict[str, str]]) -> list[dict[str, object]
                 "visual_closure": row.get("visual_closure", ""),
                 "visual_style": row.get("visual_style", ""),
                 "visual_notes": row.get("visual_notes", ""),
-                "image": web_path(row.get("image_file", "")),
+                "image": dashboard_product_image(row),
             }
         )
     return normalized
@@ -1394,16 +1461,29 @@ def build_html() -> str:
     primary_validation_rows = primary_shape_rows(shape_validation_rows)
     shape_archive_rows = normalize_shape_archive(read_csv("archive/shape_opportunity_library.csv"))
     selection_lookup = {str(row.get("asin", "")): row for row in selection_rows if row.get("asin")}
-    product_research_archive = normalize_product_research_archive(
-        read_csv("archive/product_research_index.csv"), selection_lookup
+    product_research_index = read_csv("archive/product_research_index.csv")
+    product_research_archive = normalize_product_research_archive(product_research_index, selection_lookup)
+    category_research_archive = read_csv("archive/category_research_index.csv")
+    current_research = product_research_archive[0] if product_research_archive else {}
+    current_research_asin = str(current_research.get("asin") or "")
+    current_research_title = str(current_research.get("title") or current_research_asin or "尚无单品研究")
+    current_research_listing_url = str(current_research.get("listing_url") or "")
+    current_research_decision = str(current_research.get("decision") or "历史研究")
+    current_research_reason = str(current_research.get("notes") or current_research.get("decision_reason") or "请结合研究页复核。")
+    current_research_base = f"research/{current_research_asin}" if current_research_asin else ""
+    form_rows = normalize_forms(read_csv(f"{current_research_base}/product_forms.csv")) if current_research_base else []
+    research_keyword_rows = normalize_keywords(read_csv(f"{current_research_base}/keywords.csv")) if current_research_base else []
+    top_product_rows = normalize_top_products(read_csv(f"{current_research_base}/top_products.csv")) if current_research_base else []
+    visual_rows = read_csv(f"{current_research_base}/visual_labels.csv") if current_research_base else []
+    review_rows = read_csv(f"{current_research_base}/reviews.csv") if current_research_base else []
+    review_target_rows = read_csv(f"{current_research_base}/review_targets.csv") if current_research_base else []
+    research_report = read_text(f"reports/product_opportunity_research_{current_research_asin}.md") if current_research_asin else ""
+    contact_sheet = ROOT / current_research_base / "image_contact_sheet.jpg" if current_research_base else None
+    contact_sheet_html = (
+        f'<img class="contact-sheet" src="../{escape(current_research_base)}/image_contact_sheet.jpg" alt="{escape(current_research_asin)} image contact sheet">'
+        if contact_sheet and contact_sheet.is_file()
+        else '<div class="empty">当前研究没有生成主图总览；可在上方按形态查看代表图片。</div>'
     )
-    form_rows = normalize_forms(read_csv("research/B0FS1YH17C/product_forms.csv"))
-    research_keyword_rows = normalize_keywords(read_csv("research/B0FS1YH17C/keywords.csv"))
-    top_product_rows = normalize_top_products(read_csv("research/B0FS1YH17C/top_products.csv"))
-    visual_rows = read_csv("research/B0FS1YH17C/visual_labels.csv")
-    review_rows = read_csv("research/B0FS1YH17C/reviews.csv")
-    review_target_rows = read_csv("research/B0FS1YH17C/review_targets.csv")
-    research_report = read_text("reports/product_opportunity_research_B0FS1YH17C.md")
 
     selection_strategies = tag_list(
         [{"source_strategy": str(row.get("strategy", ""))} for row in selection_rows], "source_strategy"
@@ -1433,8 +1513,11 @@ def build_html() -> str:
     )
 
     shape_archive_active_count = sum(1 for row in shape_archive_rows if row.get("archive_status") == "active_in_latest_run")
-    shape_opportunity_count = sum(1 for row in primary_validation_rows if row.get("shape_recommendation") == "Shape opportunity")
-    needs_category_count = sum(1 for row in primary_validation_rows if row.get("shape_recommendation") == "Needs category Top100")
+    shape_opportunity_count = sum(1 for row in shape_validation_rows if row.get("shape_recommendation") == "Shape opportunity")
+    watch_shape_count = sum(1 for row in shape_validation_rows if row.get("shape_recommendation") == "Watch shape")
+    validated_category_count = len(
+        {str(row.get("category_path")) for row in shape_validation_rows if row.get("category_path")}
+    )
     weekly_category_target = int(to_float(discovery_cfg.get("max_categories"), 100) or 100)
     weekly_products_per_category = int(to_float(discovery_cfg.get("products_per_category"), 100) or 100)
     current_products_examined = int(sum(to_float(row.get("products_examined")) for row in current_category_rows))
@@ -1453,7 +1536,6 @@ def build_html() -> str:
         else "历史结果作为轮换基线；下一轮开始记录实际查看数"
     )
     visual_label_count = sum(1 for row in visual_rows if row.get("visual_product_form", "").strip())
-    top_selection_score = max((float(row.get("score", 0)) for row in selection_rows), default=0)
 
     pain_points = extract_report_section(research_report, "初步痛点")
     recommendations = extract_report_section(research_report, "切入建议")
@@ -1466,6 +1548,31 @@ def build_html() -> str:
     review_covered_count = sum(1 for row in review_target_rows if to_float(row.get("review_rows_collected")) > 0)
     review_form_note = review_form_coverage_note(review_target_rows)
     review_coverage_table = render_review_coverage(review_target_rows)
+    category_research_rows = "\n".join(
+        """
+        <tr>
+          <td><strong>{name}</strong><span>{node_id} · {path}</span></td>
+          <td>{verdict}</td>
+          <td>{opportunity}</td>
+          <td class="num">{products}</td>
+          <td class="num">{reviews}</td>
+          <td>{researched_at}</td>
+          <td><a class="pill green" href="{page}">研究页</a> <a class="pill gray" href="{report}">报告</a></td>
+        </tr>
+        """.format(
+            name=escape(row.get("category_name", "")),
+            node_id=escape(row.get("node_id", "")),
+            path=escape(row.get("category_path", "")),
+            verdict=escape(row.get("verdict", "")),
+            opportunity=escape(row.get("primary_opportunity", "")),
+            products=escape(row.get("product_count", "")),
+            reviews=escape(row.get("raw_review_count", "")),
+            researched_at=escape(row.get("researched_at", "")),
+            page=escape(web_path(row.get("page_path", ""))),
+            report=escape(web_path(row.get("report_path", ""))),
+        )
+        for row in sorted(category_research_archive, key=lambda item: item.get("researched_at", ""), reverse=True)
+    )
     weights = scoring_cfg.get("weights", {})
     thresholds = scoring_cfg.get("recommendation_thresholds", {})
     brand_cfg = scoring_cfg.get("brand_moat", {})
@@ -1520,12 +1627,12 @@ def build_html() -> str:
         for row in exclusion_rows
     )
     coverage_warning_html = ""
-    if current_scanned_category_count >= 20 and selection_category_count < min(20, current_scanned_category_count):
+    if current_scanned_category_count and validated_category_count < current_scanned_category_count:
         coverage_warning_html = f"""
       <div class="audit-warning">
-        <strong>本轮候选覆盖不足，不能据此判断市场没有机会。</strong>
-        扫描记录包含 {current_scanned_category_count} 个类目，但进入评分的候选只覆盖
-        {selection_category_count} 个类目；需要按类目均衡抽样后重新扫描和验证。
+        <strong>本轮形态验证尚未覆盖全部成功类目。</strong>
+        已成功扫描 {current_scanned_category_count} 个类目，但形态验证结果只覆盖
+        {validated_category_count} 个类目；本轮结果不能当成完整机会结论。
       </div>"""
 
     return f"""<!doctype html>
@@ -2663,6 +2770,7 @@ def build_html() -> str:
       }}
       input[type="search"] {{ min-width: 100%; }}
     }}
+    .legacy-scoring {{ display: none; }}
   </style>
 </head>
 <body>
@@ -2674,11 +2782,12 @@ def build_html() -> str:
       </div>
       <nav class="nav">
         <a href="#overview">总览</a>
-        <a href="#discovery">种子发现</a>
+        <a href="#discovery">本周类目</a>
         <a href="#category-coverage">扫描覆盖</a>
         <a href="#keyword-search">关键词选品</a>
         <a href="#shape-validation">候选验证</a>
         <a href="#archive">机会池</a>
+        <a href="#category-research-archive">类目研究档案</a>
         <a href="#research-archive">单品研究档案</a>
         <a href="#research">当前单品研究</a>
         <a href="#logic">生成逻辑</a>
@@ -2700,19 +2809,19 @@ def build_html() -> str:
 
       <div class="kpi-grid">
         <div class="kpi">
-          <div class="label">扫描种子</div>
-          <div class="value">{len(selection_rows)}</div>
-          <div class="note">只作为类目/形态入口，不直接等于机会</div>
+          <div class="label">成功扫描类目</div>
+          <div class="value">{current_scanned_category_count}</div>
+          <div class="note">计划每周约 {weekly_category_target} 个最小类目</div>
         </div>
         <div class="kpi">
-          <div class="label">候选覆盖类目</div>
-          <div class="value">{selection_category_count}</div>
-          <div class="note">本轮扫描 {current_scanned_category_count} 类目；最高种子分 {top_selection_score:.1f}</div>
+          <div class="label">已完成形态验证</div>
+          <div class="value">{validated_category_count}</div>
+          <div class="note">共拆出 {len(shape_validation_rows)} 个产品形态</div>
         </div>
         <div class="kpi">
-          <div class="label">待补 Top100</div>
-          <div class="value">{needs_category_count}</div>
-          <div class="note">种子看起来可疑，但还没完成最小类目验证</div>
+          <div class="label">继续观察形态</div>
+          <div class="value">{watch_shape_count}</div>
+          <div class="note">有信号但证据、竞争或价格带尚不充分</div>
         </div>
         <div class="kpi">
           <div class="label">通过验证机会</div>
@@ -2729,38 +2838,27 @@ def build_html() -> str:
       <section id="discovery">
         <div class="section-head">
           <div>
-            <h2>种子发现</h2>
-            <p>这里是第一层粗筛，共 {len(selection_rows)} 个种子，覆盖 {selection_category_count} 个来源类目；种子只负责提供切入口，不能直接进入机会档案。必须经过最小类目 Top100 和形态验证后，才算真正机会。</p>
+            <h2>本周类目健康度</h2>
+            <p>这里直接展示本轮所有成功扫描的最小类目。健康度只负责决定验证顺序；每个类目仍会拆成全部产品形态，只有通过需求、竞争、产品风险和价格带检查的形态才进入机会池。</p>
           </div>
-        </div>
-        <div class="controls">
-          <input id="selectionSearch" type="search" placeholder="搜索产品 / ASIN / 类目">
-          <select id="selectionStrategy">{render_options(selection_strategies, "全部策略")}</select>
-          <select id="selectionRecommendation">{render_options(selection_recommendations, "全部结论")}</select>
-          <select id="selectionLimit">
-            <option value="20">显示 20 个</option>
-            <option value="50">显示 50 个</option>
-            <option value="999">显示全部</option>
-          </select>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Rank</th>
-                <th>产品</th>
-                <th>策略</th>
-                <th class="num">分数</th>
-                <th class="num">证据</th>
-                <th class="num">售价</th>
-                <th class="num">单件毛利</th>
-                <th class="num">毛利率</th>
-                <th class="num">月毛利</th>
-                <th class="num">月销</th>
-                <th>风险</th>
+                <th>排名 / 最小类目</th>
+                <th class="num">健康度</th>
+                <th class="num">Top 产品</th>
+                <th class="num">类目月销</th>
+                <th class="num">评论中位</th>
+                <th class="num">Top10 评论</th>
+                <th>头部品牌</th>
+                <th class="num">低评高销</th>
+                <th class="num">新进入者</th>
+                <th>主要问题</th>
               </tr>
             </thead>
-            <tbody id="selectionBody"></tbody>
+            <tbody id="categoryHealthBody"></tbody>
           </table>
         </div>
       </section>
@@ -2833,12 +2931,12 @@ def build_html() -> str:
       <section id="shape-validation">
         <div class="section-head">
           <div>
-            <h2>候选产品验证</h2>
-            <p>按上方种子排名逐项验证。每个候选复用本轮 MCP 已下载的最小类目 Top100，把候选形态和相邻形态放在同一张卡片中；不会重复调用接口，也不会把证据形态单独放进机会池。</p>
+            <h2>类目形态验证</h2>
+            <p>每个成功类目只显示一张验证卡，卡内列出该类目的全部产品形态。产品级大件、强合规、易碎、品牌护城河和标题硬排除会先从形态证据中剔除；形态价格带不合适时也不会直接进入机会池。</p>
           </div>
         </div>
         <div class="controls">
-          <input id="shapeSearch" type="search" placeholder="搜索种子 / 形态 / 类目">
+          <input id="shapeSearch" type="search" placeholder="搜索形态 / 类目 / 参考 ASIN">
           <select id="shapeRecommendation">{render_options(shape_recommendations, "全部结论")}</select>
         </div>
         <div class="shape-list" id="shapeValidationList"></div>
@@ -2848,7 +2946,7 @@ def build_html() -> str:
         <div class="section-head">
           <div>
             <h2>机会池</h2>
-            <p>只有候选产品通过最小类目 Top 验证后才会进入这里。机会按类目归档，同类目放在一起，后续你从这里挑产品进入单品深度研究。</p>
+            <p>只有通过最小类目 Top100 验证的产品形态才会进入这里，并附带可用于单品研究的参考 ASIN。机会按类目归档，同类目放在一起，避免重复查看。</p>
           </div>
         </div>
         <div class="controls">
@@ -2857,9 +2955,25 @@ def build_html() -> str:
             <option value="">全部状态</option>
             <option value="active_in_latest_run" selected>本轮仍出现</option>
             <option value="not_in_latest_run">未在本轮出现</option>
+            <option value="invalidated_by_rule">已被新规则判定失效</option>
           </select>
         </div>
         <div class="opportunity-pool" id="archiveBody"></div>
+      </section>
+
+      <section id="category-research-archive">
+        <div class="section-head">
+          <div>
+            <h2>类目深度研究档案</h2>
+            <p>把最小类目 Top100、形态结构、关键词趋势和多 ASIN 评论合并分析。类目结论不会直接改写机会池，仍需从通过验证的具体形态中选择单品。</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>类目</th><th>整体判断</th><th>优先形态</th><th class="num">Top 产品</th><th class="num">原始评论</th><th>研究时间</th><th>入口</th></tr></thead>
+            <tbody>{category_research_rows or '<tr><td colspan="7"><div class="empty">还没有类目深度研究档案。</div></td></tr>'}</tbody>
+          </table>
+        </div>
       </section>
 
       <section id="research-archive">
@@ -2870,7 +2984,7 @@ def build_html() -> str:
           </div>
         </div>
         <div class="controls">
-          <input id="productResearchAsin" type="search" placeholder="输入 ASIN，例如 B0FS1YH17C">
+          <input id="productResearchAsin" type="search" placeholder="输入 ASIN，例如 {escape(current_research_asin or 'B0FXG8J58Q')}">
           <button id="productResearchOpen" type="button">打开已有研究</button>
           <button id="productResearchCommand" type="button">生成研究命令</button>
         </div>
@@ -2897,11 +3011,11 @@ def build_html() -> str:
       <section id="research">
         <div class="section-head">
           <div>
-            <h2>历史单品研究：Beeswax Bread Bags</h2>
-            <p><strong>当前结论：已淘汰。</strong> 该产品直接接触食品，对个人卖家存在额外材料安全、迁移测试和合规资质风险。以下内容仅作历史研究证据，不代表当前机会推荐。</p>
+            <h2>当前单品研究：{escape(short_title(current_research_title, 90))}</h2>
+            <p><strong>当前结论：{escape(current_research_decision)}。</strong> {escape(current_research_reason)}</p>
             <p>后续你可以指定任意 ASIN 开同样的研究页；系统会优先补它所在最小类目 Top100，再把形态、材质、套装、图片、评论痛点和切入方向一起存档。</p>
           </div>
-          <a class="pill green" href="https://www.amazon.com/dp/B0FS1YH17C" target="_blank" rel="noreferrer">打开目标 Listing</a>
+          <a class="pill green" href="{escape(current_research_listing_url)}" target="_blank" rel="noreferrer">打开目标 Listing</a>
         </div>
 
         <div class="insight-section">
@@ -2997,7 +3111,7 @@ def build_html() -> str:
 
         <div style="margin-top: 18px;">
           <h3>主图总览</h3>
-          <img class="contact-sheet" src="../research/B0FS1YH17C/image_contact_sheet.jpg" alt="B0FS1YH17C image contact sheet">
+          {contact_sheet_html}
         </div>
       </section>
 
@@ -3015,19 +3129,19 @@ def build_html() -> str:
             <div class="formula-grid">
               <div class="formula-card">
                 <strong>1</strong>
-                <span><b>种子发现：</b>用多策略找入口 ASIN。这里的分数只是粗筛分，用来决定是否值得进入类目验证。</span>
+                <span><b>类目扫描：</b>每周轮换约 {weekly_category_target} 个最小类目，每类目读取完整 Top 产品数据；失败类目单独记录，不伪装成零机会。</span>
               </div>
               <div class="formula-card">
                 <strong>2</strong>
-                <span><b>最小类目 Top 产品：</b>看整个类目是否有评论墙、头部品牌集中、低评高销缺口、CN/HK/FBA 占比和真实需求。</span>
+                <span><b>类目健康度：</b>用评论墙、头部集中、新进入者、低评高销、需求与数据完整性排序，健康度只决定验证顺序。</span>
               </div>
               <div class="formula-card">
                 <strong>3</strong>
-                <span><b>产品形态拆分：</b>同一个类目下再按形态、材质、套装、功能、尺寸、视觉元素拆开，避免马桶刷这类红海类目的局部误判。</span>
+                <span><b>产品形态验证：</b>类目内全部形态独立检查需求、竞争、价格带，并剔除大件、易碎、合规、品牌和标题硬排除产品。</span>
               </div>
               <div class="formula-card">
                 <strong>4</strong>
-                <span><b>机会池：</b>只有类目和形态都通过，才进入档案。旧机会不会被每周更新覆盖，会保留历史。</span>
+                <span><b>机会池：</b>只有形态通过才入档，并保存 1-3 个参考 ASIN。旧机会不会被周更覆盖，会保留历史。</span>
               </div>
               <div class="formula-card">
                 <strong>5</strong>
@@ -3035,13 +3149,13 @@ def build_html() -> str:
               </div>
             </div>
             <ul>
-              <li><b>Shape opportunity：</b>有最小类目 Top 产品数据，且种子所在形态通过需求、评论、低评高销和风险检查，才进入机会池。</li>
+              <li><b>Shape opportunity：</b>有完整最小类目 Top 产品数据，形态通过需求、评论、低评高销、产品排除和价格带检查，才进入机会池。</li>
               <li><b>Watch shape：</b>相邻形态或数据不错但还不够确定，只保留观察，不当作当前主机会。</li>
-              <li><b>Needs category Top100：</b>种子 ASIN 看起来可能有机会，但还缺最小类目 Top 产品验证。</li>
+              <li><b>Needs category Top100：</b>只用于手动 ASIN 或历史兼容入口缺少类目数据的情况，不属于每周自动主链路。</li>
               <li><b>Reject category/form：</b>类目或形态存在评论墙、头部品牌集中、低评高销缺口不足、大件/高风险等问题。</li>
             </ul>
           </div>
-          <div class="logic-block scoring-wide">
+          <div class="logic-block scoring-wide legacy-scoring">
             <h3>种子粗筛分怎么算</h3>
             <p class="subtle" style="margin: 6px 0 0;">当前公式：{escape(score_formula)}。这个分数只负责找入口，不是最终机会分。所有子项先转成 0-100 分，再按权重合并。</p>
             <p class="subtle" style="margin: 6px 0 0;">正向指标按“低于下限=0，高于上限=100，中间线性换算”；反向指标按“好值以下=100，坏值以上=0，中间线性扣分”。</p>
@@ -3156,7 +3270,7 @@ def build_html() -> str:
                 <tbody>
                   <tr>
                     <td><b>数据层</b></td>
-                    <td>优先要求最小类目 Top 产品数据；只有种子粗筛数据时最多进入 Needs category Top100。</td>
+                    <td>每周自动链路只使用最小类目完整 Top 产品数据；手动 ASIN 缺类目数据时最多进入 Needs category Top100。</td>
                     <td>单个 listing 容易误判，最小类目的 Top 产品结构更能反映真实竞争。</td>
                   </tr>
                   <tr>
@@ -3185,30 +3299,40 @@ def build_html() -> str:
                     <td>低评论还能卖，说明这个形态可能仍有进入空间。</td>
                   </tr>
                   <tr>
+                    <td><b>产品级排除</b></td>
+                    <td>形态内大件、易碎、强合规、品牌护城河和标题硬排除产品占比达到 50%，直接拒绝。</td>
+                    <td>类目健康不代表具体产品适合个人卖家，必须在形态层再次清理风险样本。</td>
+                  </tr>
+                  <tr>
+                    <td><b>价格带</b></td>
+                    <td>有效样本价格中位数以 $12-$80 为主；超出时最多进入 Watch。</td>
+                    <td>过滤客单过低难覆盖履约成本、或客单过高导致验证成本过重的形态。</td>
+                  </tr>
+                  <tr>
                     <td><b>主动机会</b></td>
-                    <td>只把种子对应形态、形态分 >= 65、且无硬伤的结果记为 Shape opportunity。</td>
-                    <td>相邻形态可以启发方向，但不能混成同一个机会结论。</td>
+                    <td>任一类目形态分 >= 65、样本足够且无硬伤即可记为 Shape opportunity，并保存参考 ASIN。</td>
+                    <td>机会对象是“类目中的形态”，不再要求它必须先由某个高分种子触发。</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
           <div class="logic-block">
-            <h3>1. 种子发现</h3>
+            <h3>1. 类目扫描与健康度</h3>
             <ul>
-              <li>用多策略扫描，不依赖单一关键词：轻小泛品、耗材替换、新品低评、评分缺口、高客单轻量。</li>
-              <li>先排除明显不适合小卖家的类目和关键词，例如电子核心件、成人、强合规、高破损、超大件。</li>
-              <li>再排除明显大品牌/官方品牌产品，例如 Dyson、OXO、KitchenAid、Made In 这类品牌护城河过强的候选。</li>
-              <li>种子粗筛分综合需求、竞争、利润和风险，只用来决定是否进入下一层。</li>
+              <li>每周优先扫描从未覆盖的最小类目，全部覆盖后按最久未扫描轮换。</li>
+              <li>明确大件、强合规、强专利/品牌垄断和高责任风险的类目永久跳过，不占周配额。</li>
+              <li>健康度综合需求、评论墙、头部集中、新进入者和低评高销，只用于安排形态验证顺序。</li>
+              <li>关键词和手动 ASIN 保留为补充入口，但不会绕过类目 Top 数据。</li>
             </ul>
           </div>
           <div class="logic-block">
-            <h3>2. 类目/形态验证</h3>
+            <h3>2. 类目形态验证</h3>
             <ul>
-              <li>每个候选 ASIN 先定位到最小类目，拉 Top 产品，再按形态聚类。</li>
-              <li>关键词和相似竞品只在单品研究里辅助分析，不再作为主页面的一层机会池。</li>
+              <li>每个成功类目的 Top 产品都会按形态聚类，不只验证事先选中的种子产品。</li>
+              <li>先按产品剔除大件、易碎、强合规、品牌护城河和标题硬排除，再计算形态证据。</li>
               <li>重点看类目评论墙、头部品牌占比、形态评论中位数、低评高销数量、CN/HK 卖家占比、FBA 占比和变体数量。</li>
-              <li>例如马桶刷类目整体评论墙很重，即使某个单品销量好，也会在这一层被拒绝。</li>
+              <li>通过形态会携带参考 ASIN 进入机会池；同类目下其他形态各自保留结论，避免重复查看。</li>
             </ul>
           </div>
           <div class="logic-block">
@@ -3236,15 +3360,15 @@ def build_html() -> str:
             <ul>
               <li>优先 Home、Kitchen、Storage、Garden、Office、Tools、Craft 等适合个人卖家的小类目。</li>
               <li>跳过成人、食品/保健、强合规、电子核心件、大件、易破损、强品牌护城河类目。</li>
-              <li>每周生成新种子，但历史机会池不会被覆盖。</li>
+              <li>每周对新扫描或到期复扫的最小类目重新聚类形态，历史机会和失效原因都会保留。</li>
             </ul>
           </div>
           <div class="next-block">
             <h3>入池规则</h3>
             <ul>
-              <li>种子只是入口，必须通过最小类目 Top 验证。</li>
-              <li>只把种子对应形态通过的结果放进机会池。</li>
-              <li>相邻形态只作为证据和后续灵感，不单独算机会。</li>
+              <li>种子和关键词只是补充入口，不能绕过最小类目 Top 数据验证。</li>
+              <li>对类目中所有有效产品做形态聚类，每个形态独立计算证据和结论。</li>
+              <li>只有 Shape opportunity 形态携带参考 ASIN 进入机会池，Watch 和 Reject 仅存档追踪。</li>
             </ul>
           </div>
           <div class="next-block">
@@ -3334,38 +3458,25 @@ def build_html() -> str:
       return text;
     }};
 
-    function renderSelection() {{
-      const q = document.getElementById("selectionSearch").value.trim().toLowerCase();
-      const strategy = document.getElementById("selectionStrategy").value;
-      const recommendation = document.getElementById("selectionRecommendation").value;
-      const limit = Number(document.getElementById("selectionLimit").value);
-      const rows = DATA.selection
-        .filter(row => !strategy || row.strategy === strategy)
-        .filter(row => !recommendation || row.recommendation === recommendation)
-        .filter(row => {{
-          if (!q) return true;
-          return [row.asin, row.title, row.category, row.flags, row.strategy].join(" ").toLowerCase().includes(q);
-        }})
-        .slice(0, limit);
-
-      document.getElementById("selectionBody").innerHTML = rows.map(row => `
+    function renderCategoryHealth() {{
+      const rows = DATA.currentCategoryScan || [];
+      document.getElementById("categoryHealthBody").innerHTML = rows.map(row => `
         <tr>
-          <td class="num">${{row.rank}}</td>
           <td class="title-cell">
-            <a href="${{esc(row.listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.title_short)}}</a>
-            <span class="muted-small">${{esc(row.asin)}} · ${{esc(row.category)}}</span>
+            <strong>#${{fmtInt(row.category_health_rank)}} · ${{esc(row.name || "-")}}</strong>
+            <span class="muted-small">${{esc(row.path || row.category_id || "-")}}</span>
           </td>
-          <td><span class="pill gray">${{esc(row.strategy || "-")}}</span></td>
-          <td class="num">${{scoreBar(row.score)}}</td>
-          <td class="num"><span class="pill ${{row.evidence_confidence >= 60 ? "green" : row.evidence_confidence >= 40 ? "orange" : "gray"}}">${{esc(row.evidence_grade || "-")}} · ${{fmtOne(row.evidence_confidence)}}%</span></td>
-          <td class="num">${{fmtMoney(row.price)}}</td>
-          <td class="num">${{fmtMoney(row.unit_profit)}}</td>
-          <td class="num">${{fmtPct(row.margin)}}</td>
-          <td class="num">${{fmtMoney(row.monthly_profit)}}</td>
-          <td class="num">${{fmtInt(row.monthly_sales)}}</td>
-          <td><span class="pill ${{pillClass(row.flags)}}">${{esc(row.flags || "待复核")}}</span><span class="muted-small">${{esc(row.profit_estimate_status || "")}}</span></td>
+          <td class="num">${{scoreBar(row.category_health_score)}}</td>
+          <td class="num">${{fmtInt(row.category_sample_count || row.products_examined)}}</td>
+          <td class="num">${{fmtInt(row.category_total_sales)}}</td>
+          <td class="num">${{fmtInt(row.category_median_reviews)}}</td>
+          <td class="num">${{fmtInt(row.category_top10_median_reviews)}}</td>
+          <td>${{esc(row.category_top_brand || "-")}}<span class="muted-small">占比 ${{fmtPct(row.category_top_brand_share)}}</span></td>
+          <td class="num">${{fmtInt(row.category_low_review_high_sales_count)}}</td>
+          <td class="num">${{fmtInt(row.category_new_entrant_count)}}<span class="muted-small">月销 ${{fmtInt(row.category_new_entrant_sales)}}</span></td>
+          <td>${{esc(row.category_health_flags || row.scan_error || "无明显类目硬伤")}}</td>
         </tr>
-      `).join("") || `<tr><td colspan="11"><div class="empty">没有匹配结果</div></td></tr>`;
+      `).join("") || `<tr><td colspan="10"><div class="empty">还没有本周类目健康度结果。</div></td></tr>`;
     }}
 
     function renderCurrentCategoryScan() {{
@@ -3424,7 +3535,7 @@ def build_html() -> str:
     function validationGroups() {{
       const grouped = new Map();
       (DATA.shapeValidation || []).forEach(row => {{
-        const key = row.seed_asin || row.seed_title || row.category_path || String(row.rank || "");
+        const key = row.category_path || row.source_category_id || row.seed_asin || String(row.rank || "");
         if (!grouped.has(key)) grouped.set(key, []);
         grouped.get(key).push(row);
       }});
@@ -3435,14 +3546,12 @@ def build_html() -> str:
         return 3;
       }};
       return Array.from(grouped.values()).map(rows => {{
-        const primary = rows.find(row => row.shape_scope === "seed_form")
-          || rows.find(row => row.shape_recommendation === "Shape opportunity")
-          || rows[0];
+        const primary = [...rows].sort((a, b) => verdictWeight(a.shape_recommendation) - verdictWeight(b.shape_recommendation) || Number(b.shape_score || 0) - Number(a.shape_score || 0))[0];
         const evidence = rows
           .filter(row => row !== primary && row.product_form && row.product_form !== "unknown")
           .sort((a, b) => verdictWeight(a.shape_recommendation) - verdictWeight(b.shape_recommendation) || Number(b.shape_score || 0) - Number(a.shape_score || 0));
         return {{ primary, evidence, rows }};
-      }}).sort((a, b) => Number(a.primary.seed_rank || 999999) - Number(b.primary.seed_rank || 999999));
+      }}).sort((a, b) => Number(a.primary.category_health_rank || 999999) - Number(b.primary.category_health_rank || 999999));
     }}
 
     function validationAction(row) {{
@@ -3477,7 +3586,7 @@ def build_html() -> str:
           <div class="evidence-row">
             <div>
               <div class="evidence-form">${{esc(item.product_form || "-")}}</div>
-              <span class="muted-small">${{item.shape_scope === "seed_form" ? "候选形态" : "Top100 相邻形态"}} · ${{esc(item.validation_flags || item.next_action || "仅作类目参考")}}</span>
+              <span class="muted-small">类目内形态 · ${{esc(item.validation_flags || item.next_action || "仅作类目参考")}} · 排除 ${{fmtPct(item.form_excluded_share)}} · 价格中位 ${{fmtMoney(item.form_price_median)}}</span>
             </div>
             <div><span class="shape-cell-label">结论</span><span class="pill ${{pillClass(item.shape_recommendation)}}">${{esc(item.shape_recommendation || "-")}}</span></div>
             <div><span class="shape-cell-label">形态分</span><strong>${{fmtOne(item.shape_score)}}</strong></div>
@@ -3489,13 +3598,13 @@ def build_html() -> str:
           <article class="validation-card">
             <div class="validation-head">
               <div class="validation-title">
-                <a href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.seed_title_short || row.product_form || "-")}}</a>
-                <span class="muted-small">种子 #${{fmtInt(row.seed_rank)}} · ${{esc(row.seed_asin)}} · 种子分 ${{fmtOne(row.seed_score)}}</span>
-                <span class="muted-small">${{esc(row.source_category_name || row.category_path || "-")}} · 候选形态：${{esc(row.product_form || "-")}}</span>
+                <strong>${{esc(row.source_category_name || row.category_path || "未识别类目")}}</strong>
+                <span class="muted-small">类目健康度 #${{fmtInt(row.category_health_rank)}} · ${{fmtOne(row.category_health_score)}} 分 · ${{fmtInt(group.rows.length)}} 个形态</span>
+                <span class="muted-small">${{esc(row.source_category_name || row.category_path || "-")}} · 当前最佳形态：${{esc(row.product_form || "-")}}</span>
                 <div class="validation-status">
                   <span class="pill ${{pillClass(row.shape_recommendation)}}">${{esc(row.shape_recommendation || "-")}}</span>
                   <span class="pill gray">${{esc(row.data_quality || "-")}}</span>
-                  <span class="pill gray">候选形态</span>
+                  <span class="pill gray">类目形态组</span>
                 </div>
               </div>
               <div class="validation-metrics">
@@ -3516,14 +3625,15 @@ def build_html() -> str:
               <div>
                 <p class="validation-note">${{esc(row.opportunity_thesis || "等待类目验证结论。")}}</p>
                 <p class="validation-note" style="margin-top: 8px;">${{esc(row.validation_flags || "无明显硬伤")}}；${{esc(row.next_action || "-")}}</p>
+                <p class="validation-note" style="margin-top: 8px;">排除比例 ${{fmtPct(row.form_excluded_share)}} · 价格中位 ${{fmtMoney(row.form_price_median)}} · 参考 ASIN：${{esc(row.reference_asins || row.seed_asin || "-")}}</p>
                 <div class="pool-actions">
                   ${{validationAction(row)}}
-                  <a class="pill gray" href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">Listing</a>
+                  ${{row.seed_listing_url ? `<a class="pill gray" href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">参考 Listing</a>` : ""}}
                 </div>
               </div>
               <div class="evidence-box">
-                <h4>Top100 形态拆分证据（不单独进入机会池）</h4>
-                ${{evidenceRows || `<div class="empty">还没有相邻形态证据；当前只验证了候选形态。</div>`}}
+                <h4>该类目其余形态（逐个独立判定）</h4>
+                ${{evidenceRows || `<div class="empty">当前类目只识别到一个有效形态。</div>`}}
               </div>
             </div>
           </article>
@@ -3572,7 +3682,7 @@ def build_html() -> str:
                     <a href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.product_form || "-")}}</a>
                     <span class="muted-small">${{esc(row.seed_asin)}} · ${{esc(row.seed_title_short || "-")}}</span>
                     <div class="pool-actions">
-                      <span class="pill ${{row.archive_status === "active_in_latest_run" ? "green" : "gray"}}">${{row.archive_status === "active_in_latest_run" ? "本轮仍出现" : "历史机会"}}</span>
+                      <span class="pill ${{row.archive_status === "active_in_latest_run" ? "green" : "gray"}}">${{row.archive_status === "active_in_latest_run" ? "本轮仍出现" : row.archive_status === "invalidated_by_rule" ? "已失效" : "历史机会"}}</span>
                       ${{row.research_page ? `<a class="pill green" href="${{esc(researchHref(row.research_page))}}" target="_blank" rel="noreferrer">单品研究</a>` : ""}}
                       <a class="pill gray" href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">Listing</a>
                     </div>
@@ -3585,6 +3695,7 @@ def build_html() -> str:
                     <span class="shape-cell-label">机会依据</span>
                     <span class="shape-note">${{esc(row.opportunity_thesis || "-")}}</span>
                     <span class="muted-small">首次 ${{esc(row.archive_first_seen || "-")}} · 最近 ${{esc(row.archive_last_seen || "-")}} · 出现 ${{fmtInt(row.archive_seen_count)}} 次 · ${{esc(row.research_status || "-")}}</span>
+                    ${{row.archive_notes ? `<span class="muted-small">${{esc(row.archive_notes)}}</span>` : ""}}
                   </div>
                 </div>
               `).join("")}}
@@ -3741,7 +3852,7 @@ def build_html() -> str:
       if (node) node.addEventListener(event, handler);
     }}
 
-    renderSelection();
+    renderCategoryHealth();
     renderCurrentCategoryScan();
     renderKeywordSearchHistory();
     renderLatestKeywordResults();
@@ -3769,10 +3880,6 @@ def build_html() -> str:
       "根据评论痛点反推产品规格，再进入素材和 listing 自动化"
     ]);
 
-    ["selectionSearch", "selectionStrategy", "selectionRecommendation", "selectionLimit"].forEach(id => {{
-      bind(id, "input", renderSelection);
-      bind(id, "change", renderSelection);
-    }});
     bind("keywordSearchInput", "input", renderKeywordSearchHistory);
     bind("keywordSearchCommand", "click", showKeywordSearchCommand);
     ["shapeSearch", "shapeRecommendation"].forEach(id => {{

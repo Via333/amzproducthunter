@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boat Cabin Storage 类目深度研究</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root { --ink:#172033; --muted:#657184; --line:#d9dee8; --bg:#f6f7f9; --blue:#2364d2; --green:#147d54; --amber:#a86200; --red:#a62828; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { max-width:1320px; margin:0 auto; padding:24px; }
+    a { color:var(--blue); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    h1 { margin:0 0 6px; font-size:28px; line-height:1.2; }
+    h2 { margin:0 0 12px; font-size:19px; }
+    h3 { margin:0 0 8px; font-size:16px; }
+    p { margin:8px 0; }
+    section { margin-bottom:18px; padding:18px; border:1px solid var(--line); border-radius:8px; background:#fff; }
+    .top { display:flex; justify-content:space-between; gap:18px; margin-bottom:18px; }
+    .subtle { color:var(--muted); }
+    .actions { display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; }
+    .pill { display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px; background:#eaf1ff; color:var(--blue); font-weight:700; }
+    .pill.green { background:#e8f6ef; color:var(--green); }
+    .pill.amber { background:#fff1d8; color:var(--amber); }
+    .pill.gray { background:#edf0f4; color:#566174; }
+    .verdict { display:flex; justify-content:space-between; gap:24px; border-left:4px solid var(--amber); }
+    .verdict strong { display:block; font-size:22px; }
+    .score { min-width:180px; text-align:right; }
+    .score b { display:block; font-size:34px; }
+    .kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+    .kpi { padding:12px; border:1px solid var(--line); border-radius:8px; background:#fafbfc; }
+    .kpi span { display:block; color:var(--muted); font-size:12px; }
+    .kpi strong { display:block; margin-top:3px; font-size:24px; }
+    .priority-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .opportunity { padding:16px; border:1px solid var(--line); border-radius:8px; }
+    .opportunity header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px; }
+    .opportunity h3 { font-size:17px; }
+    .opportunity ul, .analysis ul, .next ol { margin:8px 0 0; padding-left:20px; }
+    .opportunity li, .analysis li, .next li { margin:6px 0; }
+    .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:8px; }
+    table { width:100%; min-width:860px; border-collapse:collapse; }
+    th,td { padding:10px 11px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { background:#f2f5f9; color:#405066; font-size:12px; }
+    .num { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .rank-yes { color:var(--green); font-weight:750; }
+    .rank-watch { color:var(--amber); font-weight:750; }
+    .rank-no { color:var(--red); font-weight:750; }
+    .trend { display:grid; grid-template-columns:repeat(12,minmax(34px,1fr)); gap:8px; align-items:end; min-height:220px; padding-top:20px; overflow:auto; }
+    .bar-col { display:grid; grid-template-rows:150px auto auto; align-items:end; min-width:44px; text-align:center; }
+    .bar { width:100%; max-width:48px; margin:0 auto; background:#2870d4; border-radius:4px 4px 0 0; }
+    .bar-col b { padding-top:5px; font-size:11px; }
+    .bar-col span { color:var(--muted); font-size:10px; white-space:nowrap; }
+    .gallery { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; }
+    .tile { overflow:hidden; border:1px solid var(--line); border-radius:8px; background:#fff; }
+    .tile img { display:block; width:100%; aspect-ratio:1/1; object-fit:contain; background:#f8f9fb; border-bottom:1px solid var(--line); }
+    .tile div { padding:10px; }
+    .tile b,.tile span { display:block; }
+    .tile span { margin-top:3px; color:var(--muted); font-size:12px; }
+    .analysis { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); padding:0; overflow:hidden; }
+    .analysis article { padding:18px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .analysis article:nth-child(2n) { border-right:0; }
+    .callout { padding:11px 12px; border-left:3px solid var(--amber); background:#fff8e8; color:#684809; }
+    .source-note { color:var(--muted); font-size:12px; }
+    @media (max-width:900px) {
+      .top,.verdict { display:block; }
+      .score { margin-top:12px; text-align:left; }
+      .kpis,.priority-grid,.gallery,.analysis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .analysis article:nth-child(2n) { border-right:0; }
+    }
+    @media (max-width:620px) {
+      main { padding:14px; }
+      .kpis,.priority-grid,.gallery,.analysis { grid-template-columns:minmax(0,1fr); }
+      .analysis article { border-right:0; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <div>
+        <h1>Boat Cabin Storage 类目深度研究</h1>
+        <div class="subtle">Amazon US · Node 3397571 · Sports & Outdoors / Boating & Sailing / Boat Cabin Products / Storage</div>
+      </div>
+      <div class="actions">
+        <a class="pill" href="../index.html#category-research-archive">返回工作台</a>
+        <a class="pill green" href="https://www.amazon.com/gp/bestsellers/sporting-goods/3397571" target="_blank" rel="noreferrer">打开类目</a>
+        <a class="pill gray" href="../assets/reports/category_deep_research_3397571.md">Markdown 报告</a>
+      </div>
+    </div>
+
+    <section class="verdict">
+      <div>
+        <span class="subtle">整体判断</span>
+        <strong>类目不直接立项，但存在可切入形态</strong>
+        <p>优先验证自粘收纳网袋；杯架/多安装位 caddy 有真实新品窗口，但必须先处理专利和粗浪防脱。船用垃圾袋只考虑可证明的高密封耐用版本。</p>
+      </div>
+      <div class="score"><span class="subtle">类目机会等级</span><b>B</b><small class="subtle">形态分化明显 · 中等退货风险</small></div>
+    </section>
+
+    <section>
+      <h2>类目规模与竞争</h2>
+      <div class="kpis">
+        <div class="kpi"><span>Top100 月销量</span><strong>22,541</strong></div>
+        <div class="kpi"><span>Top100 月销售额</span><strong>$568k</strong></div>
+        <div class="kpi"><span>Top3 产品销量份额</span><strong>30.22%</strong></div>
+        <div class="kpi"><span>低于 300 评论销量份额</span><strong>63.75%</strong></div>
+        <div class="kpi"><span>Top3 品牌销量份额</span><strong>36.83%</strong></div>
+        <div class="kpi"><span>Amazon 自营销量份额</span><strong>20.35%</strong></div>
+        <div class="kpi"><span>Top80% 中位价格</span><strong>$16.99</strong></div>
+        <div class="kpi"><span>近 30 天退货率</span><strong>7.56%</strong></div>
+      </div>
+      <p class="callout">低评论产品能拿到销量，说明新品窗口存在；但 Amazon 自营和头部销量主要集中在电池箱等不同形态，不能拿类目总销量替代具体形态判断。</p>
+    </section>
+
+    <section>
+      <h2>优先级与切入</h2>
+      <div class="priority-grid">
+        <article class="opportunity">
+          <header><div><span class="subtle">优先级 1</span><h3>自粘船舱收纳网袋</h3></div><span class="pill green">供应商验证</span></header>
+          <p><b>2,928 件/月 · 9 个样本 · 评论中位 20 · 中位价 $16.99</b></p>
+          <ul><li>核心需求是小物随手可取、免钻孔、粗浪不掉落。</li><li>痛点不是普通网布，而是胶粘牢度与不伤 vinyl/gelcoat 的冲突。</li><li>做可替换底座、两种表面胶、螺丝/扎带备份孔、挡带和排水。</li></ul>
+        </article>
+        <article class="opportunity">
+          <header><div><span class="subtle">优先级 2</span><h3>防脱落多安装位杯架 / caddy</h3></div><span class="pill amber">先做 FTO</span></header>
+          <p><b>杯架/caddy 5,434 件/月 · 21 个样本 · 评论中位 122</b></p>
+          <ul><li>新款 B0GJ8HW2VB 仅 53 评论，月销约 1,335。</li><li>解决带壳手机、32/40oz 杯、圆/方管和粗浪机械锁止。</li><li>ROBOCUP 明确以 patented clamp-on 营销，不能复制夹持结构。</li></ul>
+        </article>
+        <article class="opportunity">
+          <header><div><span class="subtle">优先级 3</span><h3>高密封船用垃圾袋</h3></div><span class="pill amber">高端版观察</span></header>
+          <p><b>4,619 件/月 · 24 个样本 · 评论中位 34 · 中位价 $21.49</b></p>
+          <ul><li>尺寸误解、撕裂、开口塌陷和气味外泄是可见痛点。</li><li>不做低价网袋；验证 900D/1000D、可拆内胆、自立开口和单手防味盖。</li><li>boat trash can CPC 约 $1.59，必须靠客单和转化覆盖广告。</li></ul>
+        </article>
+        <article class="opportunity">
+          <header><div><span class="subtle">优先级 4</span><h3>船用磁吸工具架</h3></div><span class="pill gray">小批量观察</span></header>
+          <p><b>代表款约 200 件/月 · 56 评论 · $39.99</b></p>
+          <ul><li>用户认可强磁、钳子/鱼钩收纳和多表面安装。</li><li>主要异议是价格；需要盐水密封、磁体防脱和安装实测。</li><li>需求规模有限，适合小批量高客单，不是类目主线。</li></ul>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>产品形态结构</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>形态</th><th class="num">样本</th><th class="num">月销</th><th class="num">份额</th><th class="num">中位价</th><th class="num">评论中位</th><th>判断</th></tr></thead>
+          <tbody>
+            <tr><td>杯架 / caddy</td><td class="num">21</td><td class="num">5,434</td><td class="num">24.1%</td><td class="num">$18.99</td><td class="num">122</td><td class="rank-watch">继续验证：需求大，先过结构专利和锁止测试</td></tr>
+            <tr><td>船用垃圾袋 / 折叠垃圾桶</td><td class="num">24</td><td class="num">4,619</td><td class="num">20.5%</td><td class="num">$21.49</td><td class="num">34</td><td class="rank-watch">观察：低评论新品多，同质化也高</td></tr>
+            <tr><td>电池箱</td><td class="num">1</td><td class="num">3,715</td><td class="num">16.5%</td><td class="num">$10.99</td><td class="num">2,532</td><td class="rank-no">排除：Amazon 销售，售价接近 FBA 费</td></tr>
+            <tr><td>自粘收纳网袋</td><td class="num">9</td><td class="num">2,928</td><td class="num">13.0%</td><td class="num">$16.99</td><td class="num">20</td><td class="rank-yes">优先：小件、低评论、痛点具体</td></tr>
+            <tr><td>工具 / 渔具收纳架</td><td class="num">17</td><td class="num">2,068</td><td class="num">9.2%</td><td class="num">$16.99</td><td class="num">33</td><td class="rank-watch">细分观察：磁吸高客单款可测</td></tr>
+            <tr><td>硬质收纳及其他</td><td class="num">11</td><td class="num">1,127</td><td class="num">5.0%</td><td class="num">$74.79</td><td class="num">114</td><td class="rank-no">排除：大件、适配、安装和破损风险</td></tr>
+            <tr><td>T-top / 救生衣收纳</td><td class="num">7</td><td class="num">917</td><td class="num">4.1%</td><td class="num">$38.35</td><td class="num">105</td><td class="rank-watch">暂缓：耐盐雾痛点真实，需求和物流一般</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="source-note">形态由标题规则拆分，用于研究决策，不是 Amazon 官方子分类；跨形态产品可能归入相邻组。</p>
+    </section>
+
+    <section id="profitability">
+      <h2>1688 成本与利润率估算</h2>
+      <p>1688 报价先以代表 ASIN 主图搜同款，再用产品名补充。人工剔除诱导 SKU 价格、错误尺寸和无关相似图后使用<b>中位数</b>，不使用容易被异常值扭曲的平均值。</p>
+      <p class="callout">净利润率已扣除：15% Amazon 佣金、代表 ASIN 实际 FBA 费、估算到岸成本、10%-18% 广告和 2%-4% 退货损耗。未包含所得税、长期仓储、优惠券、模具及专利/FTO 法律费用。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>形态 / 代表款</th><th class="num">售价</th><th class="num">FBA</th><th class="num">1688 中位/参考</th><th class="num">到岸成本</th><th class="num">净利润率</th><th>置信度与判断</th></tr></thead>
+          <tbody>
+            <tr><td>自粘收纳网袋<br><span class="subtle">B0DPG49CZT</span></td><td class="num">$16.99</td><td class="num">$4.90</td><td class="num">¥12.25<br><span class="subtle">4 个同形态</span></td><td class="num">$3.0-$4.8</td><td class="num rank-yes">6%-27%</td><td>高：可做，利润取决于广告和胶粘测试</td></tr>
+            <tr><td>夹装杯架 2-pack<br><span class="subtle">B0GJ8HW2VB</span></td><td class="num">$18.99</td><td class="num">$5.77</td><td class="num">¥5.75/只<br><span class="subtle">不含目标夹具</span></td><td class="num">$4.0-$6.4</td><td class="num rank-watch">-1%-22%</td><td>中低：当前价偏紧；$22.99 时约 10%-31%，先做 FTO</td></tr>
+            <tr><td>多安装位 caddy<br><span class="subtle">B0GM1FW3J1</span></td><td class="num">$17.99</td><td class="num">$5.77</td><td class="num">¥15.90<br><span class="subtle">仅主体可比</span></td><td class="num">$4.5-$7.0</td><td class="num rank-watch">-8%-16%</td><td>中低：升级锁止并卖 $24.99 时约 12%-32%</td></tr>
+            <tr><td>高密封垃圾袋<br><span class="subtle">B0BV98MSZQ</span></td><td class="num">$37.95</td><td class="num">$6.26</td><td class="num">¥45.00<br><span class="subtle">6 个同形态</span></td><td class="num">$8.0-$12.0</td><td class="num rank-yes">15%-35%</td><td>高：只做 $29-$39 高端版，低价档不成立</td></tr>
+            <tr><td>电池箱<br><span class="subtle">B000Y82MHW</span></td><td class="num">$10.99</td><td class="num">$9.94</td><td class="num">无有效同款</td><td class="num">-</td><td class="num rank-no">-45% 至 -25%</td><td>高：FBA 与佣金已破坏经济性</td></tr>
+            <tr><td>海用磁吸工具架<br><span class="subtle">B0B2FGD3K7</span></td><td class="num">$39.99</td><td class="num">$4.45</td><td class="num">¥14.45<br><span class="subtle">普通磁吸架</span></td><td class="num">$5.0-$8.0</td><td class="num rank-yes">32%-49%</td><td>中低：利润高，但要补海用 N52 实价和需求验证</td></tr>
+            <tr><td>矩形舱口盖<br><span class="subtle">B07Q887FF9</span></td><td class="num">$44.99</td><td class="num">$6.75</td><td class="num">¥6.80<br><span class="subtle">仅小圆盖参考</span></td><td class="num">$8.0-$15.0</td><td class="num rank-watch">15%-40%</td><td>低：没有矩形同规格报价，适配退货风险高</td></tr>
+            <tr><td>T-top 救生衣袋<br><span class="subtle">B09QGV5FMW</span></td><td class="num">$42.99</td><td class="num">$8.03</td><td class="num">¥65.90<br><span class="subtle">1 个同款</span></td><td class="num">$12.5-$17.5</td><td class="num rank-watch">4%-25%</td><td>中：海洋级拉链和 316 五金会继续压利润</td></tr>
+            <tr><td>其他软袋 / 罩<br><span class="subtle">B0CZXZK1BW</span></td><td class="num">$49.00</td><td class="num">$8.22</td><td class="num">¥20.25<br><span class="subtle">混合参考</span></td><td class="num">$8.0-$13.0</td><td class="num rank-watch">20%-40%</td><td>低：搜索集合过于混杂，不凭利润数字立项</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>利润排序：</b>磁吸工具架账面最好但证据弱；网袋需求最可靠；premium 垃圾袋的同款报价最充分。杯架和 caddy 必须靠结构升级把售价抬到 $22.99-$24.99，不能进入低价竞争。</p>
+      <p class="source-note"><a href="../assets/data/category_3397571_1688_quotes.csv">下载 1688 报价明细 CSV</a>。汇率情景按 1 USD = 7.2 CNY，仅用于筛选，不是实时结算汇率。</p>
+    </section>
+
+    <section>
+      <h2>代表产品图</h2>
+      <div class="gallery">
+        <article class="tile"><a href="https://www.amazon.com/dp/B0DPG49CZT" target="_blank" rel="noreferrer"><img src="https://m.media-amazon.com/images/I/81YLkgrIpkL.jpg" alt="自粘船舱收纳网袋"></a><div><b>自粘收纳网袋</b><span>B0DPG49CZT · 1,763 件/月</span></div></article>
+        <article class="tile"><a href="https://www.amazon.com/dp/B0GJ8HW2VB" target="_blank" rel="noreferrer"><img src="https://m.media-amazon.com/images/I/71kzqi2wNnL.jpg" alt="夹装船用杯架"></a><div><b>夹装船用杯架</b><span>B0GJ8HW2VB · 1,335 件/月</span></div></article>
+        <article class="tile"><a href="https://www.amazon.com/dp/B0GM1FW3J1" target="_blank" rel="noreferrer"><img src="https://m.media-amazon.com/images/I/71nNtG8MTTL.jpg" alt="多安装位 caddy"></a><div><b>多安装位 caddy</b><span>B0GM1FW3J1 · 466 件/月</span></div></article>
+        <article class="tile"><a href="https://www.amazon.com/dp/B0BV98MSZQ" target="_blank" rel="noreferrer"><img src="https://m.media-amazon.com/images/I/81EvpZn5XhL.jpg" alt="高密封船用垃圾袋"></a><div><b>高密封垃圾袋</b><span>B0BV98MSZQ · 870 件/月</span></div></article>
+        <article class="tile"><a href="https://www.amazon.com/dp/B0B2FGD3K7" target="_blank" rel="noreferrer"><img src="https://m.media-amazon.com/images/I/71hrsJCi9HL.jpg" alt="船用磁吸工具架"></a><div><b>磁吸工具架</b><span>B0B2FGD3K7 · 200 件/月</span></div></article>
+        <article class="tile"><a href="https://www.amazon.com/dp/B09QGV5FMW" target="_blank" rel="noreferrer"><img src="https://m.media-amazon.com/images/I/71MtPzd5UZL.jpg" alt="T-top 救生衣收纳袋"></a><div><b>T-top 收纳袋</b><span>B09QGV5FMW · 172 件/月</span></div></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>销量趋势与上新窗口</h2>
+      <div class="trend" aria-label="2025年9月至2026年8月月销量趋势">
+        <div class="bar-col"><div class="bar" style="height:49px"></div><b>10,660</b><span>25-09</span></div>
+        <div class="bar-col"><div class="bar" style="height:41px"></div><b>8,778</b><span>25-10</span></div>
+        <div class="bar-col"><div class="bar" style="height:33px"></div><b>7,043</b><span>25-11</span></div>
+        <div class="bar-col"><div class="bar" style="height:47px"></div><b>10,206</b><span>25-12</span></div>
+        <div class="bar-col"><div class="bar" style="height:30px"></div><b>6,578</b><span>26-01</span></div>
+        <div class="bar-col"><div class="bar" style="height:32px"></div><b>6,984</b><span>26-02</span></div>
+        <div class="bar-col"><div class="bar" style="height:56px"></div><b>12,061</b><span>26-03</span></div>
+        <div class="bar-col"><div class="bar" style="height:83px"></div><b>17,965</b><span>26-04</span></div>
+        <div class="bar-col"><div class="bar" style="height:107px"></div><b>23,067</b><span>26-05</span></div>
+        <div class="bar-col"><div class="bar" style="height:150px"></div><b>32,423</b><span>26-06</span></div>
+        <div class="bar-col"><div class="bar" style="height:117px"></div><b>25,319</b><span>26-07</span></div>
+        <div class="bar-col"><div class="bar" style="height:92px"></div><b>19,791</b><span>26-08</span></div>
+      </div>
+      <p><b>上新建议：</b>10-12 月完成打样和 FTO，1-2 月备货，3-4 月积累评论和自然位。2026 年 6 月新品销售额占比 13.6%，旺季新品可以获得份额。</p>
+    </section>
+
+    <section class="analysis">
+      <article><h2>网袋评论：胶粘矛盾</h2><ul><li>24 条近一年原始评论中，用户明确认可容量、厚网布、免钻孔和随手取物。</li><li>负面既有“一个月后脱胶”，也有“胶太强损伤 vinyl”。</li><li>打样必须在 vinyl、gelcoat、铝板上做高温潮湿测试，并提供表面兼容说明。</li></ul></article>
+      <article><h2>杯架评论：适配与锁止</h2><ul><li>大杯、coozie、手机和工具同时收纳是核心需求。</li><li>带壳手机槽偏窄；部分支架可向上滑脱，粗浪时存在风险。</li><li>差异化应放在机械锁止、柔性衬垫、圆/方管和白色 marine 配色。</li></ul></article>
+      <article><h2>垃圾袋评论：尺寸与耐久</h2><ul><li>用户需要垃圾在航行时不散落，且防漏、防味、可折叠。</li><li>低价款出现容量小于预期、结构差、第二天撕裂等反馈。</li><li>必须用真实 10/13 gal 袋、静载和航行风载测试证明，不靠绝对化文案。</li></ul></article>
+      <article><h2>T-top 评论：盐雾寿命</h2><ul><li>容量和外部口袋受到认可。</li><li>绑带过短、拉链腐蚀、撑不过一个夏季是高价值痛点。</li><li>海洋级拉链、316 五金、可更换绑带和安装跨度才是有效升级。</li></ul></article>
+    </section>
+
+    <section>
+      <h2>关键词需求</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>关键词</th><th class="num">月搜索量</th><th class="num">CPC</th><th class="num">第一页自然位均销</th><th>判断</th></tr></thead>
+          <tbody>
+            <tr><td>boat accessories</td><td class="num">121,435</td><td class="num">$1.42</td><td class="num">6,099</td><td>过宽，只用于辅助流量和市场规模</td></tr>
+            <tr><td>pontoon boat accessories</td><td class="num">72,130</td><td class="num">$1.32</td><td class="num">2,492</td><td>主要场景词，竞争较强</td></tr>
+            <tr><td>boat cup holder</td><td class="num">36,411</td><td class="num">$0.75</td><td class="num">1,178</td><td>杯架核心词；新款已到自然位 #1</td></tr>
+            <tr><td>boat trash can</td><td class="num">22,777</td><td class="num">$1.59</td><td class="num">257</td><td>意图明确但 CPC 高</td></tr>
+            <tr><td>boat storage</td><td class="num">13,498</td><td class="num">$0.60</td><td class="num">1,543</td><td>网袋核心流量，头部款自然位 #1</td></tr>
+            <tr><td>boat organizer</td><td class="num">846</td><td class="num">$0.61</td><td class="num">-</td><td>量小、意图精准，可做 exact 词</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="next">
+      <h2>验证顺序</h2>
+      <ol>
+        <li><b>网袋：</b>向 3 家供应商索取两种表面胶、网布克重和 UV 数据；完成 30 天高温潮湿、表面残胶和 500 次取放测试。</li>
+        <li><b>杯架：</b>先做 FTO，再测 15-40mm 圆/方管、40oz 杯、带壳手机和粗浪向上脱出；无机械锁止则停止。</li>
+        <li><b>垃圾袋：</b>采购 $21、$29、$38 三价格带样品，做 10kg 静载、1,000 次开合、漏水和气味封闭对比。</li>
+        <li><b>T-top：</b>只有供应商能提供 marine-grade zipper、316 紧固件和可调绑带时继续。</li>
+        <li>所有毛利重新按真实 EXW/FOB、包装、头程、FBA、广告和 7.56% 类目退货风险计算。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>证据边界</h2>
+      <p class="source-note">数据来自 2026-09-02 Sorftime MCP 快照。共读取 37 条近一年原始评论，并结合 7 个代表 ASIN 的 Customers Say 主题汇总；主题 mention 可能重叠。1688 已找到网袋、垃圾袋和 T-top 同形态报价，其余形态仍为部分可比结果，置信度已在利润表中标明。所有利润范围都必须用正式供应商报价和包装实测复算。</p>
+    </section>
+  </main>
+</body>
+</html>

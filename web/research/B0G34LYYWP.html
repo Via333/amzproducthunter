@@ -29,6 +29,11 @@
     td span { display: block; font-size: 12px; margin-top: 2px; }
     .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .gallery { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    .gallery-toolbar { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr) auto; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .gallery-toolbar select, .gallery-toolbar input { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #cbd3df; border-radius: 7px; padding: 10px 11px; background: #fff; color: #172033; font: inherit; }
+    .gallery-count { color: #657184; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .gallery-empty { padding: 28px 12px; border: 1px dashed #cbd3df; border-radius: 8px; text-align: center; color: #657184; background: #f9fafb; }
+    [hidden] { display: none !important; }
     .tile { border: 1px solid #d9dee8; border-radius: 8px; background: #fff; overflow: hidden; }
     .tile img, .image-empty { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #f7f8fa; border-bottom: 1px solid #d9dee8; }
     .image-empty { display: grid; place-items: center; color: #657184; }
@@ -69,6 +74,7 @@
       .decision { display: block; }
       .decision span { display: block; margin-top: 6px; }
       .score-box { text-align: left; margin-top: 12px; }
+      .gallery-toolbar { grid-template-columns: minmax(0, 1fr); }
     }
     @media (max-width: 560px) { .kpis, .gallery { grid-template-columns: minmax(0, 1fr); } }
   </style>
@@ -548,8 +554,16 @@
 
     <section>
       <h2>代表产品图片</h2>
-      <div class="gallery">
-            <article class="tile">
+      <div class="gallery-toolbar">
+        <select id="galleryForm" aria-label="按产品形态筛选">
+          <option value="">全部产品形态</option>
+          <option value="compatible disposable refill">compatible disposable refill</option><option value="brand duster refill">brand duster refill</option><option value="duster refill kit">duster refill kit</option><option value="reusable duster refill">reusable duster refill</option><option value="dust removal tool">dust removal tool</option><option value="cleaning agent">cleaning agent</option>
+        </select>
+        <input id="gallerySearch" type="search" placeholder="搜索 ASIN / 标题 / 材质" aria-label="搜索代表产品">
+        <span class="gallery-count" id="galleryCount"></span>
+      </div>
+      <div class="gallery" id="productGallery">
+            <article class="tile" data-gallery-item data-form="compatible disposable refill" data-search="b0g34lyywp 80 count duster refills compatible with swiffer duster, 180° disposable multi-surface microfiber cleaning dusters, unscented  compatible disposable refill  microfiber">
               <a href="https://www.amazon.com/dp/B0G34LYYWP" target="_blank" rel="noreferrer">
                 <img src="assets/B0G34LYYWP/01_B0G34LYYWP.jpg" alt="B0G34LYYWP">
                 <b>B0G34LYYWP</b>
@@ -559,7 +573,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="compatible disposable refill" data-search="b0d2dbwvgj rekopi heavy duty duster refills compatible with swiffer duster, 20 count  compatible disposable refill  unknown">
               <a href="https://www.amazon.com/dp/B0D2DBWVGJ" target="_blank" rel="noreferrer">
                 <img src="assets/B0G34LYYWP/02_B0D2DBWVGJ.jpg" alt="B0D2DBWVGJ">
                 <b>B0D2DBWVGJ</b>
@@ -569,7 +583,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="compatible disposable refill" data-search="b0dkfgyj2z heavy duty duster refills, unscented disposable dusters kit for cleaning dusting furniture blind ceiling fan, multi surface 360 feather duster(25) (pack of 2)  compatible disposable refill  unknown">
               <a href="https://www.amazon.com/dp/B0DKFGYJ2Z" target="_blank" rel="noreferrer">
                 <img src="assets/B0G34LYYWP/03_B0DKFGYJ2Z.jpg" alt="B0DKFGYJ2Z">
                 <b>B0DKFGYJ2Z</b>
@@ -579,7 +593,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="compatible disposable refill" data-search="b0cc1gqz6y duster refills,static dust removal compatible with swiffer for dusting 18ct  compatible disposable refill  unknown">
               <a href="https://www.amazon.com/dp/B0CC1GQZ6Y" target="_blank" rel="noreferrer">
                 <img src="assets/B0G34LYYWP/04_B0CC1GQZ6Y.jpg" alt="B0CC1GQZ6Y">
                 <b>B0CC1GQZ6Y</b>
@@ -589,7 +603,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="compatible disposable refill" data-search="b0gx5pcf2h duster refill for swiffer duster, one-sided disposable dusters refills with 4x microfibers (24 count)  compatible disposable refill  microfiber">
               <a href="https://www.amazon.com/dp/B0GX5PCF2H" target="_blank" rel="noreferrer">
                 <img src="assets/B0G34LYYWP/05_B0GX5PCF2H.jpg" alt="B0GX5PCF2H">
                 <b>B0GX5PCF2H</b>
@@ -599,7 +613,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="brand duster refill" data-search="b076ddvrpg swiffer dusters heavy duty multi-surface duster refills for cleaning, unscented, 11 count  brand duster refill  unknown">
               <a href="https://www.amazon.com/dp/B076DDVRPG" target="_blank" rel="noreferrer">
                 <img src="assets/B0G34LYYWP/06_B076DDVRPG.jpg" alt="B076DDVRPG">
                 <b>B076DDVRPG</b>
@@ -609,7 +623,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="brand duster refill" data-search="b01hk7n23m swiffer dusters multi-surface duster refills, lavender scent, 10 ct  brand duster refill  unknown">
               <a href="https://www.amazon.com/dp/B01HK7N23M" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B01HK7N23M</b>
@@ -619,7 +633,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="brand duster refill" data-search="b0c1rnzgkg swiffer dusters heavy duty multi-surface duster refills for cleaning, lavender, 11 count  brand duster refill  unknown">
               <a href="https://www.amazon.com/dp/B0C1RNZGKG" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0C1RNZGKG</b>
@@ -629,7 +643,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b001tq6ihs swiffer duster kit with 3 ft extendable handle | includes 1 duster extendable handle (3 ft). 3 heavy duty duster refills. for ceiling fans, vents, and hard to reach places  duster refill kit  unknown">
               <a href="https://www.amazon.com/dp/B001TQ6IHS" target="_blank" rel="noreferrer">
                 <img src="assets/B0G34LYYWP/09_B001TQ6IHS.jpg" alt="B001TQ6IHS">
                 <b>B001TQ6IHS</b>
@@ -639,7 +653,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0c68wlnkw duster refills for swiffer duster, 30 count with 1 secure-grip handle  duster refill kit  unknown">
               <a href="https://www.amazon.com/dp/B0C68WLNKW" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0C68WLNKW</b>
@@ -649,7 +663,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0dkfdhhgd heavy duty duster refills, disposable dusters kit for cleaning dusting furniture blind ceiling fan, multi surface 360 feather duster(60)+3ft extended handle +1 handle  duster refill kit  unknown">
               <a href="https://www.amazon.com/dp/B0DKFDHHGD" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DKFDHHGD</b>
@@ -659,7 +673,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0gh7h6z1t 20 pack heavy duty duster refills for swiffer, multi-surface 360° disposable dusters kit for cleaning dusting electronics furniture blind ceiling fan (handle is not included)  duster refill kit  unknown">
               <a href="https://www.amazon.com/dp/B0GH7H6Z1T" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0GH7H6Z1T</b>
@@ -669,7 +683,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0drdngfwk o-cedar flex &amp; catch heavy duty dusting kit with 3 disposable duster refills | new &amp; improved model | extendable 3 ft handle with stay-on duster hook | traps 3x more dust than feather dusters  duster refill kit  unknown">
               <a href="https://www.amazon.com/dp/B0DRDNGFWK" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DRDNGFWK</b>
@@ -679,7 +693,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0fzbwlqbf setsail heavy duty duster refills for swiffer duster with 1 handle，30 count  duster refill kit  unknown">
               <a href="https://www.amazon.com/dp/B0FZBWLQBF" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FZBWLQBF</b>
@@ -689,7 +703,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0dynkw8fj rekopi heavy duty duster refills compatible with swiffer duster, 20 count | 3 ft extension pole, 4x microfibers multisurface dusters, for cleaning home, celling fan, blinds, vent &amp; shelves  duster refill kit  microfiber">
               <a href="https://www.amazon.com/dp/B0DYNKW8FJ" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DYNKW8FJ</b>
@@ -699,7 +713,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b07djnkg5j swiffer duster refill + 1 handle (28 ct.) great  duster refill kit  unknown">
               <a href="https://www.amazon.com/dp/B07DJNKG5J" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B07DJNKG5J</b>
@@ -709,7 +723,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0ghwzhqxp alotiki duster refills, 80 count 360° dusters for cleaning with 2 handle | heavy duty duster refill for dust cleaning, 360° double-sided disposable duster for blinds, electronics, furniture  duster refill kit  unknown">
               <a href="https://www.amazon.com/dp/B0GHWZHQXP" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0GHWZHQXP</b>
@@ -719,7 +733,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0gtqf4vmw setsail 6 ft extendable duster handle compatible with swiffer duster | 20 refills heavy duty disposable duster refill for cleaning multi surface 360° duster cleaner kit for ceiling fan, blind  duster refill kit  unknown">
               <a href="https://www.amazon.com/dp/B0GTQF4VMW" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0GTQF4VMW</b>
@@ -729,7 +743,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0fxsk2yfq 6 ft extendable duster handle with 20 pcs, 360° heavy duty duster refills kit for swiffer, 4x electrostatic microfiber for cleaning home, effortlessly reach ceilings, fans &amp; hard-to-reach areas  duster refill kit  microfiber">
               <a href="https://www.amazon.com/dp/B0FXSK2YFQ" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FXSK2YFQ</b>
@@ -739,7 +753,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0g4csfkhd 80 count duster refills with 1 short handle &amp; 3 ft extendable handle, compatible with swiffer duster, 180° disposable microfiber cleaning dusters, unscented  duster refill kit  microfiber">
               <a href="https://www.amazon.com/dp/B0G4CSFKHD" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0G4CSFKHD</b>
@@ -749,7 +763,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0d4v9slkr 360° duster refills kit for swiffer duster, 25 pack &amp; 1 handle, multi-surface dusters with 4x cleaning power. efficient duster kit for cleaning pet home, office, blinds, furniture and more  duster refill kit  unknown">
               <a href="https://www.amazon.com/dp/B0D4V9SLKR" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0D4V9SLKR</b>
@@ -759,7 +773,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="duster refill kit" data-search="b0dk19tqsg senowi 60 count electrostatic duster refills compatible with swiffer duster,multi-surface dusting refills,microfibre dusters for cleaning with 1pcs retractable handle,unscented  duster refill kit  microfiber">
               <a href="https://www.amazon.com/dp/B0DK19TQSG" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DK19TQSG</b>
@@ -769,7 +783,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="reusable duster refill" data-search="b0fpf5hctm 8 pack reusable duster refill compatible with swiffer hand duster, 360 heavy duty duster refills for cleaning, office, ceiling fan (handle is not included)  reusable duster refill  unknown">
               <a href="https://www.amazon.com/dp/B0FPF5HCTM" target="_blank" rel="noreferrer">
                 <img src="assets/B0G34LYYWP/23_B0FPF5HCTM.jpg" alt="B0FPF5HCTM">
                 <b>B0FPF5HCTM</b>
@@ -779,7 +793,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="reusable duster refill" data-search="b0dfv86glz redones dusters for swiffer - reusable duster refill compatible with swiffer hand duster, 360 heavy duty dusters refills 4 pack(handle is not included)  reusable duster refill  unknown">
               <a href="https://www.amazon.com/dp/B0DFV86GLZ" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DFV86GLZ</b>
@@ -789,7 +803,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="reusable duster refill" data-search="b0dz22td18 12 pcs microfiber reusable duster refills for swiffer duster  reusable duster refill  microfiber">
               <a href="https://www.amazon.com/dp/B0DZ22TD18" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DZ22TD18</b>
@@ -799,7 +813,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="reusable duster refill" data-search="b0gtlgsd8y 8 pack reusable duster pads compatible with swiffer duster refills, washable microfiber dusting cloths for cleaning home, car, pet, furniture, fans, blinds  reusable duster refill  microfiber">
               <a href="https://www.amazon.com/dp/B0GTLGSD8Y" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0GTLGSD8Y</b>
@@ -809,7 +823,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="dust removal tool" data-search="b07dbcdctx swiffer duster kit with 3 ft extendable handle, dusters for cleaning, set includes 1 extension pole and 12 heavy duty dusting refills dust cleaner, long extended wand for ceiling fans and walls  dust removal tool  unknown">
               <a href="https://www.amazon.com/dp/B07DBCDCTX" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B07DBCDCTX</b>
@@ -819,7 +833,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="dust removal tool" data-search="b00iow7ngk swiffer dusters starter kit, kit includes 1 handle and 5 dusters  dust removal tool  unknown">
               <a href="https://www.amazon.com/dp/B00IOW7NGK" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B00IOW7NGK</b>
@@ -829,7 +843,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="dust removal tool" data-search="b08sw8lfjq cobweb duster with extensionpole,dusters for cleaning with 2 dusterheads | washable duster,cobweb duster,corner brush,telescoping pole for ceiling fan(blue)  dust removal tool  unknown">
               <a href="https://www.amazon.com/dp/B08SW8LFJQ" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B08SW8LFJQ</b>
@@ -839,7 +853,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="dust removal tool" data-search="b0c6dqs74l ivyroll cobweb duster with extension pole | spider web brush &amp; ceiling cleaning kit, 100“ microfiber feather duster cleaner with washable head for fan, furniture, home  dust removal tool  microfiber">
               <a href="https://www.amazon.com/dp/B0C6DQS74L" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0C6DQS74L</b>
@@ -849,7 +863,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="dust removal tool" data-search="b0dkgzmqpr drq ceiling fan cleaner duster with 13-48 in extension pole, blue | detachable, washable microfiber brush head is reusable for ceiling fan blades, walls, bookshelves, door tops and window tops  dust removal tool  microfiber">
               <a href="https://www.amazon.com/dp/B0DKGZMQPR" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DKGZMQPR</b>
@@ -859,7 +873,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="dust removal tool" data-search="b0fcrfqpt7 amazon basics 360° heavy duty duster kit with extendable handle and 6 microfiber plumes refills for pet hair  dust removal tool  microfiber">
               <a href="https://www.amazon.com/dp/B0FCRFQPT7" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FCRFQPT7</b>
@@ -869,7 +883,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="dust removal tool" data-search="b0gn3w1rff swiffer duster kit with 6 ft super extendable handle, heavy duty starter kit with 8 refills, lemon scent  dust removal tool  unknown">
               <a href="https://www.amazon.com/dp/B0GN3W1RFF" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0GN3W1RFF</b>
@@ -879,7 +893,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="dust removal tool" data-search="b098nrzl3z setsail extra-long dusters with extension pole 100-inch for cleaning, gray  dust removal tool  unknown">
               <a href="https://www.amazon.com/dp/B098NRZL3Z" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B098NRZL3Z</b>
@@ -889,7 +903,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="dust removal tool" data-search="b0b6g147w6 tiumso microfiber feather duster 5-in-1 kit, dusters for cleaning, duster with extension pole 100 inches, cobweb duster, microfiber dusters for high ceilings and fans, blinds, cars and furniture  dust removal tool  microfiber">
               <a href="https://www.amazon.com/dp/B0B6G147W6" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0B6G147W6</b>
@@ -899,7 +913,7 @@
             </article>
 
 
-            <article class="tile">
+            <article class="tile" data-gallery-item data-form="cleaning agent" data-search="b01lrmn9zm harris diatomaceous earth powder duster with 6 inch extension nozzle, for easier application of de in home &amp; outdoor lawn and garden use  cleaning agent  unknown">
               <a href="https://www.amazon.com/dp/B01LRMN9ZM" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B01LRMN9ZM</b>
@@ -908,9 +922,38 @@
               <p>cleaning agent · unknown · 1 pack</p>
             </article>
             </div>
+      <div class="gallery-empty" id="galleryEmpty" hidden>没有匹配的产品。</div>
     </section>
 
 
   </main>
+  <script>
+    (() => {
+      const formSelect = document.getElementById("galleryForm");
+      const searchInput = document.getElementById("gallerySearch");
+      const count = document.getElementById("galleryCount");
+      const empty = document.getElementById("galleryEmpty");
+      const tiles = Array.from(document.querySelectorAll("[data-gallery-item]"));
+
+      function filterGallery() {
+        const selectedForm = formSelect.value;
+        const query = searchInput.value.trim().toLowerCase();
+        let visible = 0;
+        tiles.forEach(tile => {
+          const matchesForm = !selectedForm || tile.dataset.form === selectedForm;
+          const matchesQuery = !query || tile.dataset.search.includes(query);
+          const show = matchesForm && matchesQuery;
+          tile.hidden = !show;
+          if (show) visible += 1;
+        });
+        count.textContent = `显示 ${visible} / ${tiles.length} 个`;
+        empty.hidden = visible !== 0;
+      }
+
+      formSelect.addEventListener("change", filterGallery);
+      searchInput.addEventListener("input", filterGallery);
+      filterGallery();
+    })();
+  </script>
 </body>
 </html>

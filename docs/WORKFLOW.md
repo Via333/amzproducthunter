@@ -31,14 +31,13 @@ python3 refresh_selection_workflow.py
 
 ```text
 Sorftime MCP 类目扫描（类目树缓存、每类目一次 Top100、逐类目断点）
--> 候选产品导入
--> product_selection.py 初筛评分
--> auto_research_shortlist.py（MCP 迁移期间关闭自动 CLI 深挖）
--> category_shape_validation.py 类目/形态验证
+-> 所有成功类目计算健康度
+-> category_shape_validation.py 拆分并验证每个类目的全部形态
+-> build_product_research_pages.py 重建已归档单品研究页
 -> build_dashboard.py 重建网页工作台
 ```
 
-候选验证优先读取当前扫描目录 `archive/discovery_runs/<run_id>/raw_category_reports/` 中已保存的类目 Top100。同一最小类目的多个种子复用同一份报告，不产生额外 Sorftime 调用；结果按种子排名展示，并保留原始标题、ASIN、最小类目和提取后的产品形态。
+形态验证直接读取当前扫描目录 `archive/discovery_runs/<run_id>/raw_category_reports/` 中已保存的类目 Top100。每个 `scan_status=success` 且原始报告存在的最小类目都验证一次，不依赖种子筛选结果。手动 ASIN 和关键词只是补充入口，不能绕过类目 Top100 验证。
 
 候选池和利润口径：
 
@@ -50,11 +49,10 @@ Sorftime MCP 类目扫描（类目树缓存、每类目一次 Top100、逐类目
 必须检查：
 
 - `web/index.html` 是否重新生成。
-- `reports/selection_ranked.csv` 是否有候选品。
+- `reports/discovered_categories.csv` 是否包含类目健康度。
 - `data/category_shape_validation.csv` 是否有验证结果。
-- `archive/selection_runs/YYYYMMDD_HHMMSS/` 是否新增快照。
 - `archive/category_shape_runs/YYYYMMDD_HHMMSS/` 是否新增快照。
-- `archive/shape_opportunity_library.csv` 是否只保留通过验证或值得观察的形态机会。
+- `archive/shape_opportunity_library.csv` 是否只有 `Shape opportunity` 处于本轮 active；旧错误机会应标记 `invalidated_by_rule` 而不删除。
 
 每周更新汇报必须包含：
 
@@ -88,14 +86,15 @@ archive/weekly_scan_reports/YYYYMMDD_HHMMSS/
 汇报字段用于对账：
 
 - 扫描类目数：当前 Run 的 `archive/discovery_runs/RUN_ID/run_manifest.json` 成功类目数。
-- 候选产品数：当前 Run 的 `archive/selection_runs/RUN_ID/selection_ranked.csv` 行数。
-- 候选类目覆盖：当前 Run 的 discovery manifest 中 `represented_categories`，用于发现候选池被少数类目占满的问题。
-- 新增候选入档数：`archive/opportunity_library.csv` 中 `archive_last_run_id` 等于最新初筛 run 且 `archive_seen_count=1` 的数量。
-- 通过验证进入机会池：`archive/shape_opportunity_library.csv` 中 `archive_status=active_in_latest_run` 的数量。
+- 验证类目数：`data/category_shape_validation.csv` 去重后的 `category_path` 数量。
+- 验证形态数及 `Shape opportunity` / `Watch shape` / `Reject category/form` 各自数量。
+- 新增入池形态：`archive/shape_opportunity_library.csv` 中当前 run 首次入档且仍 active 的数量。
+- 参考 ASIN 总数：本轮 `Shape opportunity` 的 `form_reference_asins` 去重后数量。
 - 本次形态机会：`data/category_shape_validation.csv` 中 `shape_recommendation=Shape opportunity` 的数量。
 - 人工复核/补数据：`shape_recommendation` 为 `Watch shape` 或 `Needs category Top100` 的数量。
-- 最新初筛快照、最新类目/形态快照、`web/index.html` mtime、当前日志路径。
-- 初筛和形态淘汰主因 Top 5。
+- 最新类目/形态快照、`web/index.html` mtime、当前日志路径。
+- 形态淘汰主因 Top 5。
+- 类目健康度 Top 5（来自 `reports/discovered_categories.csv`）。
 
 周报默认写入本地 `reports/` 和 `archive/weekly_scan_reports/`。
 
@@ -132,10 +131,9 @@ python3 tests/smoke_selection_workflow.py
 
 该命令只写入 `tmp/smoke_selection_workflow/<run_id>/`，不调用 Sorftime，不改 live `reports/`、`data/`、`web/` 或正式 `archive/`。验收口径：
 
-- 初筛 fixture 共 3 个候选：1 个 `Watch or collect more data`，2 个 `Reject`。
-- 初筛临时机会档案 `tmp/.../archive/opportunity_library.csv` 中 `active_in_latest_run=1`。
-- 类目/形态验证 1 条记录，`Shape opportunity=1`。
-- 临时形态机会池 `tmp/.../archive/shape_opportunity_library.csv` 中 `active_in_latest_run=1`。
+- fixture 包含 2 个成功类目和 1 个失败类目，只验证前两个。
+- 形态结果为 `Shape opportunity=1`、`Watch shape=1`、`Reject category/form=1`。
+- 通过形态必须有参考 ASIN，临时机会池 `active_in_latest_run=1`。
 
 迁移和重构验收基线见：
 
@@ -186,8 +184,8 @@ AMZ_WEEKLY_FORCE=1 automation/run_weekly_category_scan.sh
 同一天已经出现多份快照时，不删除历史目录。先对比以下信息：
 
 - 两份 `run_meta.json` 的 `run_id`、`generated_at`、`candidate_count`、`archived_candidate_count`。
-- `source_candidates.csv`、`selection_ranked.csv`、`category_shape_validation.csv` 的行数和 hash。
-- `reports/selection_ranked.csv`、`data/category_shape_validation.csv`、`web/index.html` 的 mtime 是否和某个快照一致。
+- `categories.csv`、`category_shape_validation.csv` 的行数和 hash。
+- `reports/discovered_categories.csv`、`data/category_shape_validation.csv`、`web/index.html` 的 mtime 是否和某个快照一致。
 
 默认以最后一个完整快照且与当前 live 文件一致的快照作为临时权威口径；如果证据表明最后一次是误触发或异常输出，必须在 Issue 中明确声明改用哪个旧快照，并说明是否需要恢复 live 文件。无论选择哪份，都要在原 Issue 补一条结论评论，列出权威快照、权威指标、另一份快照的解释和后续处理。
 
@@ -248,7 +246,13 @@ config/import_defaults.json                  成本、物流、FBA 等估算默�
 - 大件判定：硬大件词、容量 `>=50 quart`、`>=40 L`、“超大 + 箱/桶/篮/收纳容器”组合词、长柄拖把/扫把/清洁刷、拖把桶套装、4 件及以上大收纳套装或重量 `>=5000` 时大件风险至少 85；容量 `>=20 quart`、`>=25 L`、桶/盆 `>=10 quart`、最大边 `>=24 in`、软大件词或重量 `>=2000` 时大件风险至少 65；重量 `>=1000` 时至少 45，普通产品最大边 `>=45 in` 时至少 60。
 - 类目证据：类目为空、`Unknown` 或类似 `['', '']` 时初筛硬停止，且不启动 Top100 自动研究。
 - 类目/形态：类目评论中位数 `>=1000` 或 Top10 评论中位数 `>=1500` 视为评论墙；Top 品牌份额 `>=35%` 视为品牌集中。
-- 形态入池：形态样本 `>=2`、形态月销均值 `>=150` 或形态总月销 `>=800`、形态评论中位数 `<=300` 或低评高销样本 `>=2`；同时检查 Top10 和形态 Top3 销量集中度。种子形态 `shape_score >=65` 才是 `Shape opportunity`。
+- 形态入池：形态样本 `>=2`、形态月销均值 `>=150` 或形态总月销 `>=800`、形态评论中位数 `<=300` 或低评高销样本 `>=2`；同时检查 Top10 和形态 Top3 销量集中度。`shape_score >=65` 且无硬 flag 才是 `Shape opportunity`。
+- 形态分权重：需求 0.25、可进入性（评论中位数）0.25、低评高销 0.15、**新进入者成功率 0.25**、品牌集中 0.10。新进入者 = `online_date` 在 18 个月内的 listing；成功 = 月销 `>=200`。没有上架日期数据时该项取中性 50 并打 `no listing-age data`。
+- 相邻形态（不是种子自身形态）样本 `>=3` 时也可以成为 `Shape opportunity`（`allow_adjacent_shape_opportunity`，`form_min_count_adjacent`）。
+- 必淘汰 flag：`brand-dependent accessory`（形态内 `>=50%` listing 是"compatible with / replacement for 其他品牌"）、`new entrants not selling`（近 18 个月新上架 `>=2` 个但没有一个达标）。
+- 每个成功扫描的最小类目只读一次 Top100；`seed_limit=0`、`category_limit=0`、`category_ranking_limit=0` 都表示周扫不受种子或数量上限限制。
+- 类目健康度：对每个类目的完整 Top100 算 `category_health_score` 写入 `reports/discovered_categories.csv`，仅用于排序展示和周报，不代替形态验证。
+- 每个形态输出 `form_reference_asins`（近 18 个月新上架、月销 `>=200`、评论 `<=300` 的前 5 个 `ASIN:月销/评论`），作为单品研究入口。
 - 只有 `Shape opportunity` 写入 `archive/shape_opportunity_library.csv`；`Watch shape` 和 `Needs category Top100` 只作为人工复核/补数据项。
 
 调整时必须确认：

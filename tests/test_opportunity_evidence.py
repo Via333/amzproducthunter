@@ -18,6 +18,7 @@ from discover_sorftime_opportunities import load_category_tree, product_passes_f
 from import_sorftime_candidates import build_candidate
 from market_structure import analyze_market
 from product_taxonomy import classify_product_form
+from product_exclusions import hard_exclusion_reason
 from product_risk import has_valid_category, infer_compliance_risk, infer_fragile_risk, infer_oversize_risk
 from product_selection import calculate_scores, normalize_row, write_csv as write_selection_csv
 from weekly_scan_observability import collect_metrics
@@ -126,6 +127,7 @@ class EvidenceTest(unittest.TestCase):
         self.assertGreaterEqual(infer_oversize_risk("StorageWorks Storage Bins with Lids, Fabric Closet Storage Bins, Large"), 80)
         self.assertGreaterEqual(infer_oversize_risk("Storage Box Organizer, Pack of 4"), 80)
         self.assertGreaterEqual(infer_oversize_risk("Storage Box 28 Inches Long"), 65)
+        self.assertGreaterEqual(infer_oversize_risk("Large Capacity Garage Ball Storage Rack with Wheels"), 65)
         self.assertGreaterEqual(infer_compliance_risk("Reusable Beeswax Bread Bags for Sourdough"), 80)
         self.assertGreaterEqual(infer_compliance_risk("Glass Sweets Jar", "Cookie Jars"), 80)
         self.assertGreaterEqual(infer_compliance_risk("Camping Stove with Gas Regulator"), 80)
@@ -194,6 +196,56 @@ class EvidenceTest(unittest.TestCase):
         self.assertNotIn("electric", form)
         self.assertIn("wall-mounted", form)
         self.assertIn("storage box", form)
+
+    def test_taxonomy_strips_brand_and_keeps_combo_as_an_attribute(self) -> None:
+        branded = classify_product_form(
+            "Holaloha Toilet Bowl Brush",
+            "Home & Kitchen > Toilet Brushes & Holders",
+            brand="Holaloha",
+            category_brands=["Holaloha", "Sellemer"],
+        )
+        base = classify_product_form("Storage Box", "Office > Index Card Storage", "STORAGE BOX")
+        combo = classify_product_form("Storage Box Set with Dividers", "Office > Index Card Storage", "STORAGE BOX")
+        self.assertNotIn("holaloha", branded)
+        self.assertEqual(base, combo)
+
+    def test_ball_storage_separates_wall_mount_from_floor_rack(self) -> None:
+        wall = classify_product_form(
+            "Metal Ball Holder Wall Mount for Basketball Display",
+            "Sports > Basketball > Ball Storage",
+            "STORAGE RACK",
+        )
+        floor = classify_product_form(
+            "Garage Sports Equipment Organizer with Golf Bag Rack",
+            "Sports > Basketball > Ball Storage",
+            "STORAGE RACK",
+        )
+        self.assertEqual(wall, "wall-mounted ball holder")
+        self.assertEqual(floor, "floor sports equipment organizer")
+
+    def test_shared_product_exclusions_cover_logistics_and_food_contact(self) -> None:
+        self.assertTrue(
+            hard_exclusion_reason(
+                {"product_name": "Portable Steam Cleaner", "category": "Home > Cleaning", "brand": "Generic"}
+            )
+        )
+        self.assertTrue(
+            hard_exclusion_reason(
+                {"product_name": "Reusable Food Storage Bag", "category": "Home > Kitchen", "brand": "Generic"}
+            )
+        )
+
+    def test_shared_product_exclusions_do_not_reject_medicine_ball_storage(self) -> None:
+        self.assertEqual(
+            hard_exclusion_reason(
+                {
+                    "product_name": "Wall Mounted Medicine Ball Storage Rack",
+                    "category": "Sports & Outdoors > Exercise & Fitness > Medicine Balls",
+                    "brand": "OpenBrand",
+                }
+            ),
+            "",
+        )
 
     def test_demand_analysis_separates_basic_and_fulfillment(self) -> None:
         reviews = [
@@ -301,8 +353,8 @@ class EvidenceTest(unittest.TestCase):
                 encoding="utf-8",
             )
             metrics = collect_metrics(root, "new_run")
-            self.assertEqual(metrics["ranked_candidates"], 0)
-            self.assertEqual(metrics["selection_watch_or_go"], 0)
+            self.assertEqual(metrics["validated_categories"], 0)
+            self.assertEqual(metrics["validation_rows"], 0)
             self.assertEqual(metrics["discovery_status"], "not_started")
 
     def test_empty_selection_still_writes_a_valid_csv(self) -> None:

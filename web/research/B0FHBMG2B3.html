@@ -29,6 +29,11 @@
     td span { display: block; font-size: 12px; margin-top: 2px; }
     .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .gallery { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    .gallery-toolbar { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr) auto; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .gallery-toolbar select, .gallery-toolbar input { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #cbd3df; border-radius: 7px; padding: 10px 11px; background: #fff; color: #172033; font: inherit; }
+    .gallery-count { color: #657184; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .gallery-empty { padding: 28px 12px; border: 1px dashed #cbd3df; border-radius: 8px; text-align: center; color: #657184; background: #f9fafb; }
+    [hidden] { display: none !important; }
     .tile { border: 1px solid #d9dee8; border-radius: 8px; background: #fff; overflow: hidden; }
     .tile img, .image-empty { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #f7f8fa; border-bottom: 1px solid #d9dee8; }
     .image-empty { display: grid; place-items: center; color: #657184; }
@@ -43,7 +48,35 @@
     .decision span { color: #657184; }
     .decision.rejected { border-left-color: #c83d3d; background: #fff8f7; }
     .decision.rejected strong { color: #a62828; }
-    @media (max-width: 900px) { .top { display: block; } .kpis, .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .summary-grid article { border-left: 3px solid #d9dee8; padding-left: 14px; }
+    .summary-grid h3 { margin: 0 0 8px; font-size: 15px; }
+    .summary-grid ul { margin: 0; padding-left: 18px; }
+    .summary-grid li { margin: 0 0 7px; color: #405066; }
+    .verdict-panel { display: flex; justify-content: space-between; gap: 24px; border-left: 4px solid #d99a18; }
+    .eyebrow { color: #657184; font-size: 12px; font-weight: 750; }
+    .score-box { min-width: 120px; text-align: right; }
+    .score-box span, .score-box small { display: block; color: #657184; }
+    .score-box strong { display: block; font-size: 40px; line-height: 1.1; }
+    .analysis-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; padding: 0; overflow: hidden; }
+    .analysis-grid article { padding: 18px; border-right: 1px solid #d9dee8; border-bottom: 1px solid #d9dee8; }
+    .analysis-grid article:nth-child(2n) { border-right: 0; }
+    .analysis-grid ul, .action-list { margin: 8px 0 0; padding-left: 20px; }
+    .analysis-grid li, .action-list li { margin: 6px 0; }
+    .warning { padding: 10px 12px; border-left: 3px solid #d99a18; background: #fff8e8; color: #6d4a06; }
+    .reference-links { display: flex; gap: 10px; flex-wrap: wrap; }
+    @media (max-width: 900px) {
+      .top { display: block; }
+      .kpis, .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analysis-grid, .summary-grid { grid-template-columns: minmax(0, 1fr); }
+      .analysis-grid article { border-right: 0; }
+      .verdict-panel { display: block; }
+      .decision { display: block; }
+      .decision span { display: block; margin-top: 6px; }
+      .score-box { text-align: left; margin-top: 12px; }
+      .gallery-toolbar { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 560px) { .kpis, .gallery { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body>
@@ -61,6 +94,10 @@
     </div>
 
     <section class="decision"><strong>档案状态：已研究，待结合当前机会池复核</strong><span></span></section>
+
+
+
+
 
     <section>
       <div class="kpis">
@@ -107,7 +144,7 @@
               <td class="num">91</td>
               <td>stainless steel:3; plastic:1<span>1:7</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>garden hose splitter</b><span>评论门槛低</span></td>
@@ -119,7 +156,7 @@
               <td class="num">209</td>
               <td>plastic:13; stainless steel:12; silicone:1<span>1:42; 2:2; 6:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>2-way hose splitter</b><span>评论门槛低</span></td>
@@ -131,7 +168,7 @@
               <td class="num">212</td>
               <td>stainless steel:2; silicone:2; plastic:1<span>1:7; 2:1; 4:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>hose splitter manifold</b><span>供给少但需求可见</span></td>
@@ -143,7 +180,7 @@
               <td class="num">473</td>
               <td>-<span>1:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>4-way hose splitter</b><span>需要供应商和评论验证</span></td>
@@ -155,7 +192,7 @@
               <td class="num">19</td>
               <td>plastic:1<span>1:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>electric timer</b><span>供给少但需求可见；评分改良空间</span></td>
@@ -167,7 +204,7 @@
               <td class="num">36,816</td>
               <td>plastic:1<span>1:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>manual timer</b><span>供给少但需求可见</span></td>
@@ -179,7 +216,7 @@
               <td class="num">1,089</td>
               <td>plastic:4<span>1:4</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>hose pipe fitting</b><span>供给少但需求可见</span></td>
@@ -191,7 +228,7 @@
               <td class="num">18,724</td>
               <td>-<span>1:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>outdoor living</b><span>需要供应商和评论验证</span></td>
@@ -203,7 +240,7 @@
               <td class="num">27</td>
               <td>-<span>1:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>hose connector/adapter</b><span>需要供应商和评论验证</span></td>
@@ -254,8 +291,16 @@
 
     <section>
       <h2>代表产品图片</h2>
-      <div class="gallery">
-            <article class="tile">
+      <div class="gallery-toolbar">
+        <select id="galleryForm" aria-label="按产品形态筛选">
+          <option value="">全部产品形态</option>
+          <option value="3-way hose splitter">3-way hose splitter</option><option value="garden hose splitter">garden hose splitter</option><option value="2-way hose splitter">2-way hose splitter</option><option value="hose splitter manifold">hose splitter manifold</option><option value="4-way hose splitter">4-way hose splitter</option>
+        </select>
+        <input id="gallerySearch" type="search" placeholder="搜索 ASIN / 标题 / 材质" aria-label="搜索代表产品">
+        <span class="gallery-count" id="galleryCount"></span>
+      </div>
+      <div class="gallery" id="productGallery">
+            <article class="tile" data-gallery-item data-form="3-way hose splitter" data-search="b0fhbmg2b3 3 way hose splitter, heavy duty full flow garden water hose bib spigot splitter, brass rust and freeze resistant outdoor faucet splitter, t adapter connector with 3/4 - inch ght thread （red）  3-way hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0FHBMG2B3" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FHBMG2B3</b>
@@ -263,9 +308,9 @@
               </a>
               <p>3-way hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0fhbms2g2 hose splitter 2 way heavy duty, full flow garden hose splitter with 2 long metal handles, brass rust and freeze resistant water hose bib splitter, t adapter connector with 3/4 - inch ght thread（black）  garden hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0FHBMS2G2" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FHBMS2G2</b>
@@ -273,9 +318,9 @@
               </a>
               <p>garden hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="3-way hose splitter" data-search="b0fhbslx9y 3 way hose splitter heavy duty, garden hose splitter with 3 long handle, full flow brass nickel plated water hose t spigot splitter adapter connector, 3/4 - inch ght thread (blue)  3-way hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0FHBSLX9Y" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FHBSLX9Y</b>
@@ -283,19 +328,19 @@
               </a>
               <p>3-way hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="3-way hose splitter" data-search="b0g8yr6g32 zaakwang garden hose splitter, 3 way hose splitter, heavy duty water hose bib spigot splitter, outdoor faucet splitter with shutoff valve, t adapter connector with 3/4 - inch ght thread (green)  3-way hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0G8YR6G32" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/04_B0G8YR6G32.jpg" alt="B0G8YR6G32">
+                <img src="assets/B0FHBMG2B3/04_B0G8YR6G32.jpg" alt="B0G8YR6G32">
                 <b>B0G8YR6G32</b>
                 <span>ZaakWang Garden Hose Splitter, 3 Way Hose Splitter, Heavy Duty Water Ho...</span>
               </a>
               <p>3-way hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0dsz691qn hose splitter 2 way heavy duty brass garden hose splitter with 304 stainless steel long handle outdoor full flow hose splitter connector,y valve 3/4 inch ght thread  garden hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0DSZ691QN" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DSZ691QN</b>
@@ -303,9 +348,9 @@
               </a>
               <p>garden hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0ggbc9c94 garden hose splitter 3 way, heavy duty 304 stainless steel hose splitter with shut-off valves, full flow garden water hose bib spigot splitter, 3/4’’ ght thread outdoor faucet splitter  garden hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0GGBC9C94" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0GGBC9C94</b>
@@ -313,9 +358,9 @@
               </a>
               <p>garden hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="3-way hose splitter" data-search="b0fhjnw2ch garden hose splitter, 3 way hose splitter heavy duty full flow solid brass nickel plated spigot splitter valve with metal handle, outdoor faucet splitter, 3/4 - inch frost resistant hose adapter  3-way hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0FHJNW2CH" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FHJNW2CH</b>
@@ -323,9 +368,9 @@
               </a>
               <p>3-way hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0gs8xqy4k 304 stainless steel garden hose splitter 3 way heavy duty, full flow t valve water hose splitter with 2.1&#x27; extra long handle, lead-free，3/4&#x27; ght thread connector for outdoor spigot faucet  garden hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0GS8XQY4K" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0GS8XQY4K</b>
@@ -333,9 +378,9 @@
               </a>
               <p>garden hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0gl2ppswx hose splitter 2 way heavy duty, full flow garden hose splitter with large easy-turn handle, 3/4 inch ght brass water hose splitter for outdoor faucet, y valve hose bib splitter  garden hose splitter  plastic">
               <a href="https://www.amazon.com/dp/B0GL2PPSWX" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0GL2PPSWX</b>
@@ -343,179 +388,179 @@
               </a>
               <p>garden hose splitter · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="3-way hose splitter" data-search="b0ggn99jp2 rainpoint 3 way hose splitter, 100% metal heavy duty garden hose splitter with 1.9“ extra long handle &amp; individual shut off, 3/4 inch ght thread water hose connector for outdoor spigot faucet (green)  3-way hose splitter  plastic">
               <a href="https://www.amazon.com/dp/B0GGN99JP2" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/10_B0GGN99JP2.jpg" alt="B0GGN99JP2">
+                <img src="assets/B0FHBMG2B3/10_B0GGN99JP2.jpg" alt="B0GGN99JP2">
                 <b>B0GGN99JP2</b>
                 <span>RAINPOINT 3 Way Hose Splitter, 100% Metal Heavy Duty Garden Hose Splitt...</span>
               </a>
               <p>3-way hose splitter · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="2-way hose splitter" data-search="b0f2mjhdss lime 2 way hose splitter heavy duty - metal y garden hose splitter with shutoff valves, brass outdoor faucet adapter for spigot, 3/4 inch ght water hose connector  2-way hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0F2MJHDSS" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/11_B0F2MJHDSS.jpg" alt="B0F2MJHDSS">
+                <img src="assets/B0FHBMG2B3/11_B0F2MJHDSS.jpg" alt="B0F2MJHDSS">
                 <b>B0F2MJHDSS</b>
                 <span>LIME 2 Way Hose Splitter Heavy Duty - Metal Y Garden Hose Splitter with...</span>
               </a>
               <p>2-way hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="hose splitter manifold" data-search="b0dt6vr1mg yayamz garden hose splitter, 3/4” rust and freeze resistant outdoor hose manifold with 3 green extra long handles faucet adapter-heavy duty brass 3-way valve  hose splitter manifold  unknown">
               <a href="https://www.amazon.com/dp/B0DT6VR1MG" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/12_B0DT6VR1MG.jpg" alt="B0DT6VR1MG">
+                <img src="assets/B0FHBMG2B3/12_B0DT6VR1MG.jpg" alt="B0DT6VR1MG">
                 <b>B0DT6VR1MG</b>
                 <span>Yayamz Garden Hose Splitter, 3/4” Rust and Freeze Resistant Outdoor Hos...</span>
               </a>
               <p>hose splitter manifold · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0dzng5glh garden hose splitter 3 way, heavy duty 3-way brass valve garden hose splitter with stainless steel long handle, full flow hose splitter connector, valve 3/4 inch ght thread  garden hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0DZNG5GLH" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/13_B0DZNG5GLH.jpg" alt="B0DZNG5GLH">
+                <img src="assets/B0FHBMG2B3/13_B0DZNG5GLH.jpg" alt="B0DZNG5GLH">
                 <b>B0DZNG5GLH</b>
                 <span>Garden Hose Splitter 3 Way, Heavy Duty 3-Way Brass Valve Garden Hose Sp...</span>
               </a>
               <p>garden hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0ggnf3tf3 rainpoint garden hose splitter 2 way, all metal heavy duty water hose y splitter with 2.05“ extra long side handle &amp; shut off valves, 3/4 inch ght thread connector for outdoor spigot faucet (green)  garden hose splitter  plastic">
               <a href="https://www.amazon.com/dp/B0GGNF3TF3" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/14_B0GGNF3TF3.jpg" alt="B0GGNF3TF3">
+                <img src="assets/B0FHBMG2B3/14_B0GGNF3TF3.jpg" alt="B0GGNF3TF3">
                 <b>B0GGNF3TF3</b>
                 <span>RAINPOINT Garden Hose Splitter 2 Way, All Metal Heavy Duty Water Hose Y...</span>
               </a>
               <p>garden hose splitter · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0f59sjnww hose splitter 2 way heavy duty, 3/4 inch ght thread y valve connector with stainless steel long handle, full flow garden brass hose splitter for outdoor watering, irrigation, washing  garden hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0F59SJNWW" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/15_B0F59SJNWW.jpg" alt="B0F59SJNWW">
+                <img src="assets/B0FHBMG2B3/15_B0F59SJNWW.jpg" alt="B0F59SJNWW">
                 <b>B0F59SJNWW</b>
                 <span>Hose Splitter 2 Way Heavy Duty, 3/4 Inch GHT Thread Y Valve Connector w...</span>
               </a>
               <p>garden hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0grztrqyk 2 way heavy duty brass garden hose splitter, 360° rotatable y valve, full flow large ball valve, long handle, thickened solid brass, 3/4&#x27; ght thread for outdoor faucet, lawn irrigation, car wash  garden hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0GRZTRQYK" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/16_B0GRZTRQYK.jpg" alt="B0GRZTRQYK">
+                <img src="assets/B0FHBMG2B3/16_B0GRZTRQYK.jpg" alt="B0GRZTRQYK">
                 <b>B0GRZTRQYK</b>
                 <span>2 Way Heavy Duty Brass Garden Hose Splitter, 360° Rotatable Y Valve, Fu...</span>
               </a>
               <p>garden hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="3-way hose splitter" data-search="b0fb93gqwd 3 way hose splitter，garden hose connector and outdoor faucet splitter,with shutoff valves hoses adapter -t water spigot splitter water pipe connector，3/4“ ght thread for home outdoor garden（red blue）  3-way hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0FB93GQWD" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/17_B0FB93GQWD.jpg" alt="B0FB93GQWD">
+                <img src="assets/B0FHBMG2B3/17_B0FB93GQWD.jpg" alt="B0FB93GQWD">
                 <b>B0FB93GQWD</b>
                 <span>3 way Hose Splitter，Garden Hose Connector and Outdoor Faucet Splitter,w...</span>
               </a>
               <p>3-way hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="2-way hose splitter" data-search="b08npl7kh4 dbr tech® heavy duty 2 way hose splitter (premium brass for superior durability), wye garden hoses connector for water spigot faucet bib tap, double shut off valve, y adapter, rust-resistant finish  2-way hose splitter  silicone">
               <a href="https://www.amazon.com/dp/B08NPL7KH4" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/18_B08NPL7KH4.jpg" alt="B08NPL7KH4">
+                <img src="assets/B0FHBMG2B3/18_B08NPL7KH4.jpg" alt="B08NPL7KH4">
                 <b>B08NPL7KH4</b>
                 <span>DBR Tech® Heavy Duty 2 Way Hose Splitter (Premium Brass for Superior Du...</span>
               </a>
               <p>2-way hose splitter · silicone · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="2-way hose splitter" data-search="b0d1vp1fbx underhill garden y hose splitter 2 way, heavy duty bib faucet spigot connector with water shut off valves, metal, 30 gpm, 3/4-inch thread, a-hb2hf  2-way hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0D1VP1FBX" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/19_B0D1VP1FBX.jpg" alt="B0D1VP1FBX">
+                <img src="assets/B0FHBMG2B3/19_B0D1VP1FBX.jpg" alt="B0D1VP1FBX">
                 <b>B0D1VP1FBX</b>
                 <span>Underhill Garden Y Hose Splitter 2 Way, Heavy Duty Bib Faucet Spigot Co...</span>
               </a>
               <p>2-way hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0gjr28jnx 3 way garden hose splitter heavy duty brass, full flow outdoor faucet hose splitter with 3 shut off valves, 3/4&#x27; ght metal hose connector for garden, lawn irrigation, yard watering etc  garden hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0GJR28JNX" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/20_B0GJR28JNX.jpg" alt="B0GJR28JNX">
+                <img src="assets/B0FHBMG2B3/20_B0GJR28JNX.jpg" alt="B0GJR28JNX">
                 <b>B0GJR28JNX</b>
                 <span>3 Way Garden Hose Splitter Heavy Duty Brass, Full Flow Outdoor Faucet H...</span>
               </a>
               <p>garden hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0drg5dc7j rainpoint garden hose splitter, 2 way heavy duty water hose y spigot splitter with shutoff valves, 100% metal body outdoor faucet splitter, 1.9“ extra long metal handle, 3/4“ ght thread (1, green)  garden hose splitter  plastic">
               <a href="https://www.amazon.com/dp/B0DRG5DC7J" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/21_B0DRG5DC7J.jpg" alt="B0DRG5DC7J">
+                <img src="assets/B0FHBMG2B3/21_B0DRG5DC7J.jpg" alt="B0DRG5DC7J">
                 <b>B0DRG5DC7J</b>
                 <span>RAINPOINT Garden Hose Splitter, 2 Way Heavy Duty Water Hose Y Spigot Sp...</span>
               </a>
               <p>garden hose splitter · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b083v1tvm3 twinkle star 4 way heavy duty brass garden hose splitter, hose connector 3/4“, hose spigot adapter with 4 valves  garden hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B083V1TVM3" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/22_B083V1TVM3.jpg" alt="B083V1TVM3">
+                <img src="assets/B0FHBMG2B3/22_B083V1TVM3.jpg" alt="B083V1TVM3">
                 <b>B083V1TVM3</b>
                 <span>Twinkle Star 4 Way Heavy Duty Brass Garden Hose Splitter, Hose Connecto...</span>
               </a>
               <p>garden hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0g42qrxbd hqmpc garden hose y valve splitter with metal long handle brass hose splitter big water flow hole- spigot splitter 2 way 3/4&#x27; ght thread  garden hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0G42QRXBD" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/23_B0G42QRXBD.jpg" alt="B0G42QRXBD">
+                <img src="assets/B0FHBMG2B3/23_B0G42QRXBD.jpg" alt="B0G42QRXBD">
                 <b>B0G42QRXBD</b>
                 <span>HQMPC Garden Hose Y Valve Splitter With Metal Long Handle Brass Hose Sp...</span>
               </a>
               <p>garden hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="3-way hose splitter" data-search="b0dsjm6xy1 304 stainless steel 3 way hose splitter heavy duty, full flow garden hose splitter with metal long handle,lead-free,3/4 inch ght thread water hose connector for outdoor spigot faucet  3-way hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0DSJM6XY1" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/24_B0DSJM6XY1.jpg" alt="B0DSJM6XY1">
+                <img src="assets/B0FHBMG2B3/24_B0DSJM6XY1.jpg" alt="B0DSJM6XY1">
                 <b>B0DSJM6XY1</b>
                 <span>304 Stainless Steel 3 Way Hose Splitter Heavy Duty, Full Flow Garden Ho...</span>
               </a>
               <p>3-way hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="2-way hose splitter" data-search="b0dn1zls4m ebh brass garden hose splitter full flow, outdoor faucet heavy duty hose splitter 4 way high flow, 3/4-inch multi-angle spout with 4 individual on/off valve and extended handle  2-way hose splitter  silicone">
               <a href="https://www.amazon.com/dp/B0DN1ZLS4M" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/25_B0DN1ZLS4M.jpg" alt="B0DN1ZLS4M">
+                <img src="assets/B0FHBMG2B3/25_B0DN1ZLS4M.jpg" alt="B0DN1ZLS4M">
                 <b>B0DN1ZLS4M</b>
                 <span>EBH Brass Garden Hose Splitter Full Flow, Outdoor Faucet Heavy Duty Hos...</span>
               </a>
               <p>2-way hose splitter · silicone · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="4-way hose splitter" data-search="b0gjk9ttxw love is war 4 way hose splitter, high-flow heavy brass garden hose splitter,4 way faucet hose splitter, 3/4&#x27;, hose spigot adapter with 4 valves  4-way hose splitter  plastic">
               <a href="https://www.amazon.com/dp/B0GJK9TTXW" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/26_B0GJK9TTXW.jpg" alt="B0GJK9TTXW">
+                <img src="assets/B0FHBMG2B3/26_B0GJK9TTXW.jpg" alt="B0GJK9TTXW">
                 <b>B0GJK9TTXW</b>
                 <span>Love Is War 4 Way Hose Splitter, High-Flow Heavy Brass Garden Hose Spli...</span>
               </a>
               <p>4-way hose splitter · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0gcn415rz breeze touch garden hose splitter, brass hose splitter 2 way heavy duty, outdoor water faucet splitter with metal extended handle, outdoor faucet connector for lawn, irrigation &amp; washing  garden hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0GCN415RZ" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0GCN415RZ</b>
@@ -523,29 +568,29 @@
               </a>
               <p>garden hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0d98pnlqw garden hose splitter 2 way heavy duty, outdoor faucet splitter 2 way, solid brass spigot splitter hose y splitter with shutoff valve  garden hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0D98PNLQW" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/28_B0D98PNLQW.jpg" alt="B0D98PNLQW">
+                <img src="assets/B0FHBMG2B3/28_B0D98PNLQW.jpg" alt="B0D98PNLQW">
                 <b>B0D98PNLQW</b>
                 <span>Garden Hose Splitter 2 Way Heavy Duty, Outdoor Faucet Splitter 2 Way, S...</span>
               </a>
               <p>garden hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0g446b6nm hose splitter full flow,cumizon brass 2-way garden hose spliter, heavy duty outdoor faucet splitter hose connector, all metal hose y splitter with big shut off for sprinklers and irrigation systems  garden hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0G446B6NM" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/29_B0G446B6NM.jpg" alt="B0G446B6NM">
+                <img src="assets/B0FHBMG2B3/29_B0G446B6NM.jpg" alt="B0G446B6NM">
                 <b>B0G446B6NM</b>
                 <span>Hose Splitter Full Flow,CUMIZON Brass 2-Way Garden Hose Spliter, Heavy...</span>
               </a>
               <p>garden hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0fnwt8jqs dbr tech® garden hose splitter 2 way | full flow &amp; heavy duty leak-proof brass water divider with dual shut-off valves, y (wye) connector for outdoor faucets, spigots, lawn &amp; rv | industrial-grade  garden hose splitter  plastic">
               <a href="https://www.amazon.com/dp/B0FNWT8JQS" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FNWT8JQS</b>
@@ -553,9 +598,9 @@
               </a>
               <p>garden hose splitter · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0f388f2q5 upgrade brass garden hose splitter 2 way heavy duty y valve with stainless steel long handle,4 leakproof washers,2 connector,1 tape as gift,3/4&#x27; ght thread water hose adapter  garden hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0F388F2Q5" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0F388F2Q5</b>
@@ -563,9 +608,9 @@
               </a>
               <p>garden hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b086txjyx1 hqmpc brass garden hose y valve hose splitter water garden hose adapter 2 way 3/4“ ght thread  garden hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B086TXJYX1" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B086TXJYX1</b>
@@ -573,9 +618,9 @@
               </a>
               <p>garden hose splitter · unknown · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0ff2cy1kb lead-free hose splitter 2 way heavy duty ，304 stainless steel garden hose splitter with long handle，outdoor full flow y valve ，3/4 inch ght thread  garden hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0FF2CY1KB" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0FF2CY1KB</b>
@@ -583,19 +628,19 @@
               </a>
               <p>garden hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0ggng2t8t rainpoint 4 way garden hose splitter, 100% metal heavy duty water hose splitter with individual shut-off valves, 3/4“ ght high flow outdoor faucet splitter, 1.81“ extra long handle (green)  garden hose splitter  plastic">
               <a href="https://www.amazon.com/dp/B0GGNG2T8T" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FHBMG2B3/images/34_B0GGNG2T8T.jpg" alt="B0GGNG2T8T">
+                <img src="assets/B0FHBMG2B3/34_B0GGNG2T8T.jpg" alt="B0GGNG2T8T">
                 <b>B0GGNG2T8T</b>
                 <span>RAINPOINT 4 Way Garden Hose Splitter, 100% Metal Heavy Duty Water Hose...</span>
               </a>
               <p>garden hose splitter · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0dtkrpfm9 garden hose splitter high flow splitter with swivel elbow connect brass hose splitter with shut off valves 3 way hose bib adapter (with swivel elbow)  garden hose splitter  stainless steel">
               <a href="https://www.amazon.com/dp/B0DTKRPFM9" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DTKRPFM9</b>
@@ -603,9 +648,9 @@
               </a>
               <p>garden hose splitter · stainless steel · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="garden hose splitter" data-search="b0dpfmw62m ataosgr garden hose splitter 3 way, outdoor faucet splitter,tap adapter, hose adapter with 3 valves garden hose connector for garden outdoor home, orange  garden hose splitter  unknown">
               <a href="https://www.amazon.com/dp/B0DPFMW62M" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0DPFMW62M</b>
@@ -614,12 +659,38 @@
               <p>garden hose splitter · unknown · 1 pack</p>
             </article>
             </div>
+      <div class="gallery-empty" id="galleryEmpty" hidden>没有匹配的产品。</div>
     </section>
 
-    <section>
-      <h2>主图总览</h2>
-      <img class="contact" src="../../research/B0FHBMG2B3/image_contact_sheet.jpg" alt="B0FHBMG2B3 image contact sheet">
-    </section>
+
   </main>
+  <script>
+    (() => {
+      const formSelect = document.getElementById("galleryForm");
+      const searchInput = document.getElementById("gallerySearch");
+      const count = document.getElementById("galleryCount");
+      const empty = document.getElementById("galleryEmpty");
+      const tiles = Array.from(document.querySelectorAll("[data-gallery-item]"));
+
+      function filterGallery() {
+        const selectedForm = formSelect.value;
+        const query = searchInput.value.trim().toLowerCase();
+        let visible = 0;
+        tiles.forEach(tile => {
+          const matchesForm = !selectedForm || tile.dataset.form === selectedForm;
+          const matchesQuery = !query || tile.dataset.search.includes(query);
+          const show = matchesForm && matchesQuery;
+          tile.hidden = !show;
+          if (show) visible += 1;
+        });
+        count.textContent = `显示 ${visible} / ${tiles.length} 个`;
+        empty.hidden = visible !== 0;
+      }
+
+      formSelect.addEventListener("change", filterGallery);
+      searchInput.addEventListener("input", filterGallery);
+      filterGallery();
+    })();
+  </script>
 </body>
 </html>

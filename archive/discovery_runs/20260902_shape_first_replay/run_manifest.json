@@ -1,0 +1,21 @@
+{
+  "run_id": "20260902_shape_first_replay",
+  "strategy": "category",
+  "data_provider": "mcp_replay",
+  "status": "success",
+  "started_at": "2026-09-02T22:38:06",
+  "finished_at": "2026-09-02T22:38:11",
+  "category_tree_source": "archived_run",
+  "selected_categories": 100,
+  "successful_categories": 100,
+  "empty_categories": 0,
+  "failed_categories": 0,
+  "products_examined": 9606,
+  "eligible_candidates_before_dedupe": 680,
+  "eligible_candidates_after_dedupe": 677,
+  "candidate_count": 200,
+  "represented_categories": 63,
+  "failed_category_details": [],
+  "provider_call_count": 0,
+  "replay_source": "archive/discovery_runs/20260901_214146"
+}

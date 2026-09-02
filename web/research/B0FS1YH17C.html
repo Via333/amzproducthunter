@@ -29,6 +29,11 @@
     td span { display: block; font-size: 12px; margin-top: 2px; }
     .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .gallery { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    .gallery-toolbar { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr) auto; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .gallery-toolbar select, .gallery-toolbar input { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #cbd3df; border-radius: 7px; padding: 10px 11px; background: #fff; color: #172033; font: inherit; }
+    .gallery-count { color: #657184; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .gallery-empty { padding: 28px 12px; border: 1px dashed #cbd3df; border-radius: 8px; text-align: center; color: #657184; background: #f9fafb; }
+    [hidden] { display: none !important; }
     .tile { border: 1px solid #d9dee8; border-radius: 8px; background: #fff; overflow: hidden; }
     .tile img, .image-empty { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #f7f8fa; border-bottom: 1px solid #d9dee8; }
     .image-empty { display: grid; place-items: center; color: #657184; }
@@ -43,7 +48,35 @@
     .decision span { color: #657184; }
     .decision.rejected { border-left-color: #c83d3d; background: #fff8f7; }
     .decision.rejected strong { color: #a62828; }
-    @media (max-width: 900px) { .top { display: block; } .kpis, .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .summary-grid article { border-left: 3px solid #d9dee8; padding-left: 14px; }
+    .summary-grid h3 { margin: 0 0 8px; font-size: 15px; }
+    .summary-grid ul { margin: 0; padding-left: 18px; }
+    .summary-grid li { margin: 0 0 7px; color: #405066; }
+    .verdict-panel { display: flex; justify-content: space-between; gap: 24px; border-left: 4px solid #d99a18; }
+    .eyebrow { color: #657184; font-size: 12px; font-weight: 750; }
+    .score-box { min-width: 120px; text-align: right; }
+    .score-box span, .score-box small { display: block; color: #657184; }
+    .score-box strong { display: block; font-size: 40px; line-height: 1.1; }
+    .analysis-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; padding: 0; overflow: hidden; }
+    .analysis-grid article { padding: 18px; border-right: 1px solid #d9dee8; border-bottom: 1px solid #d9dee8; }
+    .analysis-grid article:nth-child(2n) { border-right: 0; }
+    .analysis-grid ul, .action-list { margin: 8px 0 0; padding-left: 20px; }
+    .analysis-grid li, .action-list li { margin: 6px 0; }
+    .warning { padding: 10px 12px; border-left: 3px solid #d99a18; background: #fff8e8; color: #6d4a06; }
+    .reference-links { display: flex; gap: 10px; flex-wrap: wrap; }
+    @media (max-width: 900px) {
+      .top { display: block; }
+      .kpis, .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analysis-grid, .summary-grid { grid-template-columns: minmax(0, 1fr); }
+      .analysis-grid article { border-right: 0; }
+      .verdict-panel { display: block; }
+      .decision { display: block; }
+      .decision span { display: block; margin-top: 6px; }
+      .score-box { text-align: left; margin-top: 12px; }
+      .gallery-toolbar { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 560px) { .kpis, .gallery { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body>
@@ -61,6 +94,10 @@
     </div>
 
     <section class="decision rejected"><strong>当前结论：已淘汰</strong><span>淘汰：直接食品接触，材料安全/迁移测试等合规资质风险</span></section>
+
+
+
+
 
     <section>
       <div class="kpis">
@@ -107,7 +144,7 @@
               <td class="num">100</td>
               <td>beeswax:10; fabric/waxed-looking:9; cotton:1<span>2:18; 1:2; 3:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>beeswax bread bag + bowl cover</b><span>需要供应商和评论验证</span></td>
@@ -119,7 +156,7 @@
               <td class="num">142</td>
               <td>fabric/waxed-looking:2<span>2:1; 1:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>banneton/proofing kit</b><span>供给少但需求可见</span></td>
@@ -131,7 +168,7 @@
               <td class="num">810</td>
               <td>cane basket/cloth:2<span>1:2</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>disposable bakery bread bag</b><span>评论门槛低</span></td>
@@ -143,7 +180,7 @@
               <td class="num">278</td>
               <td>paper with clear window:3; paper:1; kraft paper:1<span>100:2; 1:1; 120:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>beeswax wrap</b><span>供给少但需求可见；多件套可能仍有切入空间</span></td>
@@ -155,7 +192,7 @@
               <td class="num">2,289</td>
               <td>wrap sheet:2; beeswax:1<span>1:2; 9:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>plastic bread bag</b><span>供给少但需求可见</span></td>
@@ -167,7 +204,7 @@
               <td class="num">4,853</td>
               <td>plastic:1<span>100:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>reusable food storage bag</b><span>供给少但需求可见；2-pack 已是主流，需靠材质/清洗/尺寸差异化</span></td>
@@ -179,7 +216,7 @@
               <td class="num">1,967</td>
               <td>plastic:3<span>2:2; 1:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>linen/cotton bread bag</b><span>供给少但需求可见；评论门槛低</span></td>
@@ -191,7 +228,7 @@
               <td class="num">181</td>
               <td>linen:1<span>1:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>beeswax wrap set</b><span>需要供应商和评论验证</span></td>
@@ -203,7 +240,7 @@
               <td class="num">41</td>
               <td>wrap sheets:1<span>9:1</span></td>
             </tr>
-            
+
 
             <tr>
               <td><b>banneton/proofing</b><span>需要供应商和评论验证</span></td>
@@ -229,210 +266,210 @@
         <tr>
           <td><b>beeswax bread bag</b><span>delight · positive</span></td>
           <td>performance</td><td class="num">67</td><td>family; older_adult; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>Absolutely perfect. Keeps my freshly made sourdough tasting great all week. Fits a large boule well and super cute. Wou...<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
+          <td>Absolutely perfect. Keeps my freshly made sourdough tasting great all week. Fits a large boule well and super cute. Wou...<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>delight · positive</span></td>
           <td>size_fit</td><td class="num">60</td><td>beginner; family; older_adult; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>I have 4 of these after ordering my first. Beautiful craftmanship and easy to fit any size loaf. Very durable and wipes...<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FS1YH17C</span></td>
+          <td>I have 4 of these after ordering my first. Beautiful craftmanship and easy to fit any size loaf. Very durable and wipes...<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>delight · positive</span></td>
           <td>material_quality</td><td class="num">53</td><td>beginner; family; older_adult; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>I love these for my home made bread. U get two. The zipper is decent Quality its sturdy and the seams are double stictc...<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
+          <td>I love these for my home made bread. U get two. The zipper is decent Quality its sturdy and the seams are double stictc...<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>size_fit</td><td class="num">47</td><td>beginner; family; professional</td><td>daily_home; gift; outdoor; storage; travel</td>
-          <td>These are really nice bread bags. They could not be more simple and straight forward to use - can fit a large loaf or s...<span>B0CPLQGT7J; B0CW1YDB1M; B0D2TN5DB6; B0DDB3XNZ4; B0F3PXCKT3; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ; B0GTL8YDT2</span></td>
+          <td>These are really nice bread bags. They could not be more simple and straight forward to use - can fit a large loaf or s...<span>同主题涉及 ASIN：B0CPLQGT7J; B0CW1YDB1M; B0D2TN5DB6; B0DDB3XNZ4; B0F3PXCKT3; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ; B0GTL8YDT2</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>uncategorized · positive</span></td>
           <td>performance</td><td class="num">43</td><td>beginner; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>Keeps your bread products fresh much longer!<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
+          <td>Keeps your bread products fresh much longer!<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>material_quality</td><td class="num">43</td><td>beginner; family; professional</td><td>daily_home; gift; outdoor; storage; travel</td>
-          <td>These bags are amazing. They are reusable, beeswax bags for sourdough bread. These are much better to use than plastic...<span>B0CPLQGT7J; B0CW1YDB1M; B0D2TN5DB6; B0DDB3XNZ4; B0F3Q572JP; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ; B0GTL8YDT2</span></td>
+          <td>These bags are amazing. They are reusable, beeswax bags for sourdough bread. These are much better to use than plastic...<span>同主题涉及 ASIN：B0CPLQGT7J; B0CW1YDB1M; B0D2TN5DB6; B0DDB3XNZ4; B0F3Q572JP; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ; B0GTL8YDT2</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>delight · positive</span></td>
           <td>ease_of_use</td><td class="num">39</td><td>family; older_adult; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>I have 4 of these after ordering my first. Beautiful craftmanship and easy to fit any size loaf. Very durable and wipes...<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
+          <td>I have 4 of these after ordering my first. Beautiful craftmanship and easy to fit any size loaf. Very durable and wipes...<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>performance</td><td class="num">39</td><td>beginner; family; professional</td><td>daily_home; gift; outdoor; storage; travel</td>
-          <td>These bags are amazing. They are reusable, beeswax bags for sourdough bread. These are much better to use than plastic...<span>B0CPLQGT7J; B0CW1YDB1M; B0D2TN5DB6; B0DDB3XNZ4; B0F3PXCKT3; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GF9R6MZY; B0GK76QQPJ; B0GTL8YDT2</span></td>
+          <td>These bags are amazing. They are reusable, beeswax bags for sourdough bread. These are much better to use than plastic...<span>同主题涉及 ASIN：B0CPLQGT7J; B0CW1YDB1M; B0D2TN5DB6; B0DDB3XNZ4; B0F3PXCKT3; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GF9R6MZY; B0GK76QQPJ; B0GTL8YDT2</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>expected · positive</span></td>
           <td>material_quality</td><td class="num">36</td><td>family; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>Keeps my fresh baked breads much longer<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
+          <td>Keeps my fresh baked breads much longer<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>expected · positive</span></td>
           <td>performance</td><td class="num">35</td><td>family; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>Keeps my fresh baked breads much longer<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FS1YH17C</span></td>
+          <td>Keeps my fresh baked breads much longer<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>expected · positive</span></td>
           <td>size_fit</td><td class="num">35</td><td>family; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>Keeps my fresh baked breads much longer<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
+          <td>Keeps my fresh baked breads much longer<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>size_fit</td><td class="num">32</td><td>beginner; family; professional</td><td>daily_home; gift; storage</td>
-          <td>I was pleasantly surprised at how big the bags are! Plenty of room for a full loaf of bread. It has a nice zipper with...<span>B0CPLQGT7J; B0D2TN5DB6; B0DDB3XNZ4; B0F3PXCKT3; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GD7M6Z5R; B0GK76QQPJ</span></td>
+          <td>I was pleasantly surprised at how big the bags are! Plenty of room for a full loaf of bread. It has a nice zipper with...<span>同主题涉及 ASIN：B0CPLQGT7J; B0D2TN5DB6; B0DDB3XNZ4; B0F3PXCKT3; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GD7M6Z5R; B0GK76QQPJ</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>material_quality</td><td class="num">31</td><td>beginner; family; professional</td><td>daily_home; gift; storage</td>
-          <td>Quality product that works well<span>B0CPLQGT7J; B0DDB3XNZ4; B0F3PXCKT3; B0F3Q2X5RD; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GD7M6Z5R; B0GK76QQPJ</span></td>
+          <td>Quality product that works well<span>同主题涉及 ASIN：B0CPLQGT7J; B0DDB3XNZ4; B0F3PXCKT3; B0F3Q2X5RD; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GD7M6Z5R; B0GK76QQPJ</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>ease_of_use</td><td class="num">30</td><td>beginner; family; professional</td><td>daily_home; gift; outdoor; storage; travel</td>
-          <td>These bags are amazing. They are reusable, beeswax bags for sourdough bread. These are much better to use than plastic...<span>B0CPLQGT7J; B0DDB3XNZ4; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ</span></td>
+          <td>These bags are amazing. They are reusable, beeswax bags for sourdough bread. These are much better to use than plastic...<span>同主题涉及 ASIN：B0CPLQGT7J; B0DDB3XNZ4; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>delight · positive</span></td>
           <td>cleaning_maintenance</td><td class="num">29</td><td>family; older_adult; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>I have 4 of these after ordering my first. Beautiful craftmanship and easy to fit any size loaf. Very durable and wipes...<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
+          <td>I have 4 of these after ordering my first. Beautiful craftmanship and easy to fit any size loaf. Very durable and wipes...<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>expected · positive</span></td>
           <td>cleaning_maintenance</td><td class="num">28</td><td>family; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>Nice bread bags. Easy to open and clean when needed.<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
+          <td>Nice bread bags. Easy to open and clean when needed.<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>reusable food storage bag</b><span>delight · positive</span></td>
           <td>performance</td><td class="num">28</td><td>family; professional</td><td>daily_home; storage; travel</td>
-          <td>I love how easy to clean this bread bag is. It keeps my sourdough bread fresher for longer.<span>B09N3M4BDJ; B0DYF8MC26</span></td>
+          <td>I love how easy to clean this bread bag is. It keeps my sourdough bread fresher for longer.<span>同主题涉及 ASIN：B09N3M4BDJ; B0DYF8MC26</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>ease_of_use</td><td class="num">27</td><td>beginner; family; professional</td><td>daily_home; gift; storage</td>
-          <td>I was pleasantly surprised at how big the bags are! Plenty of room for a full loaf of bread. It has a nice zipper with...<span>B0CPLQGT7J; B0D2TN5DB6; B0F3PXCKT3; B0F3Q2X5RD; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ</span></td>
+          <td>I was pleasantly surprised at how big the bags are! Plenty of room for a full loaf of bread. It has a nice zipper with...<span>同主题涉及 ASIN：B0CPLQGT7J; B0D2TN5DB6; B0F3PXCKT3; B0F3Q2X5RD; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>delight · positive</span></td>
           <td>durability</td><td class="num">26</td><td>family; older_adult; professional</td><td>daily_home; gift; storage; travel</td>
-          <td>I have 4 of these after ordering my first. Beautiful craftmanship and easy to fit any size loaf. Very durable and wipes...<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
+          <td>I have 4 of these after ordering my first. Beautiful craftmanship and easy to fit any size loaf. Very durable and wipes...<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>uncategorized · positive</span></td>
           <td>size_fit</td><td class="num">24</td><td>beginner; professional</td><td>daily_home</td>
-          <td>Keeps your bread products fresh much longer!<span>B0F3HKCFZS; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
+          <td>Keeps your bread products fresh much longer!<span>同主题涉及 ASIN：B0F3HKCFZS; B0FHH693Z4; B0FHWFDZ39; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>expected · positive</span></td>
           <td>ease_of_use</td><td class="num">23</td><td>professional</td><td>daily_home; gift; storage; travel</td>
-          <td>Nice bread bags. Easy to open and clean when needed.<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FS1YH17C</span></td>
+          <td>Nice bread bags. Easy to open and clean when needed.<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax wrap</b><span>uncategorized · positive</span></td>
           <td>performance</td><td class="num">21</td><td>professional</td><td>daily_home; gift; storage</td>
-          <td>Works great! Keeps my sourdough bread fresh and crispy on the outside.<span>B00GK3QTCE</span></td>
+          <td>Works great! Keeps my sourdough bread fresh and crispy on the outside.<span>同主题涉及 ASIN：B00GK3QTCE</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>cleaning_maintenance</td><td class="num">20</td><td>beginner; family; professional</td><td>daily_home; gift; outdoor; storage; travel</td>
-          <td>These bread bags are perfect for the bread baker. They keep the homemade bread at the right texture because of the bees...<span>B0CPLQGT7J; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ</span></td>
+          <td>These bread bags are perfect for the bread baker. They keep the homemade bread at the right texture because of the bees...<span>同主题涉及 ASIN：B0CPLQGT7J; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>performance</td><td class="num">20</td><td>beginner; family; professional</td><td>daily_home; gift; storage</td>
-          <td>Quality product that works well<span>B0DDB3XNZ4; B0F3PXCKT3; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0GK76QQPJ</span></td>
+          <td>Quality product that works well<span>同主题涉及 ASIN：B0DDB3XNZ4; B0F3PXCKT3; B0F3QFGWMM; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0GK76QQPJ</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>beeswax bread bag</b><span>uncategorized · negative</span></td>
           <td>performance</td><td class="num">19</td><td>professional</td><td>daily_home; storage</td>
-          <td>Not the right product. The wax is on inside not woven into cotton bag. Bread turns moldy in 4 days<span>B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FS1YH17C</span></td>
+          <td>Not the right product. The wax is on inside not woven into cotton bag. Bread turns moldy in 4 days<span>同主题涉及 ASIN：B0F3HKCFZS; B0FB84KH2X; B0FHH693Z4; B0FS1YH17C</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>reusable food storage bag</b><span>uncategorized · negative</span></td>
           <td>performance</td><td class="num">19</td><td>beginner; professional</td><td>daily_home; storage</td>
-          <td>Good plastic type of bags. Do not keep bread longer, has a tendency to cause mold due to the heat. Good bags to freeze...<span>B09N3M4BDJ</span></td>
+          <td>Good plastic type of bags. Do not keep bread longer, has a tendency to cause mold due to the heat. Good bags to freeze...<span>同主题涉及 ASIN：B09N3M4BDJ</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>uncategorized · positive</span></td>
           <td>other</td><td class="num">19</td><td>-</td><td>daily_home; storage</td>
-          <td>Really nice bread bags. I will update once used more.<span>B0CPLQGT7J; B0F3PXCKT3; B0FB8B4KFQ; B0GTRBFJTB</span></td>
+          <td>Really nice bread bags. I will update once used more.<span>同主题涉及 ASIN：B0CPLQGT7J; B0F3PXCKT3; B0FB8B4KFQ; B0GTRBFJTB</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>reusable food storage bag</b><span>delight · positive</span></td>
           <td>cleaning_maintenance</td><td class="num">18</td><td>family; professional</td><td>daily_home; storage</td>
-          <td>I love how easy to clean this bread bag is. It keeps my sourdough bread fresher for longer.<span>B09N3M4BDJ; B0DYF8MC26</span></td>
+          <td>I love how easy to clean this bread bag is. It keeps my sourdough bread fresher for longer.<span>同主题涉及 ASIN：B09N3M4BDJ; B0DYF8MC26</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>expected · positive</span></td>
           <td>cleaning_maintenance</td><td class="num">18</td><td>beginner; family; professional</td><td>daily_home; gift; storage</td>
-          <td>I was pleasantly surprised at how big the bags are! Plenty of room for a full loaf of bread. It has a nice zipper with...<span>B0CPLQGT7J; B0F3PXCKT3; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ</span></td>
+          <td>I was pleasantly surprised at how big the bags are! Plenty of room for a full loaf of bread. It has a nice zipper with...<span>同主题涉及 ASIN：B0CPLQGT7J; B0F3PXCKT3; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ</span></td>
         </tr>
-        
+
 
         <tr>
           <td><b>unknown</b><span>delight · positive</span></td>
           <td>durability</td><td class="num">18</td><td>beginner; family; professional</td><td>daily_home; gift; storage</td>
-          <td>These are really nice bread bags. They could not be more simple and straight forward to use - can fit a large loaf or s...<span>B0CPLQGT7J; B0CW1YDB1M; B0D2TN5DB6; B0DDB3XNZ4; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ</span></td>
+          <td>These are really nice bread bags. They could not be more simple and straight forward to use - can fit a large loaf or s...<span>同主题涉及 ASIN：B0CPLQGT7J; B0CW1YDB1M; B0D2TN5DB6; B0DDB3XNZ4; B0FB8B4KFQ; B0FK16H33Y; B0FS1PFL3X; B0G4VNKV69; B0GK76QQPJ</span></td>
         </tr>
         </tbody>
         </table>
@@ -464,7 +501,7 @@
               <td class="num">197</td>
               <td class="num">74</td>
             </tr>
-            
+
 
             <tr>
               <td><a href="https://www.amazon.com/dp/B0CW1ZBP6P" target="_blank" rel="noreferrer">B0CW1ZBP6P</a><span>50 Pcs Bread Bags for Homemade Bread, Sourdough Paper With Window, 50...</span></td>
@@ -473,7 +510,7 @@
               <td class="num">4,098</td>
               <td class="num">100</td>
             </tr>
-            
+
 
             <tr>
               <td><a href="https://www.amazon.com/dp/B0DPJSTLH5" target="_blank" rel="noreferrer">B0DPJSTLH5</a><span>Sourdough Proofing Basket Gift Set, 9“ Round and 10“ Oval Banneton Br...</span></td>
@@ -482,7 +519,7 @@
               <td class="num">1,297</td>
               <td class="num">100</td>
             </tr>
-            
+
 
             <tr>
               <td><a href="https://www.amazon.com/dp/B09N3M4BDJ" target="_blank" rel="noreferrer">B09N3M4BDJ</a><span>GRIN BY GRIN- Bread Bags 2 Pack Reusable Zipper Bags for Homemade Bre...</span></td>
@@ -491,7 +528,7 @@
               <td class="num">1,967</td>
               <td class="num">100</td>
             </tr>
-            
+
 
             <tr>
               <td><a href="https://www.amazon.com/dp/B00GK3QTCE" target="_blank" rel="noreferrer">B00GK3QTCE</a><span>Bee‘s Wrap Beeswax Wraps for Bread - Beeswax Bread Wrap for Sourdough...</span></td>
@@ -500,7 +537,7 @@
               <td class="num">3,186</td>
               <td class="num">100</td>
             </tr>
-            
+
 
             <tr>
               <td><a href="https://www.amazon.com/dp/B0DYF8MC26" target="_blank" rel="noreferrer">B0DYF8MC26</a><span>2 Packs Safe Double-Layer Fresh-Keeping Bread Storage Container for H...</span></td>
@@ -509,7 +546,7 @@
               <td class="num">17</td>
               <td class="num">13</td>
             </tr>
-            
+
 
             <tr>
               <td><a href="https://www.amazon.com/dp/B0F3HKCFZS" target="_blank" rel="noreferrer">B0F3HKCFZS</a><span>Bread Bags for Homemade Bread - 2 Packs XL Reusable Organic Beeswax L...</span></td>
@@ -518,7 +555,7 @@
               <td class="num">248</td>
               <td class="num">100</td>
             </tr>
-            
+
 
             <tr>
               <td><a href="https://www.amazon.com/dp/B0FHWFDZ39" target="_blank" rel="noreferrer">B0FHWFDZ39</a><span>Beeswax Sourdough Bread Bags for Homemade Bread, 2 Packs XL Reusable...</span></td>
@@ -527,7 +564,7 @@
               <td class="num">328</td>
               <td class="num">99</td>
             </tr>
-            
+
 
             <tr>
               <td><a href="https://www.amazon.com/dp/B0FB84KH2X" target="_blank" rel="noreferrer">B0FB84KH2X</a><span>2 PACK Beeswax Sourdough Bread Bags for Homemade Bread, Reusable Cott...</span></td>
@@ -536,7 +573,7 @@
               <td class="num">100</td>
               <td class="num">49</td>
             </tr>
-            
+
 
             <tr>
               <td><a href="https://www.amazon.com/dp/B0FHH693Z4" target="_blank" rel="noreferrer">B0FHH693Z4</a><span>2 Pack Beeswax Bread Bags with Zipper, XL(13x17in) Sourdough Bread St...</span></td>
@@ -552,228 +589,236 @@
 
     <section>
       <h2>代表产品图片</h2>
-      <div class="gallery">
-            <article class="tile">
+      <div class="gallery-toolbar">
+        <select id="galleryForm" aria-label="按产品形态筛选">
+          <option value="">全部产品形态</option>
+          <option value="beeswax bread bag">beeswax bread bag</option><option value="beeswax bread bag + bowl cover">beeswax bread bag + bowl cover</option><option value="reusable food storage bag">reusable food storage bag</option><option value="linen/cotton bread bag">linen/cotton bread bag</option><option value="disposable bakery bread bag">disposable bakery bread bag</option><option value="beeswax wrap set">beeswax wrap set</option><option value="beeswax wrap">beeswax wrap</option><option value="plastic bread bag">plastic bread bag</option><option value="banneton/proofing kit">banneton/proofing kit</option>
+        </select>
+        <input id="gallerySearch" type="search" placeholder="搜索 ASIN / 标题 / 材质" aria-label="搜索代表产品">
+        <span class="gallery-count" id="galleryCount"></span>
+      </div>
+      <div class="gallery" id="productGallery">
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0fs1yh17c premium beeswax bread bags for sourdough - 2 packs xl reusable organic beeswax linen cotton sourdough bag, homesteading essentials sourdough bags with zip to keep fresh bread bags for homemade bread beeswax bread bag beeswax bread bag fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0FS1YH17C" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/01_B0FS1YH17C.jpg" alt="B0FS1YH17C">
+                <img src="assets/B0FS1YH17C/01_B0FS1YH17C.jpg" alt="B0FS1YH17C">
                 <b>B0FS1YH17C</b>
                 <span>Premium Beeswax Bread Bags for Sourdough - 2 Packs XL Reusable Organic...</span>
               </a>
               <p>beeswax bread bag · fabric/waxed-looking · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0f3hkcfzs bread bags for homemade bread - 2 packs xl reusable organic beeswax linen cotton sourdough bag, homesteading essentials sourdough bags with sealing zip to keep fresh beeswax bread bag beeswax bread bag fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0F3HKCFZS" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/02_B0F3HKCFZS.jpg" alt="B0F3HKCFZS">
+                <img src="assets/B0FS1YH17C/02_B0F3HKCFZS.jpg" alt="B0F3HKCFZS">
                 <b>B0F3HKCFZS</b>
                 <span>Bread Bags for Homemade Bread - 2 Packs XL Reusable Organic Beeswax Lin...</span>
               </a>
               <p>beeswax bread bag · fabric/waxed-looking · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0fhwfdz39 beeswax sourdough bread bags for homemade bread, 2 packs xl reusable organic beeswax linen cotton sourdough bag, keep loaves fresh longer, homesteading essentials  beeswax bread bag  beeswax">
               <a href="https://www.amazon.com/dp/B0FHWFDZ39" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/03_B0FHWFDZ39.jpg" alt="B0FHWFDZ39">
+                <img src="assets/B0FS1YH17C/03_B0FHWFDZ39.jpg" alt="B0FHWFDZ39">
                 <b>B0FHWFDZ39</b>
                 <span>Beeswax Sourdough Bread Bags for Homemade Bread, 2 Packs XL Reusable Or...</span>
               </a>
               <p>beeswax bread bag · beeswax · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0fb84kh2x 2 pack beeswax sourdough bread bags for homemade bread, reusable cotton beeswax bread bag portable waxed storage all natural bees wax linen bag keep fresh,13’’×17’’, 02 beeswax bread bag beeswax bread bag fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0FB84KH2X" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/04_B0FB84KH2X.jpg" alt="B0FB84KH2X">
+                <img src="assets/B0FS1YH17C/04_B0FB84KH2X.jpg" alt="B0FB84KH2X">
                 <b>B0FB84KH2X</b>
                 <span>2 PACK Beeswax Sourdough Bread Bags for Homemade Bread, Reusable Cotton...</span>
               </a>
               <p>beeswax bread bag · fabric/waxed-looking · 1 visible pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0fhh693z4 2 pack beeswax bread bags with zipper, xl(13x17in) sourdough bread storage for homemade, freezer storage bag to keep fresh, cotton beeswax container, baguette bag with liner kitchen baking (off-white) beeswax bread bag beeswax bread bag fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0FHH693Z4" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/05_B0FHH693Z4.jpg" alt="B0FHH693Z4">
+                <img src="assets/B0FS1YH17C/05_B0FHH693Z4.jpg" alt="B0FHH693Z4">
                 <b>B0FHH693Z4</b>
                 <span>2 Pack Beeswax Bread Bags with Zipper, XL(13x17in) Sourdough Bread Stor...</span>
               </a>
               <p>beeswax bread bag · fabric/waxed-looking · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0f3v3s7wg 2 pack beeswax bread bags for sourdough homemade bread, xl cotton lining sourdough reusable natural beeswax bread storage bag, keep fresh and upgraded large capacity portable-17 x 12.6 inches beeswax bread bag beeswax bread bag fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0F3V3S7WG" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/06_B0F3V3S7WG.jpg" alt="B0F3V3S7WG">
+                <img src="assets/B0FS1YH17C/06_B0F3V3S7WG.jpg" alt="B0F3V3S7WG">
                 <b>B0F3V3S7WG</b>
                 <span>2 Pack Beeswax Bread Bags for Sourdough Homemade Bread, XL Cotton Linin...</span>
               </a>
               <p>beeswax bread bag · fabric/waxed-looking · 1 visible pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0df4xw71q 2 pack beeswax bread bags for homemade, reusable bread bag for sourdough, xl-reusable waxed linen food storage bag to keep sourdough fresh, freezer-safe, eco-friendly (orange&amp;grey) beeswax bread bag beeswax bread bag fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0DF4XW71Q" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/07_B0DF4XW71Q.jpg" alt="B0DF4XW71Q">
+                <img src="assets/B0FS1YH17C/07_B0DF4XW71Q.jpg" alt="B0DF4XW71Q">
                 <b>B0DF4XW71Q</b>
                 <span>2 Pack Beeswax Bread Bags for Homemade, Reusable Bread Bag for Sourdoug...</span>
               </a>
               <p>beeswax bread bag · fabric/waxed-looking · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0gbx8gd6q 2 pack beeswax bread bags for sourdough homemade bread, xl reusable bread storage bag, organic waxed line and linen fabric bread bag for home bakers, picnics work or gift-giving beeswax bread bag beeswax bread bag fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0GBX8GD6Q" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/08_B0GBX8GD6Q.jpg" alt="B0GBX8GD6Q">
+                <img src="assets/B0FS1YH17C/08_B0GBX8GD6Q.jpg" alt="B0GBX8GD6Q">
                 <b>B0GBX8GD6Q</b>
                 <span>2 Pack Beeswax Bread Bags for Sourdough Homemade Bread, XL Reusable Bre...</span>
               </a>
               <p>beeswax bread bag · fabric/waxed-looking · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0gxfsw65c bread bag, beeswax infused cotton bread bag for homemade sourdough, organic beeswax linen, large capacity, keep fresh, environmentally friendly and reusable, l-shaped zipper (2pcs)  beeswax bread bag  beeswax">
               <a href="https://www.amazon.com/dp/B0GXFSW65C" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/09_B0GXFSW65C.jpg" alt="B0GXFSW65C">
+                <img src="assets/B0FS1YH17C/09_B0GXFSW65C.jpg" alt="B0GXFSW65C">
                 <b>B0GXFSW65C</b>
                 <span>Bread Bag, Beeswax Infused Cotton Bread Bag for Homemade Sourdough, Org...</span>
               </a>
               <p>beeswax bread bag · beeswax · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0gj31cvmh jomddems 2 pack beeswax bread bag,sourdough bread bags for homemade bread,reusable extra large organic cotton bread storage bag keeps fresh longer (bread print color)  beeswax bread bag  beeswax">
               <a href="https://www.amazon.com/dp/B0GJ31CVMH" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/10_B0GJ31CVMH.jpg" alt="B0GJ31CVMH">
+                <img src="assets/B0FS1YH17C/10_B0GJ31CVMH.jpg" alt="B0GJ31CVMH">
                 <b>B0GJ31CVMH</b>
                 <span>jomddems 2 Pack beeswax bread bag,sourdough bread bags for homemade bre...</span>
               </a>
               <p>beeswax bread bag · beeswax · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0f1cqljs5 2 pack beeswax bread bags for sourdough,reusable organic linen beeswax bread bag for homemade sourdough 17 x 12.6 inches food storage cloth bag – freezer-friendly &amp; freshness preservation beeswax bread bag beeswax bread bag fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0F1CQLJS5" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/11_B0F1CQLJS5.jpg" alt="B0F1CQLJS5">
+                <img src="assets/B0FS1YH17C/11_B0F1CQLJS5.jpg" alt="B0F1CQLJS5">
                 <b>B0F1CQLJS5</b>
                 <span>2 Pack Beeswax Bread Bags for Sourdough,Reusable Organic Linen Beeswax...</span>
               </a>
               <p>beeswax bread bag · fabric/waxed-looking · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag + bowl cover" data-search="b0fl29bsg5 2 pack beeswax bread bag,17&#x27;×13&#x27;reusable organic bread bags for homemade bread sourdough,linen outer lining and pure cotton beewax inner lining moisture-proof &amp;fresh-preserving with buckle&amp;bowl covers beeswax bread bag + bowl cover beeswax bread bag + bowl cover fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0FL29BSG5" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/12_B0FL29BSG5.jpg" alt="B0FL29BSG5">
+                <img src="assets/B0FS1YH17C/12_B0FL29BSG5.jpg" alt="B0FL29BSG5">
                 <b>B0FL29BSG5</b>
                 <span>2 Pack Beeswax Bread Bag,17&#x27;×13&#x27;Reusable Organic Bread Bags for Homemad...</span>
               </a>
               <p>beeswax bread bag + bowl cover · fabric/waxed-looking · 1 bag + cover pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0fjlj62kl 2-pack reusable beeswax bread bags for sourdough, natural linen bag for homemade bread，extend the insurance period(coffee)  beeswax bread bag  beeswax">
               <a href="https://www.amazon.com/dp/B0FJLJ62KL" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/13_B0FJLJ62KL.jpg" alt="B0FJLJ62KL">
+                <img src="assets/B0FS1YH17C/13_B0FJLJ62KL.jpg" alt="B0FJLJ62KL">
                 <b>B0FJLJ62KL</b>
                 <span>2-Pack Reusable Beeswax Bread Bags for Sourdough, Natural Linen Bag for...</span>
               </a>
               <p>beeswax bread bag · beeswax · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0d83sd1zp reusable beeswax bread bags for sourdough: xl eco-friendly fresh food storage (13x17in, 2 pack) | moisture lock, sustainable homemade bread preservation beeswax bread bag beeswax bread bag fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0D83SD1ZP" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/14_B0D83SD1ZP.jpg" alt="B0D83SD1ZP">
+                <img src="assets/B0FS1YH17C/14_B0D83SD1ZP.jpg" alt="B0D83SD1ZP">
                 <b>B0D83SD1ZP</b>
                 <span>Reusable Beeswax Bread Bags for Sourdough: XL Eco-Friendly Fresh Food S...</span>
               </a>
               <p>beeswax bread bag · fabric/waxed-looking · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0fl1grfxz 3 pack cotton beeswax bread bags for sourdough - 2xl organic reusable with bees wax lining &amp; buckle closure + 1 beeswax wrap, wax cloth bread bags &amp; freezer safe, eco-friendly &amp; easy to clean  beeswax bread bag  beeswax">
               <a href="https://www.amazon.com/dp/B0FL1GRFXZ" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/15_B0FL1GRFXZ.jpg" alt="B0FL1GRFXZ">
+                <img src="assets/B0FS1YH17C/15_B0FL1GRFXZ.jpg" alt="B0FL1GRFXZ">
                 <b>B0FL1GRFXZ</b>
                 <span>3 Pack Cotton Beeswax Bread Bags for Sourdough - 2XL Organic Reusable w...</span>
               </a>
               <p>beeswax bread bag · beeswax · 3 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag + bowl cover" data-search="b0flxgt34c beeswax bread bags for sourdough and homemade bread — 2 xl reusable cotton bread bags + beeswax bowl cover, food-safe bread storage keeps loaves fresh, zero waste bakery gift set beeswax bread bag + bowl cover beeswax bread bag + bowl cover fabric/waxed-looking fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0FLXGT34C" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/16_B0FLXGT34C.jpg" alt="B0FLXGT34C">
+                <img src="assets/B0FS1YH17C/16_B0FLXGT34C.jpg" alt="B0FLXGT34C">
                 <b>B0FLXGT34C</b>
                 <span>Beeswax Bread Bags for Sourdough and Homemade Bread — 2 XL Reusable Cot...</span>
               </a>
               <p>beeswax bread bag + bowl cover · fabric/waxed-looking · 2 bags + cover pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0g78ppcvg beeswax bread bags natural beeswax-lined cotton storage reusable sourdough bread bags bakery essentials freshness keeper for homemade (2 pack)  beeswax bread bag  beeswax">
               <a href="https://www.amazon.com/dp/B0G78PPCVG" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/17_B0G78PPCVG.jpg" alt="B0G78PPCVG">
+                <img src="assets/B0FS1YH17C/17_B0G78PPCVG.jpg" alt="B0G78PPCVG">
                 <b>B0G78PPCVG</b>
                 <span>Beeswax Bread Bags Natural Beeswax-Lined Cotton Storage Reusable Sourdo...</span>
               </a>
               <p>beeswax bread bag · beeswax · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0ff31vy9q 2 pack reusable beeswax bread bags for sourdough, 17inx13in bread bags for homemade bread, xl natural beewax lined bread bag, freezer friendly freshness preservation for food storage  beeswax bread bag  beeswax">
               <a href="https://www.amazon.com/dp/B0FF31VY9Q" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/18_B0FF31VY9Q.jpg" alt="B0FF31VY9Q">
+                <img src="assets/B0FS1YH17C/18_B0FF31VY9Q.jpg" alt="B0FF31VY9Q">
                 <b>B0FF31VY9Q</b>
                 <span>2 Pack Reusable Beeswax Bread Bags for Sourdough, 17inx13in Bread Bags...</span>
               </a>
               <p>beeswax bread bag · beeswax · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0gvjcmtgb reusable beeswax bread bags for homemade bread,2-pack (17“x13“) extra large sourdough storage,heavy-duty cotton artisan loaf keeper to preserve crust and freshness(artisan print &amp; classic graphic)  beeswax bread bag  beeswax">
               <a href="https://www.amazon.com/dp/B0GVJCMTGB" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/19_B0GVJCMTGB.jpg" alt="B0GVJCMTGB">
+                <img src="assets/B0FS1YH17C/19_B0GVJCMTGB.jpg" alt="B0GVJCMTGB">
                 <b>B0GVJCMTGB</b>
                 <span>Reusable Beeswax Bread Bags for Homemade Bread,2-Pack (17“x13“) Extra L...</span>
               </a>
               <p>beeswax bread bag · beeswax · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0h1195wl7 beeswax bread bags, 2pack eazywell goods premium 100% cotton reusable bread storage bag beeswax with zipper, 13 * 17inches wax bag for sourdough homemade bread (2pcs)  beeswax bread bag  cotton">
               <a href="https://www.amazon.com/dp/B0H1195WL7" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/20_B0H1195WL7.jpg" alt="B0H1195WL7">
+                <img src="assets/B0FS1YH17C/20_B0H1195WL7.jpg" alt="B0H1195WL7">
                 <b>B0H1195WL7</b>
                 <span>Beeswax Bread Bags, 2pack Eazywell Goods Premium 100% Cotton Reusable B...</span>
               </a>
               <p>beeswax bread bag · cotton · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0gdfk7nqt lorine beeswax lining bread bags, reusable bread bags for homemade &amp; sourdough bread, large capacity 13 * 17‘‘, moisture lock with zip for bread freshness with sealing (2 pcs) beeswax bread bag beeswax bread bag coated fabric/waxed-looking coated fabric/waxed-looking">
               <a href="https://www.amazon.com/dp/B0GDFK7NQT" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/21_B0GDFK7NQT.jpg" alt="B0GDFK7NQT">
+                <img src="assets/B0FS1YH17C/21_B0GDFK7NQT.jpg" alt="B0GDFK7NQT">
                 <b>B0GDFK7NQT</b>
                 <span>Lorine Beeswax Lining Bread Bags, Reusable Bread Bags for Homemade &amp; So...</span>
               </a>
               <p>beeswax bread bag · coated fabric/waxed-looking · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="reusable food storage bag" data-search="b09n3m4bdj grin by grin- bread bags 2 pack reusable zipper bags for homemade bread sourdough extra large freezer storage  reusable food storage bag  plastic">
               <a href="https://www.amazon.com/dp/B09N3M4BDJ" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/22_B09N3M4BDJ.jpg" alt="B09N3M4BDJ">
+                <img src="assets/B0FS1YH17C/22_B09N3M4BDJ.jpg" alt="B09N3M4BDJ">
                 <b>B09N3M4BDJ</b>
                 <span>GRIN BY GRIN- Bread Bags 2 Pack Reusable Zipper Bags for Homemade Bread...</span>
               </a>
               <p>reusable food storage bag · plastic · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0h28tcb56 lorine beeswax bread bags for homemade bread &amp; sourdough –17“×13.6“ 2pc xl eco-friendly, natural food-safe storage bag to sourdough bags with sealing zip to keep  beeswax bread bag  beeswax">
               <a href="https://www.amazon.com/dp/B0H28TCB56" target="_blank" rel="noreferrer">
                 <div class="image-empty">无图</div>
                 <b>B0H28TCB56</b>
@@ -781,143 +826,169 @@
               </a>
               <p>beeswax bread bag · beeswax · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="linen/cotton bread bag" data-search="b0f8bdjsf9 kibaga beautiful linen bread bag set and proofing cover for homemade sourdough bread - keeps your loaf fresh for days - reusable and easy to clean storage bag, the perfect baking accessories  linen/cotton bread bag  linen">
               <a href="https://www.amazon.com/dp/B0F8BDJSF9" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/24_B0F8BDJSF9.jpg" alt="B0F8BDJSF9">
+                <img src="assets/B0FS1YH17C/24_B0F8BDJSF9.jpg" alt="B0F8BDJSF9">
                 <b>B0F8BDJSF9</b>
                 <span>KIBAGA Beautiful Linen Bread Bag Set and Proofing Cover For Homemade So...</span>
               </a>
               <p>linen/cotton bread bag · linen · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="disposable bakery bread bag" data-search="b0bq5kn672 100 pack large paper bread bags for homemade bread sourdough bags 14&#x27; x 8.3&#x27; x 3.5&#x27; with tin tie tab lock clear front window bakery bag packaging cookie bag with label seal stickers  disposable bakery bread bag  paper">
               <a href="https://www.amazon.com/dp/B0BQ5KN672" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/25_B0BQ5KN672.jpg" alt="B0BQ5KN672">
+                <img src="assets/B0FS1YH17C/25_B0BQ5KN672.jpg" alt="B0BQ5KN672">
                 <b>B0BQ5KN672</b>
                 <span>100 Pack Large Paper Bread Bags for Homemade Bread Sourdough Bags 14&#x27; x...</span>
               </a>
               <p>disposable bakery bread bag · paper · 100 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="disposable bakery bread bag" data-search="b0g2s1b7gr beautiful bread bags for homemade bread - clear window bags keep your sourdough loaves fresh for days &amp; are great for gifting homemade bread - perfectly sized bakery paper packaging for baked goods disposable bakery bread bag disposable bakery bread bag paper with clear window paper with clear window">
               <a href="https://www.amazon.com/dp/B0G2S1B7GR" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/26_B0G2S1B7GR.jpg" alt="B0G2S1B7GR">
+                <img src="assets/B0FS1YH17C/26_B0G2S1B7GR.jpg" alt="B0G2S1B7GR">
                 <b>B0G2S1B7GR</b>
                 <span>Beautiful Bread Bags for Homemade Bread - Clear Window Bags Keep Your S...</span>
               </a>
               <p>disposable bakery bread bag · paper with clear window · many pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="disposable bakery bread bag" data-search="b0fxmf5chn tripho 100 pcs bread bags for homemade bread with clear window &amp; 120 stickers, sourdough bread bags for storage of bread,cookies &amp; snacks, large bakery paper bags disposable bakery bread bag disposable bakery bread bag kraft paper kraft paper">
               <a href="https://www.amazon.com/dp/B0FXMF5CHN" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/27_B0FXMF5CHN.jpg" alt="B0FXMF5CHN">
+                <img src="assets/B0FS1YH17C/27_B0FXMF5CHN.jpg" alt="B0FXMF5CHN">
                 <b>B0FXMF5CHN</b>
                 <span>Tripho 100 Pcs Bread Bags for Homemade Bread with Clear Window &amp; 120 St...</span>
               </a>
               <p>disposable bakery bread bag · kraft paper · 100 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="disposable bakery bread bag" data-search="b0fhcw8zgn moretoes 120 pack large paper bread bags for homemade bread, 13.7x8.3x3.5 inches, sourdough bread bags with tin tie tab and clear front window, includes 144 label seal stickers (brown) disposable bakery bread bag disposable bakery bread bag paper with clear window paper with clear window">
               <a href="https://www.amazon.com/dp/B0FHCW8ZGN" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/28_B0FHCW8ZGN.jpg" alt="B0FHCW8ZGN">
+                <img src="assets/B0FS1YH17C/28_B0FHCW8ZGN.jpg" alt="B0FHCW8ZGN">
                 <b>B0FHCW8ZGN</b>
                 <span>Moretoes 120 Pack Large Paper Bread Bags for Homemade Bread, 13.7x8.3x3...</span>
               </a>
               <p>disposable bakery bread bag · paper with clear window · many pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="reusable food storage bag" data-search="b0dyf8mc26 2 packs safe double-layer fresh-keeping bread storage container for homemade bread and sourdough,eco-friendly plastic-free food storage | moisture lock technology  reusable food storage bag  plastic">
               <a href="https://www.amazon.com/dp/B0DYF8MC26" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/29_B0DYF8MC26.jpg" alt="B0DYF8MC26">
+                <img src="assets/B0FS1YH17C/29_B0DYF8MC26.jpg" alt="B0DYF8MC26">
                 <b>B0DYF8MC26</b>
                 <span>2 Packs Safe Double-Layer Fresh-Keeping Bread Storage Container for Hom...</span>
               </a>
               <p>reusable food storage bag · plastic · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax wrap set" data-search="b0g6f1zq1n beeswax wraps for food – 9 pack reusable beeswax bread bag &amp; sandwich wrap, organic &amp; eco-friendly &amp; sustainable bees paper, perfect alternative to aluminum foil sourdough storage &amp; plastic wrap beeswax wrap set beeswax wrap set wrap sheets wrap sheets">
               <a href="https://www.amazon.com/dp/B0G6F1ZQ1N" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/30_B0G6F1ZQ1N.jpg" alt="B0G6F1ZQ1N">
+                <img src="assets/B0FS1YH17C/30_B0G6F1ZQ1N.jpg" alt="B0G6F1ZQ1N">
                 <b>B0G6F1ZQ1N</b>
                 <span>Beeswax Wraps for Food – 9 Pack Reusable Beeswax Bread Bag &amp; Sandwich W...</span>
               </a>
               <p>beeswax wrap set · wrap sheets · 9 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax wrap" data-search="b00gk3qtce bee‘s wrap beeswax wraps for bread - beeswax bread wrap for sourdough &amp; bread storage - plastic free made in usa reusable natural food wrap - honeycomb beeswax wrap beeswax wrap wrap sheet wrap sheet">
               <a href="https://www.amazon.com/dp/B00GK3QTCE" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/31_B00GK3QTCE.jpg" alt="B00GK3QTCE">
+                <img src="assets/B0FS1YH17C/31_B00GK3QTCE.jpg" alt="B00GK3QTCE">
                 <b>B00GK3QTCE</b>
                 <span>Bee‘s Wrap Beeswax Wraps for Bread - Beeswax Bread Wrap for Sourdough &amp;...</span>
               </a>
               <p>beeswax wrap · wrap sheet · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="reusable food storage bag" data-search="b08cr1g8cs bread bags with ties, reusable,100 clear bags and 100 ties, bread bags for homemade bread and bakery loaf adjustable reusable(100)  reusable food storage bag  plastic">
               <a href="https://www.amazon.com/dp/B08CR1G8CS" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/32_B08CR1G8CS.jpg" alt="B08CR1G8CS">
+                <img src="assets/B0FS1YH17C/32_B08CR1G8CS.jpg" alt="B08CR1G8CS">
                 <b>B08CR1G8CS</b>
                 <span>Bread Bags with Ties, Reusable,100 Clear Bags and 100 Ties, Bread Bags...</span>
               </a>
               <p>reusable food storage bag · plastic · 1 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="plastic bread bag" data-search="b08q7wjc3g reusable plastic bread bags for homemade bread - 100 pack clear bag with ties for an airtight moisture-free preservation and storage - loaf home bakers bakery owners  plastic bread bag  plastic">
               <a href="https://www.amazon.com/dp/B08Q7WJC3G" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/33_B08Q7WJC3G.jpg" alt="B08Q7WJC3G">
+                <img src="assets/B0FS1YH17C/33_B08Q7WJC3G.jpg" alt="B08Q7WJC3G">
                 <b>B08Q7WJC3G</b>
                 <span>Reusable Plastic Bread Bags for Homemade Bread - 100 Pack Clear Bag wit...</span>
               </a>
               <p>plastic bread bag · plastic · 100 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="beeswax bread bag" data-search="b0fwkhp3cm 2-pack reusable beeswax bread bags for sourdough &amp; homemadebread with zipper, 16.5 x 13 inch bread bags for food storage  beeswax bread bag  beeswax">
               <a href="https://www.amazon.com/dp/B0FWKHP3CM" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/34_B0FWKHP3CM.jpg" alt="B0FWKHP3CM">
+                <img src="assets/B0FS1YH17C/34_B0FWKHP3CM.jpg" alt="B0FWKHP3CM">
                 <b>B0FWKHP3CM</b>
                 <span>2-Pack Reusable Beeswax Bread Bags for Sourdough &amp; HomemadeBread with Z...</span>
               </a>
               <p>beeswax bread bag · beeswax · 2 pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="disposable bakery bread bag" data-search="b0cw1zbp6p 50 pcs bread bags for homemade bread, sourdough paper with window, 50% thicker 13.7x8.2x3.7in a large bakery bags used for storage cookies &amp; snacks, 60 cute sealing stickers with ties disposable bakery bread bag disposable bakery bread bag paper with clear window paper with clear window">
               <a href="https://www.amazon.com/dp/B0CW1ZBP6P" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/35_B0CW1ZBP6P.jpg" alt="B0CW1ZBP6P">
+                <img src="assets/B0FS1YH17C/35_B0CW1ZBP6P.jpg" alt="B0CW1ZBP6P">
                 <b>B0CW1ZBP6P</b>
                 <span>50 Pcs Bread Bags for Homemade Bread, Sourdough Paper With Window, 50%...</span>
               </a>
               <p>disposable bakery bread bag · paper with clear window · many pack</p>
             </article>
-            
 
-            <article class="tile">
+
+            <article class="tile" data-gallery-item data-form="banneton/proofing kit" data-search="b0dpjstlh5 sourdough proofing basket gift set, 9“ round and 10“ oval banneton bread baking supplies, sourdough baskets with bread lame, danish whish, bowl scraper, sourdough scraper, and linen liner banneton/proofing kit banneton/proofing kit cane basket/cloth cane basket/cloth">
               <a href="https://www.amazon.com/dp/B0DPJSTLH5" target="_blank" rel="noreferrer">
-                <img src="../../research/B0FS1YH17C/images/36_B0DPJSTLH5.jpg" alt="B0DPJSTLH5">
+                <img src="assets/B0FS1YH17C/36_B0DPJSTLH5.jpg" alt="B0DPJSTLH5">
                 <b>B0DPJSTLH5</b>
                 <span>Sourdough Proofing Basket Gift Set, 9“ Round and 10“ Oval Banneton Brea...</span>
               </a>
               <p>banneton/proofing kit · cane basket/cloth · kit pack</p>
             </article>
             </div>
+      <div class="gallery-empty" id="galleryEmpty" hidden>没有匹配的产品。</div>
     </section>
 
-    <section>
-      <h2>主图总览</h2>
-      <img class="contact" src="../../research/B0FS1YH17C/image_contact_sheet.jpg" alt="B0FS1YH17C image contact sheet">
-    </section>
+    <section><h2>主图总览</h2><img class="contact" src="assets/B0FS1YH17C/image_contact_sheet.jpg" alt="B0FS1YH17C image contact sheet"></section>
   </main>
+  <script>
+    (() => {
+      const formSelect = document.getElementById("galleryForm");
+      const searchInput = document.getElementById("gallerySearch");
+      const count = document.getElementById("galleryCount");
+      const empty = document.getElementById("galleryEmpty");
+      const tiles = Array.from(document.querySelectorAll("[data-gallery-item]"));
+
+      function filterGallery() {
+        const selectedForm = formSelect.value;
+        const query = searchInput.value.trim().toLowerCase();
+        let visible = 0;
+        tiles.forEach(tile => {
+          const matchesForm = !selectedForm || tile.dataset.form === selectedForm;
+          const matchesQuery = !query || tile.dataset.search.includes(query);
+          const show = matchesForm && matchesQuery;
+          tile.hidden = !show;
+          if (show) visible += 1;
+        });
+        count.textContent = `显示 ${visible} / ${tiles.length} 个`;
+        empty.hidden = visible !== 0;
+      }
+
+      formSelect.addEventListener("change", filterGallery);
+      searchInput.addEventListener("input", filterGallery);
+      filterGallery();
+    })();
+  </script>
 </body>
 </html>

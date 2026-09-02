@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import re
 
+from product_exclusions import configured_terms
+
 
 HARD_FRAGILE_PATTERNS = {
     "glass": r"\bglass\b",
@@ -43,6 +45,8 @@ HARD_OVERSIZE_COMBINATIONS = [
     r"\b(?:storage\s+)?(?:box|bin|container|hamper|chest)\b.*\b(?:extra[ -]?large|oversized|jumbo)\b",
     r"\blarge\b.*\b(?:storage\s+)?(?:boxes|bins|baskets|containers|hampers|box|bin|basket|container|hamper|blanket\s+baskets?)\b",
     r"\b(?:storage\s+)?(?:boxes|bins|baskets|containers|hampers|box|bin|basket|container|hamper|blanket\s+baskets?)\b.*\blarge\b",
+    r"\b(?:large\s+capacity|heavy[ -]?duty\s+rolling|rolling)\b.*\b(?:storage\s+(?:rack|organizer)|ball\s+cart|sports\s+equipment\s+organizer)\b",
+    r"\b(?:storage\s+(?:rack|organizer)|ball\s+cart|sports\s+equipment\s+organizer)\b.*\b(?:with\s+wheels|rolling|large\s+capacity)\b",
     r"\b(?:[4-9]|[1-9]\d)[ -]?(?:pack|count|pcs?)\b.*\b(?:storage|closet|classroom)\b.*\b(?:box|bin|basket|cube)s?\b",
     r"\bpack\s+of\s+(?:[4-9]|[1-9]\d)\b.*\b(?:storage\s+)?(?:box|bin|basket|container)s?\b",
     r"\b(?:storage\s+)?(?:box|bin|basket|container)s?\b.*\bpack\s+of\s+(?:[4-9]|[1-9]\d)\b",
@@ -67,6 +71,9 @@ def combined_text(title: object, category: object = "", brand: object = "") -> s
 
 def fragile_signal(title: object, category: object = "", brand: object = "") -> tuple[int, str]:
     text = combined_text(title, category, brand)
+    for term in configured_terms("fragile_terms"):
+        if re.search(rf"\b{re.escape(term)}\b", text):
+            return 90, term
     for label, pattern in HARD_FRAGILE_PATTERNS.items():
         if re.search(pattern, text):
             return 90, label
@@ -85,6 +92,9 @@ def infer_fragile_risk(
 
 def food_contact_signal(title: object, category: object = "", brand: object = "") -> tuple[int, str]:
     text = combined_text(title, category, brand)
+    for term in configured_terms("compliance_terms"):
+        if term in text:
+            return 90, term
     for label, pattern in HARD_FOOD_CONTACT_PATTERNS.items():
         if re.search(pattern, text):
             return 90, label
@@ -103,6 +113,12 @@ def infer_compliance_risk(
 
 def oversize_signal(title: object, category: object = "", brand: object = "") -> tuple[int, str]:
     text = combined_text(title, category, brand)
+    for term in configured_terms("oversize_hard_terms"):
+        if term in text:
+            return 90, term
+    for term in configured_terms("oversize_soft_terms"):
+        if term in text:
+            return 70, term
     for match in re.finditer(r"\b(\d{1,2}(?:\.\d+)?)\s*(?:gallon|gal)\b", text):
         capacity = float(match.group(1))
         if capacity >= 3:

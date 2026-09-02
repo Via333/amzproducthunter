@@ -16,7 +16,9 @@ from pathlib import Path
 from statistics import mean, median
 
 from import_sorftime_candidates import to_float
-from product_selection import amazon_listing_url
+from product_risk import infer_compliance_risk, infer_fragile_risk, infer_oversize_risk
+from product_selection import amazon_listing_url, brand_moat_reason, hard_exclusion_reason
+from product_taxonomy import classify_product_form
 
 
 OUTPUT_FIELDS = [
@@ -26,10 +28,14 @@ OUTPUT_FIELDS = [
     "seed_title",
     "seed_score",
     "seed_recommendation",
+    "seed_asins",
+    "seed_count",
     "source_category_id",
     "source_category_name",
     "validation_run_id",
     "category_path",
+    "category_health_score",
+    "category_health_rank",
     "data_quality",
     "product_form",
     "shape_scope",
@@ -64,6 +70,17 @@ OUTPUT_FIELDS = [
     "form_median_reviews",
     "form_avg_rating",
     "form_low_review_high_sales_count",
+    "form_dated_count",
+    "form_new_entrant_count",
+    "form_new_entrant_success_count",
+    "form_new_entrant_success_rate",
+    "form_new_entrant_median_sales",
+    "form_new_entrant_median_reviews",
+    "form_brand_dependent_share",
+    "form_excluded_share",
+    "form_excluded_reasons",
+    "form_price_median",
+    "form_reference_asins",
     "form_top_materials",
     "form_top_packs",
     "form_top_styles",
@@ -114,6 +131,19 @@ KNOWN_TITLE_FORMS = {
     "solar pathway lights",
 }
 
+GENERIC_FORM_NAMES = {
+    "unknown",
+    "sporting goods",
+    "home organizers and storage",
+    "home kitchen",
+    "sports outdoors",
+    "office products",
+    "patio lawn garden",
+    "tools home improvement",
+}
+
+INVALIDATING_FLAGS = {"brand-dependent accessory", "excluded products"}
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Validate Amazon seeds by category and product form.")
@@ -122,6 +152,7 @@ def parse_args():
     parser.add_argument("--output-csv", help="Validation output CSV.")
     parser.add_argument("--output-report", help="Markdown report output.")
     parser.add_argument("--archive-dir", help="Archive directory.")
+    parser.add_argument("--asin", action="append", default=[], help="Manually prioritize an ASIN found in this run's raw Top100 reports. Repeatable.")
     parser.add_argument("--no-archive", action="store_true")
     return parser.parse_args()
 
@@ -216,6 +247,9 @@ def short_title(value, limit=110):
 
 
 def select_seed_rows(rows, rules):
+    limit = int(to_float(rules.get("seed_limit"), 0))
+    if limit <= 0:
+        return []
     selected = []
     recommendation_contains = str(rules.get("seed_recommendation_contains", "Watch"))
     for rank, row in enumerate(rows, start=1):
@@ -225,7 +259,7 @@ def select_seed_rows(rows, rules):
         if recommendation_contains and recommendation_contains not in str(row.get("recommendation", "")):
             continue
         selected.append({**row, "_seed_rank": rank})
-    return selected[: int(rules.get("seed_limit", len(selected)))]
+    return selected[:limit]
 
 
 def by_key(rows, key):
@@ -233,47 +267,17 @@ def by_key(rows, key):
 
 
 def product_form_from_title(title):
-    text = normalize_text(title)
-    rules = [
-        ("magnetic tool mat", ["magnetic tool mat", "magnetic work mat"]),
-        ("card binder", ["card binder", "trading card album", "card collection binder"]),
-        ("tool holster", ["tool holster", "drill holster", "tool belt holder"]),
-        ("duster refill", ["duster refill", "duster refills", "duster replacement"]),
-        ("boat rail cup holder", ["boat rail cup holder", "marine cup holder", "clamp on cup holder"]),
-        ("boat storage bag", ["boat storage bag", "boat gear bag", "boat tote bag"]),
-        ("boat caddy", ["boat caddy", "marine caddy"]),
-        ("digital scale", ["digital gram scale", "digital kitchen scale", "digital scale"]),
-        ("socket organizer", ["socket organizer", "socket holder", "socket tray"]),
-        ("beeswax bread bag", ["beeswax bread bag", "beeswax linen", "beeswax sourdough", "waxed bread bag"]),
-        ("disposable bakery bread bag", ["bakery bread bag", "bread bag with window", "paper bread bag"]),
-        ("bread box", ["bread box", "bread storage container", "bread keeper"]),
-        ("beeswax wrap", ["beeswax wrap", "food wrap"]),
-        ("toilet brush holder", ["toilet brush and holder", "toilet bowl brush and holder", "toilet brush holder"]),
-        ("toilet plunger brush combo", ["plunger and bowl brush", "plunger and toilet brush", "plunger brush combo"]),
-        ("under-rim toilet brush", ["under rim", "under-rim"]),
-        ("silicone toilet brush", ["silicone toilet brush"]),
-        ("disposable toilet brush refill", ["disposable toilet brush", "toilet wand refill", "refill heads"]),
-        ("hose splitter", ["hose splitter", "faucet splitter", "spigot splitter", "water hose bib"]),
-        ("hose connector", ["hose connector", "garden hose connector", "hose adapter"]),
-        ("bike air pump", ["bike air pump", "electric bike pump", "bicycle pump"]),
-        ("salt grinder", ["salt mill", "salt grinder", "pepper grinder", "peppermill"]),
-        ("solar pathway lights", ["solar pathway lights", "solar walkway lights", "landscape lights"]),
-    ]
-    for label, terms in rules:
-        if any(term in text for term in terms):
-            return label
-    tokens = [token for token in text.split() if len(token) > 2]
-    return " ".join(tokens[:3]) if tokens else "unknown"
+    return classify_product_form(title)
 
 
-def product_form_from_category_product(product):
-    title_form = product_form_from_title(product.get("title", ""))
-    if title_form in KNOWN_TITLE_FORMS:
-        return title_form
-    product_category = normalize_text(product.get("product_category", ""))
-    if product_category and product_category != "unknown":
-        return product_category
-    return title_form
+def product_form_from_category_product(product, category_path="", category_brands=None):
+    return classify_product_form(
+        product.get("title", ""),
+        category_path,
+        product.get("product_category", ""),
+        brand=product.get("brand", ""),
+        category_brands=category_brands,
+    )
 
 
 def active_research_dir(seed_asin, rules):
@@ -383,7 +387,7 @@ def category_metrics(product_rows):
     }
 
 
-def normalized_category_product(product, category_path):
+def normalized_category_product(product, category_path, category_brands=None):
     seller_origin = str(product.get("seller_origin", "") or "").strip().lower()
     if "香港" in seller_origin or seller_origin == "hk":
         seller_code = "HK"
@@ -404,7 +408,7 @@ def normalized_category_product(product, category_path):
         "online_date": str(product.get("online_date", "") or "").strip(),
         "seller_address": seller_code,
         "is_fba": delivery_type in {"fba", "amzfba"},
-        "product_form": product_form_from_category_product(product),
+        "product_form": product_form_from_category_product(product, category_path, category_brands),
     }
 
 
@@ -450,28 +454,150 @@ def category_market_metrics(rows):
     return metrics
 
 
-def form_summary_rows(rows):
+DEFAULT_NEW_ENTRANT_THRESHOLDS = {
+    "new_entrant_months": 18,
+    "new_entrant_min_sales": 200,
+    "new_entrant_max_reviews": 300,
+    "reference_asin_limit": 5,
+}
+
+BRAND_DEPENDENT_PATTERNS = re.compile(
+    r"\b(compatible with|compatible for|replacement for|refills? for|fits? (?:for )?(?:all |most )?[a-z0-9]+ (?:brand|models?)|for use with)\b",
+    re.IGNORECASE,
+)
+
+
+def listing_age_days(raw_date, now=None):
+    raw_date = str(raw_date or "").strip()
+    if not raw_date:
+        return None
+    try:
+        listed_at = datetime.strptime(raw_date[:10], "%Y-%m-%d")
+    except ValueError:
+        return None
+    return ((now or datetime.now()) - listed_at).days
+
+
+def category_brand_names(rows, min_length=4):
+    """Brand names seen in the category, used to detect 'compatible with <Brand>' accessories."""
+    names = set()
+    for row in rows:
+        brand = normalize_text(row.get("brand", ""))
+        if len(brand) >= min_length and brand not in {"generic", "unbranded", "unknown"}:
+            names.add(brand)
+    return names
+
+
+def is_brand_dependent(product, brand_names):
+    """True when a listing positions itself as an accessory/refill for another brand.
+
+    Two signals: an explicit 'compatible with / replacement for' phrase, or the
+    title naming a *different* brand that also sells in this category
+    (e.g. 'Duster Refills Compatible with Swiffer' sold by a third party).
+    """
+
+    title = str(product.get("title", "") or "")
+    if BRAND_DEPENDENT_PATTERNS.search(title):
+        return True
+    own_brand = normalize_text(product.get("brand", ""))
+    title_norm = f" {normalize_text(title)} "
+    for name in brand_names:
+        if name == own_brand:
+            continue
+        if f" {name} " in title_norm:
+            return True
+    return False
+
+
+def new_entrant_metrics(form_products, thresholds, now=None):
+    months = to_float(thresholds.get("new_entrant_months"), DEFAULT_NEW_ENTRANT_THRESHOLDS["new_entrant_months"])
+    min_sales = to_float(thresholds.get("new_entrant_min_sales"), DEFAULT_NEW_ENTRANT_THRESHOLDS["new_entrant_min_sales"])
+    max_reviews = to_float(thresholds.get("new_entrant_max_reviews"), DEFAULT_NEW_ENTRANT_THRESHOLDS["new_entrant_max_reviews"])
+    reference_limit = int(to_float(thresholds.get("reference_asin_limit"), DEFAULT_NEW_ENTRANT_THRESHOLDS["reference_asin_limit"]))
+    cutoff_days = months * 30.5
+
+    dated = []
+    for product in form_products:
+        age = listing_age_days(product.get("online_date"), now)
+        if age is not None:
+            dated.append((age, product))
+    entrants = [product for age, product in dated if age <= cutoff_days]
+    successes = [product for product in entrants if to_float(product.get("monthly_sales"), 0) >= min_sales]
+    references = sorted(
+        (product for product in successes if to_float(product.get("reviews"), 0) <= max_reviews),
+        key=lambda product: -to_float(product.get("monthly_sales"), 0),
+    )[:reference_limit]
+    return {
+        "dated_count": len(dated),
+        "new_entrant_count": len(entrants),
+        "new_entrant_success_count": len(successes),
+        "new_entrant_success_rate": round(len(successes) / len(entrants), 3) if entrants else 0,
+        "new_entrant_median_sales": round(med(to_float(p.get("monthly_sales"), 0) for p in entrants), 0) if entrants else 0,
+        "new_entrant_median_reviews": round(med(to_float(p.get("reviews"), 0) for p in entrants), 0) if entrants else 0,
+        "reference_asins": "; ".join(
+            f"{p.get('asin')}:{int(to_float(p.get('monthly_sales'), 0))}/{int(to_float(p.get('reviews'), 0))}"
+            for p in references
+        ),
+    }
+
+
+def product_exclusion_reason(product, scoring_rules):
+    row = {
+        "product_name": product.get("title", ""),
+        "category": product.get("bsr_category", ""),
+        "brand": product.get("brand", ""),
+    }
+    reason = hard_exclusion_reason(row, scoring_rules) or brand_moat_reason(row, scoring_rules)
+    if reason:
+        return reason
+    title = row["product_name"]
+    category = row["category"]
+    brand = row["brand"]
+    if infer_oversize_risk(title, category, brand, 0) >= 65:
+        return "oversize risk"
+    if infer_compliance_risk(title, category, brand, 0) >= 80:
+        return "compliance risk"
+    if infer_fragile_risk(title, category, brand, 0) >= 80:
+        return "fragile risk"
+    return ""
+
+
+def form_summary_rows(rows, thresholds=None, now=None, scoring_rules=None):
+    thresholds = thresholds or DEFAULT_NEW_ENTRANT_THRESHOLDS
+    scoring_rules = scoring_rules or {}
     grouped = defaultdict(list)
     for row in rows:
         grouped[row.get("product_form") or "unknown"].append(row)
     category_sales = sum(to_float(row.get("monthly_sales"), 0) for row in rows)
+    brand_names = category_brand_names(rows)
     summaries = []
     for product_form, form_products in grouped.items():
-        form_sales = [to_float(row.get("monthly_sales"), 0) for row in form_products]
-        form_reviews = [to_float(row.get("reviews"), 0) for row in form_products]
+        exclusion_reasons = [product_exclusion_reason(row, scoring_rules) for row in form_products]
+        brand_dependent_flags = [is_brand_dependent(row, brand_names) for row in form_products]
+        eligible_products = [
+            row
+            for row, reason, brand_dependent in zip(form_products, exclusion_reasons, brand_dependent_flags)
+            if not reason and not brand_dependent
+        ]
+        form_sales = [to_float(row.get("monthly_sales"), 0) for row in eligible_products]
+        form_reviews = [to_float(row.get("reviews"), 0) for row in eligible_products]
         total_sales = sum(form_sales)
         low_review_high_sales = sum(
             1
-            for row in form_products
+            for row in eligible_products
             if to_float(row.get("reviews"), 0) <= 300 and to_float(row.get("monthly_sales"), 0) >= 500
         )
+        brand_dependent = sum(brand_dependent_flags)
+        exclusion_counts = Counter(reason for reason in exclusion_reasons if reason)
+        prices = [to_float(row.get("price"), 0) for row in eligible_products if to_float(row.get("price"), 0) > 0]
+        entrant = new_entrant_metrics(eligible_products, thresholds, now)
         summaries.append(
             {
                 "product_form": product_form,
-                "count": len(form_products),
-                "direct_count": len(form_products),
+                "count": len(eligible_products),
+                "direct_count": len(eligible_products),
                 "keyword_count": 0,
-                "avg_price": round(avg(row.get("price") for row in form_products), 2),
+                "avg_price": round(avg(row.get("price") for row in eligible_products), 2),
                 "avg_monthly_sales": round(avg(form_sales), 0),
                 "median_monthly_sales": round(med(form_sales), 0),
                 "total_monthly_sales": round(total_sales, 0),
@@ -482,6 +608,11 @@ def form_summary_rows(rows):
                 "median_reviews": round(med(form_reviews), 0),
                 "avg_rating": round(avg(row.get("rating") for row in form_products), 1),
                 "low_review_high_sales_count": low_review_high_sales,
+                "brand_dependent_share": round(brand_dependent / len(form_products), 3) if form_products else 0,
+                "excluded_share": round(sum(exclusion_counts.values()) / len(form_products), 3) if form_products else 0,
+                "excluded_reasons": "; ".join(f"{reason}:{count}" for reason, count in exclusion_counts.most_common(3)),
+                "price_median": round(med(prices), 2) if prices else 0,
+                **entrant,
                 "top_materials": "",
                 "top_pack_counts": "",
                 "top_styles": "",
@@ -491,42 +622,81 @@ def form_summary_rows(rows):
     return summaries
 
 
-def seed_context(seed):
+def seed_context(seed, all_seeds=None):
+    """Seed columns for one category.
+
+    ``seed`` is the representative (best-ranked) seed; ``all_seeds`` lists every
+    seed that landed in the same minimum category so the validation card can
+    show them without duplicating the whole Top100 analysis per seed.
+    """
+
+    all_seeds = [s for s in (all_seeds or [seed]) if s.get("source_asin")]
     asin = seed.get("source_asin", "")
     return {
         "seed_rank": seed.get("_seed_rank", ""),
         "seed_asin": asin,
-        "seed_listing_url": seed.get("listing_url") or amazon_listing_url(asin),
+        "seed_listing_url": (seed.get("listing_url") or amazon_listing_url(asin)) if asin else "",
         "seed_title": seed.get("product_name", ""),
         "seed_score": seed.get("opportunity_score", ""),
         "seed_recommendation": seed.get("recommendation", ""),
+        "seed_asins": "; ".join(str(s.get("source_asin", "")).strip() for s in all_seeds if s.get("source_asin")),
+        "seed_count": len(all_seeds),
         "source_category_id": seed.get("source_category_id", ""),
         "source_category_name": seed.get("source_category_name", ""),
+        "category_health_score": seed.get("category_health_score", ""),
+        "category_health_rank": seed.get("category_health_rank", ""),
     }
 
 
-def build_rows_from_category_report(seed, report, rules, run_id=""):
-    category_path = seed.get("source_category_path") or seed.get("category", "")
+def seed_forms_in_report(seeds, products):
+    forms = set()
+    for seed in seeds:
+        seed_asin = seed.get("source_asin", "")
+        if not seed_asin:
+            continue
+        seed_product = next((row for row in products if row.get("asin") == seed_asin), None)
+        form = seed_product.get("product_form") if seed_product else product_form_from_title(seed.get("product_name", ""))
+        if form:
+            forms.add(normalize_text(form))
+    return forms
+
+
+def build_rows_from_category_report(seeds, report, rules, run_id=""):
+    """Build one row per product form for a category Top100 report.
+
+    ``seeds`` may be a single seed dict (legacy) or the list of all seeds that
+    fell into this category. The Top100 is analysed once; seed forms are marked
+    ``seed_form`` and every other form ``adjacent_form`` (or ``category_form``
+    when the category was picked by health ranking rather than by a seed).
+    """
+
+    if isinstance(seeds, dict):
+        seeds = [seeds]
+    seeds = list(seeds)
+    representative = seeds[0]
+    category_path = representative.get("source_category_path") or representative.get("category", "")
     raw_products = extract_category_report_products(report)
-    products = [normalized_category_product(product, category_path) for product in raw_products]
+    category_brands = [product.get("brand", "") for product in raw_products if product.get("brand")]
+    products = [normalized_category_product(product, category_path, category_brands) for product in raw_products]
     products = [product for product in products if product.get("asin")]
     if not products:
         return []
 
+    thresholds = rules.get("thresholds", {})
     metrics = category_market_metrics(products)
-    seed_asin = seed.get("source_asin", "")
-    seed_product = next((row for row in products if row.get("asin") == seed_asin), None)
-    seed_form = (
-        seed_product.get("product_form")
-        if seed_product
-        else product_form_from_title(seed.get("product_name", ""))
-    )
+    seed_forms = seed_forms_in_report(seeds, products)
+    has_seed = any(seed.get("source_asin") for seed in seeds)
     rows = []
-    for form in form_summary_rows(products):
+    for form in form_summary_rows(products, thresholds, scoring_rules=rules.get("_scoring_rules", {})):
         product_form = form.get("product_form") or "unknown"
-        scope = "seed_form" if normalize_text(product_form) == normalize_text(seed_form) else "adjacent_form"
+        if normalize_text(product_form) in seed_forms:
+            scope = "seed_form"
+        elif has_seed:
+            scope = "adjacent_form"
+        else:
+            scope = "category_form"
         row = {
-            **seed_context(seed),
+            **seed_context(representative, seeds),
             **metrics,
             "validation_run_id": run_id,
             "data_quality": "category_top100",
@@ -544,6 +714,17 @@ def build_rows_from_category_report(seed, report, rules, run_id=""):
             "form_median_reviews": form.get("median_reviews", 0),
             "form_avg_rating": form.get("avg_rating", 0),
             "form_low_review_high_sales_count": form.get("low_review_high_sales_count", 0),
+            "form_dated_count": form.get("dated_count", 0),
+            "form_new_entrant_count": form.get("new_entrant_count", 0),
+            "form_new_entrant_success_count": form.get("new_entrant_success_count", 0),
+            "form_new_entrant_success_rate": form.get("new_entrant_success_rate", 0),
+            "form_new_entrant_median_sales": form.get("new_entrant_median_sales", 0),
+            "form_new_entrant_median_reviews": form.get("new_entrant_median_reviews", 0),
+            "form_brand_dependent_share": form.get("brand_dependent_share", 0),
+            "form_excluded_share": form.get("excluded_share", 0),
+            "form_excluded_reasons": form.get("excluded_reasons", ""),
+            "form_price_median": form.get("price_median", 0),
+            "form_reference_asins": form.get("reference_asins", ""),
             "form_top_materials": form.get("top_materials", ""),
             "form_top_packs": form.get("top_pack_counts", ""),
             "form_top_styles": form.get("top_styles", ""),
@@ -689,6 +870,8 @@ def evaluate_shape_row(row, rules):
     category_sample_count = to_float(row.get("category_sample_count"), 0)
 
     flags = [part.strip() for part in str(row.get("validation_flags", "")).split(";") if part.strip()]
+    if normalize_text(row.get("product_form")) in GENERIC_FORM_NAMES:
+        flags.append("generic form classification")
     if data_quality == "seed_only":
         flags.append("needs category Top100")
     if data_quality == "competitor_deep_dive_only":
@@ -716,6 +899,41 @@ def evaluate_shape_row(row, rules):
     if form_median_reviews > thresholds["form_max_median_reviews"] and form_low_gap < thresholds["form_min_low_review_high_sales"]:
         flags.append("form review wall")
 
+    # New-entrant evidence: among listings launched in the last N months, how
+    # many are already selling? This is the most direct answer to "can a new
+    # product win in this form", so it carries the weight the old seed-scope
+    # bonus used to have.
+    dated_count = to_float(row.get("form_dated_count"), 0)
+    entrant_count = to_float(row.get("form_new_entrant_count"), 0)
+    entrant_success = to_float(row.get("form_new_entrant_success_count"), 0)
+    entrant_rate = to_float(row.get("form_new_entrant_success_rate"), 0)
+    entrant_min_count = to_float(thresholds.get("new_entrant_min_count"), 2)
+    brand_dependent_share = to_float(row.get("form_brand_dependent_share"), 0)
+    excluded_share = to_float(row.get("form_excluded_share"), 0)
+    form_price_median = to_float(row.get("form_price_median"), 0)
+
+    if dated_count <= 0:
+        entrant_score = 50.0  # no listing-age data: neutral, not a penalty
+        if data_quality == "category_top100":
+            flags.append("no listing-age data")
+    elif entrant_count <= 0:
+        entrant_score = 0.0
+        flags.append("no new entrants")
+    elif entrant_count < entrant_min_count:
+        entrant_score = entrant_rate * 100 * 0.6  # one data point: discount it
+    else:
+        entrant_score = entrant_rate * 100
+    if entrant_count >= entrant_min_count and entrant_success <= 0:
+        flags.append("new entrants not selling")
+    if brand_dependent_share >= to_float(thresholds.get("brand_dependent_share"), 0.5):
+        flags.append("brand-dependent accessory")
+    if excluded_share >= to_float(thresholds.get("form_excluded_share"), 0.5):
+        flags.append("excluded products")
+    price_min = to_float(thresholds.get("price_min"), 12)
+    price_max = to_float(thresholds.get("price_max"), 80)
+    if form_price_median and not price_min <= form_price_median <= price_max:
+        flags.append("price band outside target")
+
     demand_score = (
         min(100, form_total_sales / thresholds.get("form_full_total_sales", 3000) * 100) * 0.55
         + min(100, form_median_sales / thresholds.get("form_full_median_sales", 500) * 100) * 0.45
@@ -723,13 +941,12 @@ def evaluate_shape_row(row, rules):
     access_score = max(0, 100 - form_median_reviews / 1000 * 100)
     gap_score = min(100, form_low_gap * 20)
     concentration_score = max(0, 100 - top_brand_share * 100)
-    scope_score = 100 if row.get("shape_scope") == "seed_form" else 70
     shape_score = round(
-        demand_score * 0.28
-        + access_score * 0.28
-        + gap_score * 0.22
-        + concentration_score * 0.12
-        + scope_score * 0.1,
+        demand_score * 0.25
+        + access_score * 0.25
+        + gap_score * 0.15
+        + entrant_score * 0.25
+        + concentration_score * 0.10,
         1,
     )
 
@@ -742,23 +959,44 @@ def evaluate_shape_row(row, rules):
         "form sales concentrated",
         "form review wall",
         "no low-review high-sales gap",
+        "brand-dependent accessory",
+        "new entrants not selling",
+        "excluded products",
     }
+    # Flags that always reject: an accessory market for someone else's brand is
+    # an IP / hijack trap, and a form where recent launches all failed is a
+    # closed market regardless of how good the aggregate numbers look.
+    always_reject_flags = {"brand-dependent accessory", "new entrants not selling", "excluded products"}
     has_hard_flag = any(flag in hard_flags for flag in flags)
+    has_always_reject = any(flag in always_reject_flags for flag in flags)
     has_thin_sample = "thin form sample" in flags
+    has_price_band_risk = "price band outside target" in flags
+    has_generic_form = "generic form classification" in flags
     has_top100 = data_quality == "category_top100"
     is_seed_form = row.get("shape_scope") == "seed_form"
+    allow_adjacent = bool(rules.get("allow_adjacent_shape_opportunity", True))
+    adjacent_min_count = to_float(thresholds.get("form_min_count_adjacent"), 3)
+    # Adjacent / category-only forms have no seed evidence behind them, so they
+    # need a larger sample before they can enter the pool on their own.
+    scope_allows_opportunity = is_seed_form or (allow_adjacent and form_count >= adjacent_min_count)
 
     if not has_top100 and has_hard_flag and form_low_gap < thresholds["form_min_low_review_high_sales"]:
         recommendation = "Reject category/form"
     elif not has_top100:
         recommendation = "Needs category Top100"
+    elif has_always_reject:
+        recommendation = "Reject category/form"
     elif has_hard_flag and form_low_gap < thresholds["form_min_low_review_high_sales"]:
         recommendation = "Reject category/form"
     elif has_hard_flag:
         recommendation = "Watch shape" if shape_score >= thresholds["watch_shape_score"] else "Reject category/form"
     elif has_thin_sample:
         recommendation = "Watch shape" if shape_score >= thresholds["watch_shape_score"] else "Reject category/form"
-    elif is_seed_form and shape_score >= thresholds["shape_opportunity_score"]:
+    elif has_price_band_risk:
+        recommendation = "Watch shape" if shape_score >= thresholds["watch_shape_score"] else "Reject category/form"
+    elif has_generic_form:
+        recommendation = "Watch shape" if shape_score >= thresholds["watch_shape_score"] else "Reject category/form"
+    elif scope_allows_opportunity and shape_score >= thresholds["shape_opportunity_score"]:
         recommendation = "Shape opportunity"
     elif shape_score >= thresholds["watch_shape_score"]:
         recommendation = "Watch shape"
@@ -773,25 +1011,42 @@ def evaluate_shape_row(row, rules):
     return row
 
 
+def entrant_sentence(row):
+    entrant_count = int(to_float(row.get("form_new_entrant_count"), 0))
+    if entrant_count <= 0:
+        return ""
+    rate = to_float(row.get("form_new_entrant_success_rate"), 0)
+    success = int(to_float(row.get("form_new_entrant_success_count"), 0))
+    return f"近 18 个月新上架 {entrant_count} 个，其中 {success} 个已达标（{rate * 100:.0f}%）。"
+
+
 def opportunity_thesis(row):
     rec = row.get("shape_recommendation", "")
     form = row.get("product_form", "")
+    entrant = entrant_sentence(row)
     if rec == "Shape opportunity":
-        return (
+        text = (
             f"{form} 形态已通过类目 Top100 验证：月销均值 {row.get('form_avg_sales')}，"
             f"形态总月销 {row.get('form_total_sales')}，评论中位数 {row.get('form_median_reviews')}，"
-            f"低评高销样本 {row.get('form_low_review_high_sales_count')} 个。"
+            f"低评高销样本 {row.get('form_low_review_high_sales_count')} 个。{entrant}"
         )
+        if row.get("form_reference_asins"):
+            text += f" 参考新进入者：{row.get('form_reference_asins')}"
+        return text
     if rec == "Watch shape":
-        return f"{form} 有部分需求信号，但仍需确认评论墙、品牌集中或供应链差异化。"
+        return f"{form} 有部分需求信号，但仍需确认评论墙、品牌集中或供应链差异化。{entrant}"
     if rec == "Needs category Top100":
         return f"{form} 目前只是种子入口，还不能判定机会；需要拉最小类目 Top100 后按形态复核。"
-    return f"{form} 当前类目/形态竞争结构不适合直接进入机会档案。"
+    flags = str(row.get("validation_flags", "") or "")
+    reason = f"（{flags}）" if flags else ""
+    return f"{form} 当前类目/形态竞争结构不适合直接进入机会档案{reason}。"
 
 
 def next_action(row):
     rec = row.get("shape_recommendation", "")
     if rec == "Shape opportunity":
+        if row.get("form_reference_asins"):
+            return "从参考新进入者 ASIN 里挑 1-2 个做单品研究，再进供应商验证"
         return "进入单品研究/供应商验证"
     if rec == "Watch shape":
         return "补评论和供应商报价后再判断"
@@ -800,28 +1055,159 @@ def next_action(row):
     return "淘汰或仅保留历史追溯"
 
 
-def build_validation_rows(seeds, deep_rows, rules, discovery_run_dir=None):
+def category_key(seed):
+    category_id = str(seed.get("source_category_id", "") or "").strip()
+    if category_id:
+        return f"id:{category_id}"
+    path = normalize_text(seed.get("source_category_path") or seed.get("category", ""))
+    return f"path:{path}" if path else ""
+
+
+def group_seeds_by_category(seeds):
+    grouped = {}
+    order = []
+    for seed in seeds:
+        key = category_key(seed)
+        if not key:
+            key = f"seed:{seed.get('source_asin', '')}"
+        if key not in grouped:
+            grouped[key] = []
+            order.append(key)
+        grouped[key].append(seed)
+    return [(key, grouped[key]) for key in order]
+
+
+def category_seed_from_row(row, **overrides):
+    seed = {
+        "source_category_id": row.get("category_id", ""),
+        "source_category_name": row.get("name", ""),
+        "source_category_path": row.get("path", ""),
+        "category": row.get("path", ""),
+        "category_health_score": row.get("category_health_score", ""),
+        "category_health_rank": row.get("category_health_rank", ""),
+    }
+    seed.update(overrides)
+    return seed
+
+
+def manual_asin_seeds(asins, discovery_run_dir):
+    requested = [str(asin or "").strip().upper() for asin in asins if str(asin or "").strip()]
+    if not requested or not discovery_run_dir:
+        return []
+    run_dir = Path(discovery_run_dir)
+    categories = {str(row.get("category_id", "")): row for row in read_csv(run_dir / "categories.csv")}
+    found = {}
+    for report_path in sorted((run_dir / "raw_category_reports").glob("*.json")):
+        category_id = report_path.stem
+        try:
+            products = extract_category_report_products(load_json(report_path))
+        except (json.JSONDecodeError, OSError):
+            continue
+        for product in products:
+            asin = str(product.get("asin", "") or "").strip().upper()
+            if asin not in requested or asin in found:
+                continue
+            category = categories.get(category_id, {"category_id": category_id})
+            found[asin] = category_seed_from_row(
+                category,
+                source_asin=asin,
+                listing_url=amazon_listing_url(asin),
+                product_name=str(product.get("title", "") or "").strip(),
+                recommendation="Manual ASIN",
+            )
+    for asin in requested:
+        if asin not in found:
+            print(f"Manual ASIN not found in this discovery run: {asin}")
+    return [found[asin] for asin in requested if asin in found]
+
+
+def load_ranked_categories(rules, discovery_run_dir, exclude_keys=()):
+    """Top categories by health score from the discovery report, without seeds.
+
+    Lets the validation step look at categories the single-listing scorer never
+    surfaced a seed for. Requires ``category_health_score`` in the report; a
+    report without it (older discovery runs) is silently ignored.
+    """
+
+    ranking_value = str(rules.get("category_ranking", "") or "").strip()
+    limit = int(to_float(rules.get("category_ranking_limit"), 0))
+    if not discovery_run_dir:
+        return []
+    if ranking_value:
+        ranking_path = Path(ranking_value)
+    else:
+        current_run_id = str(os.environ.get("AMZ_WEEKLY_RUN_ID", "") or "").strip()
+        current_run_path = Path(rules.get("discovery_runs_root", "archive/discovery_runs")) / current_run_id / "categories.csv"
+        # During an offline replay, raw Top100 JSON comes from the archived
+        # source run, while category health is recomputed into the current run.
+        ranking_path = current_run_path if current_run_id and current_run_path.exists() else Path(discovery_run_dir) / "categories.csv"
+    ranking_rows = read_csv(ranking_path)
+    if not ranking_rows:
+        return []
+    scored = [row for row in ranking_rows if row.get("scan_status") == "success"]
+    scored.sort(
+        key=lambda row: (
+            not bool(str(row.get("category_health_score", "") or "").strip()),
+            -to_float(row.get("category_health_score"), 0),
+            str(row.get("path", "")),
+        )
+    )
+    selected = []
+    for row in scored:
+        pseudo_seed = category_seed_from_row(row)
+        key = category_key(pseudo_seed)
+        if not key or key in exclude_keys:
+            continue
+        if not load_category_report(pseudo_seed, discovery_run_dir):
+            continue
+        selected.append((key, [pseudo_seed]))
+        if limit > 0 and len(selected) >= limit:
+            break
+    return selected
+
+
+def build_validation_rows(seeds, deep_rows, rules, discovery_run_dir=None, extra_categories=None):
     deep_by_asin = by_key(deep_rows, "source_asin") if rules.get("allow_deep_dive_fallback") else {}
     rows = []
-    validation_run_id = Path(discovery_run_dir).name if discovery_run_dir else ""
-    for seed in seeds:
-        asin = seed.get("source_asin", "")
-        category_report = load_category_report(seed, discovery_run_dir)
-        research_dir = active_research_dir(asin, rules)
+    validation_run_id = str(os.environ.get("AMZ_WEEKLY_RUN_ID", "") or "").strip()
+    if not validation_run_id and discovery_run_dir:
+        validation_run_id = Path(discovery_run_dir).name
+    category_limit = int(to_float(rules.get("category_limit"), 0))
+    groups = group_seeds_by_category(seeds)
+    if category_limit > 0:
+        groups = groups[:category_limit]
+    groups.extend(extra_categories or [])
+
+    for _key, category_seeds in groups:
+        representative = category_seeds[0]
+        asin = representative.get("source_asin", "")
+        category_report = load_category_report(representative, discovery_run_dir)
         if category_report:
-            report_rows = build_rows_from_category_report(seed, category_report, rules, validation_run_id)
-            rows.extend(report_rows or [build_pending_row(seed, rules)])
-        elif research_dir:
-            rows.extend(build_rows_from_research(seed, research_dir, rules))
-        elif asin in deep_by_asin:
-            rows.append(build_row_from_deep_summary(seed, deep_by_asin[asin], rules))
-        else:
-            rows.append(build_pending_row(seed, rules))
+            report_rows = build_rows_from_category_report(category_seeds, category_report, rules, validation_run_id)
+            rows.extend(report_rows or [build_pending_row(representative, rules)])
+            continue
+        # No Top100 for this category: fall back per seed as before.
+        for seed in category_seeds:
+            seed_asin = seed.get("source_asin", "")
+            research_dir = active_research_dir(seed_asin, rules)
+            if research_dir:
+                rows.extend(build_rows_from_research(seed, research_dir, rules))
+            elif seed_asin in deep_by_asin:
+                rows.append(build_row_from_deep_summary(seed, deep_by_asin[seed_asin], rules))
+            else:
+                rows.append(build_pending_row(seed, rules))
+    recommendation_order = {
+        "Shape opportunity": 0,
+        "Watch shape": 1,
+        "Needs category Top100": 2,
+        "Reject category/form": 3,
+    }
     rows.sort(
         key=lambda row: (
-            to_float(row.get("seed_rank"), 999999),
-            row.get("shape_scope") != "seed_form",
+            recommendation_order.get(row.get("shape_recommendation"), 9),
             -to_float(row.get("shape_score"), 0),
+            to_float(row.get("category_health_rank"), 999999),
+            row.get("category_path", ""),
             row.get("product_form", ""),
         )
     )
@@ -836,6 +1222,49 @@ def shape_archive_key(row):
 
 def should_archive_shape(row):
     return row.get("shape_recommendation") == "Shape opportunity"
+
+
+def category_exclusion_reason(category_path, config_path="config/category_exclusions.json"):
+    path = Path(config_path)
+    if not path.exists():
+        return ""
+    category = normalize_text(category_path)
+    config = load_json(path)
+    for item in config.get("path_contains", []):
+        term = normalize_text(item.get("term", ""))
+        if term and term in category:
+            return f"excluded category: {item.get('term')}"
+    return ""
+
+
+def archived_shape_invalidation_reason(row):
+    flags = {part.strip() for part in str(row.get("validation_flags", "")).split(";") if part.strip()}
+    invalid_flag = next((flag for flag in INVALIDATING_FLAGS if flag in flags), "")
+    if invalid_flag:
+        return invalid_flag
+    if normalize_text(row.get("product_form")) in GENERIC_FORM_NAMES:
+        return "generic product form"
+    reason = category_exclusion_reason(row.get("category_path", ""))
+    if reason:
+        return reason
+    seed_title = row.get("seed_title", "")
+    if BRAND_DEPENDENT_PATTERNS.search(str(seed_title or "")):
+        return "brand-dependent accessory"
+    candidate = {
+        "product_name": seed_title or row.get("product_form", ""),
+        "category": row.get("category_path", ""),
+        "brand": "",
+    }
+    reason = hard_exclusion_reason(candidate, {}) or brand_moat_reason(candidate, {})
+    if reason:
+        return reason
+    if infer_oversize_risk(candidate["product_name"], candidate["category"], "", 0) >= 65:
+        return "oversize risk"
+    if infer_compliance_risk(candidate["product_name"], candidate["category"], "", 0) >= 80:
+        return "compliance risk"
+    if infer_fragile_risk(candidate["product_name"], candidate["category"], "", 0) >= 80:
+        return "fragile risk"
+    return ""
 
 
 def read_csv_rows(path):
@@ -858,13 +1287,14 @@ def update_shape_archive(rows, archive_dir, run_id):
         prior = by_archive_key.get(key, {})
         score = to_float(row.get("shape_score"), 0)
         best_score = max(to_float(prior.get("archive_best_score"), 0), score)
+        same_run = str(prior.get("archive_last_run_id", "")) == str(run_id)
         merged = {**prior, **row}
         merged.update(
             {
                 "shape_archive_key": key,
                 "archive_first_seen": prior.get("archive_first_seen") or now,
                 "archive_last_seen": now,
-                "archive_seen_count": int(to_float(prior.get("archive_seen_count"), 0)) + 1,
+                "archive_seen_count": int(to_float(prior.get("archive_seen_count"), 0)) + (0 if same_run else 1),
                 "archive_best_score": round(best_score, 1),
                 "archive_latest_score": row.get("shape_score", ""),
                 "archive_status": "active_in_latest_run",
@@ -877,7 +1307,15 @@ def update_shape_archive(rows, archive_dir, run_id):
 
     for key, row in by_archive_key.items():
         if key not in active_keys:
-            row["archive_status"] = "not_in_latest_run"
+            reason = archived_shape_invalidation_reason(row)
+            if reason:
+                row["archive_status"] = "invalidated_by_rule"
+                note = f"invalidated_by_rule ({run_id}): {reason}"
+                existing_notes = str(row.get("archive_notes", "") or "")
+                if note not in existing_notes:
+                    row["archive_notes"] = "; ".join(part for part in (existing_notes, note) if part)
+            else:
+                row["archive_status"] = "not_in_latest_run"
 
     archive_rows = list(by_archive_key.values())
     archive_rows.sort(
@@ -899,7 +1337,7 @@ def archive_run(rows, input_path, output_csv_path, report_path, archive_dir):
     run_dir = archive_dir / "category_shape_runs" / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     write_csv(run_dir / "category_shape_validation.csv", rows, OUTPUT_FIELDS)
-    if Path(input_path).exists():
+    if input_path and Path(input_path).is_file():
         shutil.copyfile(input_path, run_dir / "source_selection_ranked.csv")
     if Path(output_csv_path).exists():
         shutil.copyfile(output_csv_path, run_dir / "latest_category_shape_validation.csv")
@@ -921,19 +1359,26 @@ def write_report(path, rows):
         "",
         f"- 验证记录数：{len(rows)}",
         f"- 通过形态机会：{sum(1 for row in rows if row.get('shape_recommendation') == 'Shape opportunity')}",
+        f"- 观察形态：{sum(1 for row in rows if row.get('shape_recommendation') == 'Watch shape')}",
         f"- 待补 Top100：{sum(1 for row in rows if row.get('shape_recommendation') == 'Needs category Top100')}",
+        f"- 覆盖类目：{len({row.get('category_path', '') for row in rows})}",
         "",
         "## 形态排序",
         "",
-        "| 种子 | 形态 | 数据层级 | 分数 | 结论 | 类目/评论墙 | 形态月销 | 形态评论 | 低评高销 | 说明 |",
-        "| --- | --- | --- | ---: | --- | --- | ---: | ---: | ---: | --- |",
+        "| 种子 | 形态 | 范围 | 分数 | 结论 | 类目/评论墙 | 形态月销 | 形态评论 | 低评高销 | 新进入者成功 | 参考 ASIN | 说明 |",
+        "| --- | --- | --- | ---: | --- | --- | ---: | ---: | ---: | --- | --- | --- |",
     ]
     for row in rows:
         lines.append(
-            "| {seed} | {form} | {quality} | {score} | {rec} | {cat_reviews}/{top_reviews} | {sales} | {reviews} | {gap} | {thesis} |".format(
-                seed=markdown_link(row.get("seed_asin", ""), row.get("seed_listing_url", "")),
+            "| {seed} | {form} | {scope} | {score} | {rec} | {cat_reviews}/{top_reviews} | {sales} | {reviews} | {gap} | {entrant} | {refs} | {thesis} |".format(
+                seed=markdown_link(row.get("seed_asin", "") or "(类目排名)", row.get("seed_listing_url", "")),
                 form=escape_pipe(row.get("product_form", "")),
-                quality=escape_pipe(row.get("data_quality", "")),
+                scope=escape_pipe(row.get("shape_scope", "")),
+                entrant="{}/{}".format(
+                    int(to_float(row.get("form_new_entrant_success_count"), 0)),
+                    int(to_float(row.get("form_new_entrant_count"), 0)),
+                ),
+                refs=escape_pipe(str(row.get("form_reference_asins", "") or "").replace("; ", "<br>")),
                 score=row.get("shape_score", ""),
                 rec=escape_pipe(row.get("shape_recommendation", "")),
                 cat_reviews=row.get("category_median_reviews", ""),
@@ -961,22 +1406,38 @@ def escape_pipe(value):
 def main():
     args = parse_args()
     rules = load_json(args.rules)
-    input_path = args.input or rules["input"]
+    input_path = args.input or rules.get("input", "")
     output_csv = args.output_csv or rules["output_csv"]
     output_report = args.output_report or rules["output_report"]
     archive_dir = Path(args.archive_dir or rules["archive_dir"])
 
-    seeds = select_seed_rows(read_csv(input_path), rules)
+    scoring_rules_path = rules.get("scoring_rules_path", "config/scoring_rules.json")
+    rules["_scoring_rules"] = load_json(scoring_rules_path) if Path(scoring_rules_path).exists() else {}
+    seeds = select_seed_rows(read_csv(input_path), rules) if input_path else []
     deep_rows = read_csv(rules["deep_dive_summary"])
     discovery_run_dir = resolve_discovery_run_dir(rules)
-    rows = build_validation_rows(seeds, deep_rows, rules, discovery_run_dir)
+    seeds.extend(manual_asin_seeds(args.asin, discovery_run_dir))
+    deduped_seeds = []
+    seen_seed_keys = set()
+    for seed in seeds:
+        key = (category_key(seed), str(seed.get("source_asin", "") or "").upper())
+        if key in seen_seed_keys:
+            continue
+        seen_seed_keys.add(key)
+        deduped_seeds.append(seed)
+    seeds = deduped_seeds
+    seed_category_keys = {key for key, _ in group_seeds_by_category(seeds)}
+    ranked_categories = load_ranked_categories(rules, discovery_run_dir, exclude_keys=seed_category_keys)
+    rows = build_validation_rows(seeds, deep_rows, rules, discovery_run_dir, extra_categories=ranked_categories)
     write_csv(output_csv, rows, OUTPUT_FIELDS)
     write_report(output_report, rows)
     archive_result = None
     if not args.no_archive:
         archive_result = archive_run(rows, input_path, output_csv, output_report, archive_dir)
 
-    print(f"Validated seeds: {len(seeds)}")
+    print(f"Manual/legacy seeds: {len(seeds)} across {len(seed_category_keys)} categories")
+    print(f"Health-ranked categories without seeds: {len(ranked_categories)}")
+    print(f"Validated categories: {len(seed_category_keys) + len(ranked_categories)}")
     print(f"Validation rows: {len(rows)}")
     print(f"Category Top100 source: {discovery_run_dir or 'none'}")
     print(f"CSV: {output_csv}")

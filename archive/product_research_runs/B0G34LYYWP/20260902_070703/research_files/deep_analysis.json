@@ -1,0 +1,230 @@
+{
+  "verdict": "继续验证，不直接立项",
+  "score": 59,
+  "confidence": "medium",
+  "one_line": "需求和新品增长真实，目标 Listing 占同形态样本销量约 139%；先做样品、磁场运输测试和小预算关键词验证。",
+  "generated_at": "2026-09-02 07:05:56",
+  "data_sources": [
+    "Sorftime MCP product/keyword/review/trend",
+    "archive/discovery_runs/20260901_214146/raw_category_reports/2245498011.json",
+    "Sorftime 1688 image search"
+  ],
+  "tool_calls": 11,
+  "facts": {
+    "price": 26.99,
+    "coupon": 0.0,
+    "effective_price": 26.99,
+    "monthly_sales": 1362.0,
+    "monthly_revenue": 36760.38,
+    "reviews": 89.0,
+    "rating": 4.4,
+    "package_size_cm": "34.11*22.71*15.80",
+    "weight_g": 839.0,
+    "fba_fee": 8.6,
+    "gross_profit": 14.34,
+    "gross_profit_rate": 53.13,
+    "online_date": "2026-02-02",
+    "subcategory": "Feather Dusters (Rank: 37)"
+  },
+  "market": {
+    "category_top100_sales": 342259.0,
+    "category_top3_share": "Top-3 products monthly sales share: 25.31%",
+    "category_low_review_sales_share": "Products with <300 reviews monthly sales share: 10.58%",
+    "category_return_rate": "Category return rate (last 30 days): 1.86%",
+    "direct_competitor_count": 1,
+    "direct_form_monthly_sales": 981.0,
+    "seed_share_of_direct_sample": 1.3884,
+    "direct_form_median_reviews": 153.0,
+    "keyword_monthly_search_volume": 30329.0,
+    "keyword_competitor_count": 20565.0,
+    "keyword_cpc": 1.28,
+    "keyword_peak_season": "6月",
+    "keyword_caveat": "搜索结果被工艺磁片、焊接垫、磁性托盘等大量跨形态产品污染，不能把结果数当作直接竞品数。"
+  },
+  "trend": {
+    "sales": [
+      {
+        "period": "2026年02月",
+        "value": 8.0
+      },
+      {
+        "period": "2026年03月",
+        "value": 186.0
+      },
+      {
+        "period": "2026年04月",
+        "value": 178.0
+      },
+      {
+        "period": "2026年05月",
+        "value": 734.0
+      },
+      {
+        "period": "2026年06月",
+        "value": 712.0
+      },
+      {
+        "period": "2026年07月",
+        "value": 1443.0
+      },
+      {
+        "period": "2026年08月",
+        "value": 1376.0
+      },
+      {
+        "period": "2026年09月",
+        "value": 1362.0
+      }
+    ],
+    "price": [
+      {
+        "period": "2026年02月",
+        "value": 29.99
+      },
+      {
+        "period": "2026年03月",
+        "value": 29.05
+      },
+      {
+        "period": "2026年04月",
+        "value": 28.99
+      },
+      {
+        "period": "2026年05月",
+        "value": 29.09
+      },
+      {
+        "period": "2026年06月",
+        "value": 30.66
+      },
+      {
+        "period": "2026年07月",
+        "value": 28.64
+      },
+      {
+        "period": "2026年08月",
+        "value": 28.83
+      },
+      {
+        "period": "2026年09月",
+        "value": 26.99
+      }
+    ],
+    "recent_three_month_avg_sales": 1394,
+    "summary": "2025-12 上架后从 143 件增长到近期约 981 件；6 月峰值 1,253，7 月回落后 8-9 月恢复。"
+  },
+  "variations": [
+    {
+      "Asin": "B0G34LYYWP",
+      "Property": "Scent:Unscented,Size:80P",
+      "SalesAmount": 700,
+      "ItemIndex": 1,
+      "ItemTotal": 4
+    },
+    {
+      "Asin": "B0G34NMRCG",
+      "Property": "Scent:Unscented,Size:40P",
+      "SalesAmount": 200,
+      "ItemIndex": 2,
+      "ItemTotal": 4
+    },
+    {
+      "Asin": "B0H55FQHBC",
+      "Property": "Scent:Unscented,Size:120P",
+      "SalesAmount": 100,
+      "ItemIndex": 3,
+      "ItemTotal": 4
+    },
+    {
+      "Asin": "B0H55MSN9L",
+      "Property": "Scent:Unscented,Size:60P",
+      "SalesAmount": -1,
+      "ItemIndex": 4,
+      "ItemTotal": 4
+    }
+  ],
+  "review_summary": {
+    "reviews_read": 20,
+    "low_star_reviews": 1,
+    "customers_say": "Customers find the dust removal tool effective, with one mentioning it works as well as expensive brand name sweepers. They also consider it good value for money.",
+    "topics": [
+      {
+        "keyword": "dust retention",
+        "content": "Customers find that the dusters effectively remove dust, with one customer noting they work as well as branded alternatives.",
+        "mention": 19,
+        "positive": 15,
+        "negative": 4,
+        "update_time": "2026-08-30"
+      },
+      {
+        "keyword": "value for money",
+        "content": "Customers find the duster refills to be good value for money and say they would purchase them again.",
+        "mention": 12,
+        "positive": 9,
+        "negative": 3,
+        "update_time": "2026-08-30"
+      },
+      {
+        "keyword": "fit",
+        "content": "Customers find that the duster refills fit perfectly on their swiffer duster handle.",
+        "mention": 5,
+        "positive": 4,
+        "negative": 1,
+        "update_time": "2026-08-30"
+      }
+    ],
+    "core_positive": [
+      "磁力强、可垂直吸附",
+      "工具和紧固件不易丢失",
+      "三种尺寸适配不同工位",
+      "PVC 表面不易刮漆且易清洁"
+    ],
+    "core_negative": [
+      "少量用户认为磁力低于预期",
+      "大垫尺寸和承载面积仍偏小",
+      "原价偏高，转化依赖优惠券",
+      "标题写 25Lb，描述/配件又出现 15Lb，规格表达不一致"
+    ]
+  },
+  "supply": {
+    "image_match_count": 0,
+    "lowest_visible_price_cny": 0,
+    "top_match_30d_sales": 0,
+    "top_match_repurchase_rate": 0,
+    "assessment": "同图货源很多，说明制造门槛不高、跟卖速度会快；价格仅是图搜展示价，必须核对 3 件套、磁铁等级、拉力、皮面和包装后才能计入利润。"
+  },
+  "opportunities": [
+    "把“垫子”升级为工位系统：零件分区、拆装顺序标记、可擦写标签或模块化拼接。",
+    "优先做单块大尺寸与 3 尺寸套装两条 SKU，避免只复制现有 3 件套。",
+    "用实测承重、垂直吸附、弧面贴合和不伤车漆做视频证据，而不是继续堆 25/40Lb 数字。",
+    "定位汽车维修、设备维护和 DIY 拆装场景，集中投放 exact 关键词，减少泛 magnetic 流量浪费。"
+  ],
+  "risks": [
+    "直接形态只有 1 个有效样本，目标 ASIN 占样本销量约 139%，仍需拆分产品需求与头部 Listing 运营能力。",
+    "关键词 magnetic tool mat 的搜索结果严重跨类目，表面 30k 搜索量不能全部归因于目标形态。",
+    "产品约 1.63kg，FBA 费 $7.77；低价跟进会很快挤压利润。",
+    "磁性货物需做外包装磁场测试；是否属于受限航空磁性材料取决于包装后的实测值。",
+    "嵌入磁铁必须验证跌落、弯折、缝合/热压后不会脱出，并避免儿童/玩具化营销。"
+  ],
+  "next_actions": [
+    "向 3 家供应商索取 3 件套真实阶梯价、磁铁材质/等级、单垫拉力测试、重量和包装尺寸。",
+    "做包装后 7 英尺磁场/指南针偏转测试，并让货代书面确认空运运输条件。",
+    "采购头部款与两个 $23-$34 竞品，实测垂直承载、弧面贴合、刮漆、耐油污和 500 次弯折。",
+    "先用 magnetic tool mat 精确词做 2 周广告验证；目标是非品牌转化能覆盖 $1.28 CPC。",
+    "若样品无法在尺寸、磁力一致性或分区功能上形成明确差异，则停止立项。"
+  ],
+  "compliance": {
+    "level": "medium",
+    "summary": "不是食品接触品，也不是天然需要高门槛认证的类目；主要门槛是磁体脱落安全、一般产品合规和磁性货物运输测试。",
+    "references": [
+      {
+        "label": "CPSC Magnets Business Guidance",
+        "url": "https://www.cpsc.gov/Business--Manufacturing/Business-Education/Business-Guidance/Magnets"
+      },
+      {
+        "label": "USPS Publication 52 - Magnetized Materials",
+        "url": "https://pe.usps.com/text/pub52/pub52c3_028.htm"
+      }
+    ]
+  }
+}
