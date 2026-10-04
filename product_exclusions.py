@@ -54,6 +54,30 @@ def starts_with_brand(title: object, brand: object) -> bool:
     return bool(brand_norm and (title_norm == brand_norm or title_norm.startswith(f"{brand_norm} ")))
 
 
+def product_rule_reason(row: dict, config: dict) -> str:
+    title = normalize_text(str(row.get("product_name", "")).replace("&", " and "))
+    category = normalize_text(row.get("category", ""))
+    leaf = normalize_text(re.split(r"\s*>\s*", str(row.get("category", "")))[-1])
+    for rule in config.get("product_rules", []):
+        context = rule.get("category_context")
+        if context and not re.search(context, category):
+            continue
+        subject = title
+        if rule.get("subject_only"):
+            # Usage context is not the item being sold: "mop pads for steam cleaners".
+            subject = re.split(r"\b(?:for|compatible with|compatible for|fits?)\b", subject, maxsplit=1)[0]
+        accessory = False
+        for pattern in rule.get("accessory_patterns", []):
+            subject, matches = re.subn(pattern, " ", subject)
+            accessory = accessory or bool(matches)
+        title_match = any(re.search(pattern, subject) for pattern in rule.get("title_patterns", []))
+        category_match = any(re.search(pattern, category) for pattern in rule.get("category_patterns", []))
+        leaf_match = not accessory and any(re.search(pattern, leaf) for pattern in rule.get("leaf_patterns", []))
+        if title_match or category_match or leaf_match:
+            return f"excluded product rule: {rule['id']} ({rule['reason']})"
+    return ""
+
+
 def hard_exclusion_reason(
     row: dict,
     config_path: str = DEFAULT_CONFIG_PATH,
@@ -63,6 +87,9 @@ def hard_exclusion_reason(
     require_category = config.get("require_valid_category", False) if require_valid_category is None else require_valid_category
     if require_category and not has_valid_category(row.get("category", "")):
         return "missing or invalid category evidence"
+    rule_reason = product_rule_reason(row, config)
+    if rule_reason:
+        return rule_reason
     title_match = contains_term(row.get("product_name", ""), config.get("title_contains", []))
     if title_match:
         return f"excluded title term: {title_match}"

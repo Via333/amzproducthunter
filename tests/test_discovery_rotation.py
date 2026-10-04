@@ -100,7 +100,7 @@ class CategoryRotationTest(unittest.TestCase):
 
 class KeywordSearchTest(unittest.TestCase):
     def test_saved_response_is_scored_and_archived(self) -> None:
-        with tempfile.TemporaryDirectory(dir=ROOT / "tmp") as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             output_root = Path(temp_dir)
             archive_root = output_root / "runs"
             index_path = output_root / "index.csv"
@@ -116,6 +116,8 @@ class KeywordSearchTest(unittest.TestCase):
                     str(archive_root),
                     "--index",
                     str(index_path),
+                    "--publish-root",
+                    str(output_root / "published"),
                     "--no-dashboard",
                 ],
                 cwd=ROOT,

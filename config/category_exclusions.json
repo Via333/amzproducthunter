@@ -3,6 +3,86 @@
   "category_ids": [],
   "path_contains": [
     {
+      "term": "gun accessories, maintenance & storage",
+      "type": "武器相关",
+      "reason": "明确的枪械维护、配件和储存子树，不在当前经营范围"
+    },
+    {
+      "term": "air guns & accessories",
+      "type": "武器相关",
+      "reason": "气枪及其专用配件存在平台、运输和产品责任风险"
+    },
+    {
+      "term": "airsoft guns & accessories",
+      "type": "武器相关",
+      "reason": "软弹枪及其专用配件不在当前低风险经营范围"
+    },
+    {
+      "term": "hunting knives",
+      "type": "武器/刀具",
+      "reason": "刀具安全、平台政策和产品责任风险高"
+    },
+    {
+      "term": "vacuum sealer bags",
+      "type": "食品接触",
+      "reason": "直接食品接触材料，需要迁移测试和合规证明"
+    },
+    {
+      "term": "decorating & pastry bags",
+      "type": "食品接触",
+      "reason": "直接食品接触的一次性耗材，不在当前低合规风险范围"
+    },
+    {
+      "term": "food coloring",
+      "type": "入口/强合规",
+      "reason": "可食用配方、标签和成分合规要求高"
+    },
+    {
+      "term": "edible ink printers",
+      "type": "入口/设备",
+      "reason": "涉及可食用耗材和打印设备双重合规及售后风险"
+    },
+    {
+      "term": "baking cups",
+      "type": "食品接触",
+      "reason": "直接食品接触材料，需要相应测试和合规证明"
+    },
+    {
+      "term": "parchment",
+      "type": "食品接触",
+      "reason": "直接食品接触耗材，不在当前低合规风险范围"
+    },
+    {
+      "term": "rimming salts & sugars",
+      "type": "入口/强合规",
+      "reason": "可食用产品涉及配方、标签和食品合规要求"
+    },
+    {
+      "term": "cooking torches",
+      "type": "燃气/高责任",
+      "reason": "明火、燃气和点火结构带来运输及产品责任风险"
+    },
+    {
+      "term": "seltzer bottles & chargers",
+      "type": "压力容器",
+      "reason": "气瓶和压力部件的运输、认证及售后风险较高"
+    },
+    {
+      "term": "one-piece toilets",
+      "type": "大件/易碎",
+      "reason": "体积大且运输破损、安装和退货成本高"
+    },
+    {
+      "term": "two-piece toilets",
+      "type": "大件/易碎",
+      "reason": "体积大且运输破损、安装和退货成本高"
+    },
+    {
+      "term": "kitchen sinks",
+      "type": "大件/安装",
+      "reason": "体积、安装适配、运输破损和退货成本较高"
+    },
+    {
       "term": "furniture",
       "type": "大件",
       "reason": "仓储、头程和退货成本高，不适合个人卖家"

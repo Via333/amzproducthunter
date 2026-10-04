@@ -1,0 +1,76 @@
+/* Product groups are unframed bands; only individual ASINs are framed. */
+#shape-validation .shape-list { display: block; }
+#shape-validation .wb-category { border: 0; border-bottom: 1px solid #d7deea; padding: 14px 0; margin: 0; box-shadow: none; border-radius: 0; }
+.wb-category > summary, .wb-family > summary, .wb-shape > summary { cursor: pointer; padding: 10px 2px; }
+.wb-category > summary { font-weight: 700; font-size: 18px; }
+.wb-category summary .wb-counts { font-size: 13px; font-weight: 400; color: #596579; margin-left: 12px; }
+.wb-path { font-size: 12px; color: #596579; margin: 0 0 12px; overflow-wrap: anywhere; }
+.wb-family { border-top: 1px solid #e8ebf0; padding: 4px 0 4px 12px; }
+.wb-family > summary { font-size: 16px; font-weight: 600; }
+.wb-shape { border-top: 1px solid #edf0f4; }
+.wb-shape > summary { font-size: 14px; }
+.wb-shape-content { padding: 8px 6px 16px; }
+.wb-shape-content p { font-size: 13px; margin: 6px 0; line-height: 1.6; }
+.wb-metrics { display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 13px; padding: 8px 0; }
+.wb-products { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 10px; margin-top: 12px; }
+.wb-product { border: 1px solid #d7deea; border-radius: 6px; padding: 12px; min-width: 0; display: grid; grid-template-columns: 56px minmax(0,1fr); align-items: start; gap: 10px; }
+.wb-product img { width: 56px; height: 64px; object-fit: contain; background: white; }
+.wb-product .wb-no-image { width: 56px; height: 64px; display: grid; place-items: center; background: #f2f4f7; color: #84909f; font-size: 11px; }
+.wb-product-title { font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.wb-product-asin { font-size: 12px; color: #526075; }
+.wb-product-meta { font-size: 12px; color: #596579; }
+.wb-actions { display: flex; align-items: center; gap: 8px; grid-column: 1 / -1; }
+.wb-actions button, .wb-actions a, .wb-icon-button { min-height: 34px; border: 1px solid #cbd4df; border-radius: 4px; background: white; color: #1b293b; padding: 6px 10px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; text-decoration: none; }
+.wb-actions button:disabled { color: #768190; cursor: not-allowed; }
+.wb-actions button[data-action="favorite"] { width: 36px; padding: 6px; flex: 0 0 36px; }
+.wb-actions button[aria-pressed="true"] { color: #9d6600; background: #fff7df; border-color: #e6c476; }
+.wb-actions button[aria-pressed="true"] svg { fill: #ffdf75; }
+.wb-actions svg { width: 16px; height: 16px; flex: 0 0 16px; }
+.wb-status { display: inline-block; font-size: 12px; padding: 2px 6px; background: #eef1f5; color: #526075; border-radius: 3px; margin: 0 5px; }
+.wb-status.opportunity { background: #e3f4ed; color: #137151; }
+.wb-status.watch { background: #fff3d9; color: #945f06; }
+.wb-status.reject { background: #fbeceb; color: #a03b36; }
+.wb-rejected { border-top: 1px solid #e2e6ed; margin-top: 12px; padding-top: 8px; color: #526075; }
+.wb-rejected > summary { cursor: pointer; font-size: 13px; padding: 8px 0; }
+.workbench-tabs { display: flex; border-bottom: 1px solid #d7deea; margin-bottom: 12px; gap: 4px; }
+.workbench-tabs button { border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 10px 16px; font-size: 14px; cursor: pointer; }
+.workbench-tabs button[aria-selected="true"] { border-bottom-color: #2563df; color: #204fab; }
+#workbenchNotice { font-size: 13px; color: #986217; min-height: 24px; margin-bottom: 6px; }
+#workbenchConnection { font-size: 12px; color: #526075; }
+.wb-connection { display: flex; align-items: center; gap: 8px; min-height: 40px; font-size: 13px; color: #137151; }
+.wb-connection > span { display: inline-flex; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+.wb-connection.offline, #workbenchConnection.offline { color: #986217; }
+.wb-connection svg { width: 16px; height: 16px; flex: 0 0 16px; }
+.wb-connection .wb-icon-button { width: 34px; height: 34px; padding: 6px; flex: 0 0 34px; }
+.wb-connection button:focus-visible { outline: 2px solid #2563df; outline-offset: 3px; }
+.wb-job { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 12px 0; border-bottom: 1px solid #e2e6ed; font-size: 13px; }
+.wb-job .wb-actions { grid-column: auto; }
+.wb-job-title { overflow-wrap: anywhere; }
+.wb-empty { padding: 24px 0; font-size: 14px; color: #647185; }
+.wb-category > summary, .wb-family > summary, .wb-shape > summary { position: relative; padding-right: 44px; min-height: 34px; overflow-wrap: anywhere; }
+.wb-discard { width: 34px; height: 34px; padding: 6px; flex: 0 0 34px; color: #7b4744; }
+.wb-discard svg { width: 17px; height: 17px; flex: 0 0 17px; }
+summary > .wb-discard { position: absolute; right: 2px; top: 7px; }
+.wb-discard:hover { background: #fff1ef; border-color: #c1918a; }
+.wb-discard:focus-visible { outline: 2px solid #2563df; outline-offset: 3px; }
+.wb-connection { flex-wrap: wrap; }
+.wb-connection [data-action="show-dismissals"] { width: auto; flex: 0 0 auto; margin-left: auto; }
+#shapeWorkbenchNotice { font-size: 13px; color: #875600; overflow-wrap: anywhere; }
+#shapeWorkbenchNotice:not(:empty) { padding: 8px 0; }
+#keywordSearchForm { display: flex; flex-wrap: wrap; gap: 10px; }
+#keywordSearchInput { flex: 1 1 240px; min-width: 0; }
+#keywordSearchSubmit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 116px; min-height: 40px; flex: 0 0 auto; }
+#keywordSearchSubmit svg { width: 16px; height: 16px; }
+#keywordSearchSubmit:disabled { cursor: not-allowed; opacity: .6; }
+#keywordSearchStatus { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; margin: 10px 0; }
+#keywordSearchStatus a { margin-left: 10px; }
+#keywordSearchJobs { margin-bottom: 16px; }
+.wb-category summary:focus-visible, .wb-family summary:focus-visible, .wb-shape summary:focus-visible, .wb-actions button:focus-visible { outline: 2px solid #2563df; outline-offset: 3px; }
+@media (max-width: 600px) {
+  .wb-category summary .wb-counts { display: block; margin: 6px 0 0 18px; }
+  .wb-family { padding-left: 6px; }
+  .wb-job { grid-template-columns: 1fr; }
+  #research-workbench .section-head { flex-wrap: wrap; }
+  .workbench-tabs { flex-wrap: wrap; }
+  .workbench-tabs button { padding: 10px 8px; font-size: 13px; }
+}

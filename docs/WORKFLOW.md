@@ -21,6 +21,16 @@
 
 ## 每周选品更新
 
+### 类目预筛和产品排除
+
+- `config/autodiscovery_rules.json` 的 `category_filters` 和 `config/category_exclusions.json` 控制扫描前跳过；基础规则的原因记录在 `exclusion_reasons`。
+- 工业、汽车、狩猎/射击、吸尘/蒸汽/地面清洁属于逐产品验证范围，不再按父类目关键词永久跳过。
+- `config/product_exclusions.json` 的 `product_rules` 对具体整机、动力部件、武器和汽车安全/车型专用件执行硬拦截；`review_categories` 是对应经营范围说明。
+- 清洁电器判断区分商品主体和用途：拖把垫、滤袋、刷头可进入验证；附带这些配件的整机仍排除。明确整机叶类目可在标题不明时兜底；不是通过“配件”一词绕过所有风险。
+- 通用配件通过基础过滤不等于机会：品牌依赖、食品接触、危险品、破损、实际体积重量、市场和形态证据继续生效。
+- 已放开的类目重新参与原有“从未扫描优先，再按最久未扫”队列，不清空历史扫描状态，不自动把它们加入机会池。
+- 修改规则后先运行 `python3 -m unittest discover -s tests -p test_conditional_category_exclusions.py`，可用历史 Top100 离线回放，未经实际重新取数不要改称最新市场数据。
+
 入口命令：
 
 ```bash
@@ -44,6 +54,8 @@ Sorftime MCP 类目扫描（类目树缓存、每类目一次 Top100、逐类目
 - 全量合格候选按来源类目轮询抽样进入评分池：先让每个有候选的类目获得一个名额，再取各类目的第二、第三个产品。
 - 运行归档同时保存全量去重候选 `candidates_eligible.csv` 和进入评分的 `candidates_selected.csv`。
 - 默认成本估算只以较低权重参与排序；没有供应商真实报价时，不因估算毛利或估算单件利润直接淘汰。
+- 上述默认成本只适用于种子发现和粗排；进入单品研究后禁止沿用。
+- 单品研究采购成本采用至少 3 条 1688 同款/同规格去重 SKU 价或供应商确认价的中位数。商品列表最低展示价只是候选线索，不得直接计入利润；不得采用明显引流 SKU 或不相干的以图搜款结果。
 - 供应商报价、头程和包装数据齐全后，恢复完整利润权重和毛利/单件利润门槛。
 
 必须检查：
@@ -71,7 +83,7 @@ MCP 运行口径：
 - 每个类目调用一次 `category_report`，一次返回最多 100 个产品；100 类目的标准周扫约消耗 100 次调用。
 - 原始结果写入 `archive/discovery_runs/RUN_ID/raw_category_reports/`，规则调整优先回放这些数据，避免重复调用。
 - 回放命令：`python3 refresh_selection_workflow.py --replay-source-run archive/discovery_runs/RUN_ID --run-id NEW_RUN_ID`。
-- 旧单品研究链路尚未迁移到 MCP；在迁移完成前，周扫不自动启动依赖 CLI 的深挖。
+- 单品研究使用 Sorftime MCP；周扫只产出候选，不自动消耗大量调用做所有候选的深挖。
 
 ### 周扫可观测性和告警
 
@@ -214,6 +226,35 @@ python3 refresh_product_research.py --asin ASIN
 - 竞品结构和低评高销机会。
 - 可切入机会。
 - 是否值得继续打样或找供应商。
+- 1688 同款报价证据：至少 3 条去重样本、报价区间、采购价中位数和可追溯链接。
+- 使用中位采购价核算贡献利润率；包装、头程、FBA、佣金、广告和退货的实价/假设必须分开标注。
+- 同款样本不足时显示“利润未验证”，不允许以售价比例估算采购成本，也不能给出正向立项结论。
+
+### 三项强制核验
+
+从 2026-09-05 起，每个 ASIN 的新研究和历史页面必须展示以下三项，由 `research_required_checks.py` 统一检查，缺少任何一项不得输出正向立项结论。
+
+1. 季节性：优先目标单品连续 24 个完整月，其次类目趋势；去掉当月/未来月，不把缺失值填零。比较两个完整 12 月周期的归一指数、旺淡季比和高低月份重复性；持续单向增长/衰退不判定为季节循环。类目代理不代表单品或形态自身已确认；还需成熟同形态竞品、促销和断货记录验证。来源超过 90 天或序列停留过久回到待核验。
+2. 专利与品牌集中度：分开记录同形态 Top1/Top3 销量份额和知识产权结论。检索目标市场官方专利文本、授权/失效状态、具体结构、权利要求及外观；未查到或存在多个卖家不等于无侵权。公开申请不当作已授权垄断；Google Patents 状态需官方复核。采购前必要时交专业人士做 FTO。
+3. 声明与认证：限定站点、型号/变体、材料、功能和用户年龄；列明强制、条件适用和建议文件。每项标记文件已取得、未取得或暂无适用依据；平台实际索证和法律要求分开，使用许可也不能当作制造商认证。
+
+原始趋势与产品资料写入 `research/ASIN/research_sources.json`。代理必须联网检索当前官方依据后填写 `research/ASIN/risk_review.json`，顶层含 `asin`、`site`；`patent`、`compliance` 分别含：
+
+- `review_status`（`reviewed` 仅表示完成初查）、`reviewed_on`、`risk`、`summary`。
+- `clearance`（默认 `pending`，不得仅因有来源就填 `clear`）。
+- `sources`：包含 `title` 和 HTTPS `url`；`evidence`、`next_steps` 必须说明适用范围及不确定性。
+- `patents`：专利号、链接、状态和与目标结构的关系；`documents`：文件名、适用性及当前证据。
+
+人工证据须与 ASIN/站点一致、日期有效且不超过 180 天。参考渔网两个档案的结构，但不得把其结论复用到其他 ASIN。脚本能检查完整性和有效期，不能代替法律判断。`required_checks.json` 区分 `review_complete` 与 `launch_clearance`，只有检查/风险放行且利润证据满足，才可恢复原市场判断；缺资料不默认放行。
+
+只调整分析和规则、原始来源已经保存时，先零调用重建，再登记：
+
+```bash
+python3 mcp_product_opportunity_research.py --asin ASIN --rebuild-cached
+python3 refresh_product_research.py --asin ASIN --register-existing
+```
+
+离线重建保留原始采集日期与调用次数，不把页面重建当作新数据。已人工确认的供应商报价不得覆盖；最低展示价仍然只是候选。历史归档文件不回写、不删除。
 
 如果只是把已有本地研究补登记到档案，不重新调用 Sorftime：
 

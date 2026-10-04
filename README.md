@@ -49,6 +49,21 @@ python3 keyword_opportunity_search.py --keyword "bread storage bag"
 python3 build_dashboard.py
 ```
 
+## 本地网页
+
+固定地址为 http://127.0.0.1:8765/ 。本机使用 macOS 用户服务 `com.amz-selection.preview` 提供 `web/` 目录，登录后自动启动，退出终端或 Codex 不会关闭该服务。服务仅监听本机。
+
+检查状态和启动已有服务（重复启动不会创建第二个进程）：
+
+```bash
+launchctl print gui/$(id -u)/com.amz-selection.preview
+launchctl kickstart gui/$(id -u)/com.amz-selection.preview
+```
+
+需要重启时使用 `launchctl kickstart -k gui/$(id -u)/com.amz-selection.preview`。不要再单独启动 `python3 -m http.server 8765`，否则会与已运行的服务冲突。日志位于 `logs/preview.stdout.log` 和 `logs/preview.stderr.log`。
+
+配置源文件为 `automation/com.amz-selection.preview.plist`，本机安装位置为 `~/Library/LaunchAgents/com.amz-selection.preview.plist`；迁移项目目录或更换 Python 路径时需要同步更新两处配置。停止当前登录会话中的服务可运行 `launchctl bootout gui/$(id -u)/com.amz-selection.preview`。
+
 ## 文件结构
 
 ```text

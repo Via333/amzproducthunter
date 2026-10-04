@@ -1,0 +1,400 @@
+{
+  "node_id": "553582",
+  "category_name": "Tool Holsters",
+  "category_path": "Tools & Home Improvement > Storage & Home Organization > Tool Organizers > Tool Holsters",
+  "researched_at": "2026-09-02 21:58",
+  "data_provider": "Sorftime MCP",
+  "mcp_tool_calls": 23,
+  "verdict": "类目不直接立项；仅保留两个形态继续验证",
+  "grade": "B-",
+  "primary_opportunity": "磁吸腰带工具夹（供应商与 FTO 验证）",
+  "summary": "Top100 需求不小，但混入品牌专用手电套、枪套、墙面工具架和普通工具。类目总量不能直接代表 Tool Holster 的可复制需求。磁吸腰带工具夹有两个低评新品卖起；磁吸工作垫继续沿用独立单品研究，不能用本类目三个混合样本直接立项。",
+  "validation_tracks": [
+    {
+      "form": "磁吸腰带工具夹",
+      "status": "阶段 1 已通过；阶段 2 待完成",
+      "state": "pending",
+      "current_result": "类目需求和新品成功信号通过，但商业可行性与专利风险尚未通过，现在不能立项。",
+      "evidence": [
+        "7 个样本合计月销 2,637，评论中位 132",
+        "2 个近 18 个月新品都已卖起，分别约 349 和 434 件/月",
+        "评论证明磁吸便捷有需求，但垂直抗滑、腰带夹适配和重量仍是痛点"
+      ],
+      "pending": [
+        "3 档样品的垂直抗滑、振动、跌落和 1,000 次夹取测试",
+        "供应商报价、包装后重量和 $19.99/$24.99 利润测算",
+        "腰带夹、磁体封装和止滑结构 FTO"
+      ],
+      "links": [
+        {"label": "查看评论验证", "url": "#review-analysis"},
+        {"label": "打开高端基准款", "url": "https://www.amazon.com/dp/B0DJ3RM73J"}
+      ]
+    },
+    {
+      "form": "磁吸工作垫",
+      "status": "单品深研已完成；实物/利润待验证",
+      "state": "research_done",
+      "current_result": "B0FXG8J58Q 已完成独立研究，得分 73，结论是“继续验证，不直接立项”。",
+      "evidence": [
+        "10 个直接竞品样本合计月销 2,741，目标款占约 35.8%",
+        "已归纳 94 条评论，强磁、耐用和多尺寸是主要好评点",
+        "2025-12 上架后近期销量约 981 件/月，需求与增长信号真实"
+      ],
+      "pending": [
+        "实物磁力、耐久、工位振动和油污环境测试",
+        "磁性产品运输包装与空运限制确认",
+        "真实供应商报价和小预算关键词测试"
+      ],
+      "links": [
+        {"label": "查看完整单品研究", "url": "../research/B0FXG8J58Q.html"},
+        {"label": "打开 Amazon", "url": "https://www.amazon.com/dp/B0FXG8J58Q"}
+      ]
+    }
+  ],
+  "category_metrics": {
+    "category_health_score": 77.2,
+    "top100_monthly_sales": 42728,
+    "top100_monthly_revenue": 656420.17,
+    "top3_product_sales_share": 0.3038,
+    "top10_product_sales_share": 0.454,
+    "top3_brand_sales_share": 0.3181,
+    "top3_seller_sales_share": 0.4418,
+    "amazon_owned_sales_share": 0.1736,
+    "low_review_sales_share": 0.3549,
+    "high_review_sales_share": 0.4429,
+    "median_reviews": 246,
+    "top10_median_reviews": 859,
+    "median_price": 14.34,
+    "return_rate": 0.0319,
+    "cn_hk_seller_share": 0.47,
+    "fba_share": 0.97,
+    "new_listing_share_12m": 0.16,
+    "review_sales_spearman": 0.323
+  },
+  "data_quality_flags": [
+    "Top100 语义混杂：包含枪套、墙面工具架、手电筒本体及其他非腰带工具套产品",
+    "WUBEN G5 单链接月销 9,111、评论 8,519，但 online_date 显示 2026-04-08，需人工核对父体/变体口径",
+    "类目健康度没有扣除品牌专用和跨类目产品，因此 77.2 只用于扫描排序，不能直接用于立项",
+    "类目关键词月搜索量普遍较小，宽泛搜索结果数不能当作目标形态需求"
+  ],
+  "forms": [
+    {
+      "name": "flashlight_holster",
+      "label": "手电筒套",
+      "listing_count": 8,
+      "monthly_sales": 11954,
+      "sales_share": 0.28,
+      "median_price": 9.99,
+      "median_reviews": 330,
+      "new_listing_count": 4,
+      "new_entrant_success_count": 3,
+      "decision": "reject_brand_dependent",
+      "reason": "WUBEN 与 OLIGHT 两个品牌专用款占该组约 87% 销量，价格低且需求不可直接复制。"
+    },
+    {
+      "name": "tape_measure_combo_holder",
+      "label": "卷尺/组合工具夹",
+      "listing_count": 18,
+      "monthly_sales": 4517,
+      "sales_share": 0.106,
+      "median_price": 13.99,
+      "median_reviews": 250,
+      "new_listing_count": 2,
+      "new_entrant_success_count": 1,
+      "decision": "reject_low_differentiation",
+      "reason": "样本多但功能混杂、售价低，未出现稳定低评高销缺口。"
+    },
+    {
+      "name": "bench_wall_tool_organizer",
+      "label": "桌面/墙面工具架",
+      "listing_count": 7,
+      "monthly_sales": 4252,
+      "sales_share": 0.10,
+      "median_price": 16.14,
+      "median_reviews": 672,
+      "new_listing_count": 1,
+      "new_entrant_success_count": 1,
+      "decision": "separate_category_research",
+      "reason": "不是 Tool Holster 同一形态；WORKPRO 单链接占该组约 50%，应回到工具架最小类目单独验证。"
+    },
+    {
+      "name": "single_tool_sheath",
+      "label": "锤/钳/扳手单工具套",
+      "listing_count": 10,
+      "monthly_sales": 3595,
+      "sales_share": 0.084,
+      "median_price": 10.09,
+      "median_reviews": 1076,
+      "new_listing_count": 2,
+      "new_entrant_success_count": 1,
+      "decision": "reject_mature_low_price",
+      "reason": "价格带低、评论墙高，传统皮套和金属环已经成熟。"
+    },
+    {
+      "name": "magnetic_belt_tool_holder",
+      "label": "磁吸腰带工具夹",
+      "listing_count": 7,
+      "monthly_sales": 2637,
+      "sales_share": 0.062,
+      "median_price": 16.99,
+      "median_reviews": 132,
+      "top3_sales_share": 0.602,
+      "new_listing_count": 2,
+      "new_entrant_success_count": 2,
+      "decision": "supplier_and_fto_validation",
+      "reason": "两个近 18 个月低评新品已达到 349-434 件/月，需求真实；但头部结构、磁体固定和腰带夹方案需先做 FTO 与样品测试。"
+    },
+    {
+      "name": "work_glove_clip",
+      "label": "工作手套夹",
+      "listing_count": 4,
+      "monthly_sales": 2301,
+      "sales_share": 0.054,
+      "median_price": 7.49,
+      "median_reviews": 244,
+      "new_listing_count": 1,
+      "new_entrant_success_count": 1,
+      "decision": "reject_price_and_concentration",
+      "reason": "Seibertron 标注 Patented 的单链接占该组约 76%，中位价低于目标价格带。"
+    },
+    {
+      "name": "general_drill_tool_hook",
+      "label": "通用电钻/工具挂钩",
+      "listing_count": 7,
+      "monthly_sales": 2111,
+      "sales_share": 0.049,
+      "median_price": 11.99,
+      "median_reviews": 133,
+      "new_listing_count": 2,
+      "new_entrant_success_count": 2,
+      "decision": "watch_low_price",
+      "reason": "存在新品，但售价刚好低于目标价格带，普通挂钩差异化弱。"
+    },
+    {
+      "name": "locking_power_tool_holster",
+      "label": "锁止式电动工具夹",
+      "listing_count": 5,
+      "monthly_sales": 1857,
+      "sales_share": 0.043,
+      "median_price": 34.99,
+      "median_reviews": 353,
+      "new_listing_count": 1,
+      "new_entrant_success_count": 0,
+      "decision": "watch_high_ip_and_quality_risk",
+      "reason": "客单价可做，但新品未卖起；评论显示销钉断裂、螺丝滑牙、腰带适配和损坏电动工具的责任风险。"
+    },
+    {
+      "name": "firearm_knife_holster_accessory",
+      "label": "枪套/刀套配件",
+      "listing_count": 5,
+      "monthly_sales": 1604,
+      "sales_share": 0.038,
+      "median_price": 14.69,
+      "median_reviews": 67,
+      "new_listing_count": 2,
+      "new_entrant_success_count": 1,
+      "decision": "hard_reject",
+      "reason": "武器相关产品，不符合当前选品边界。"
+    },
+    {
+      "name": "magnetic_work_mat_parts_tray",
+      "label": "磁吸工作垫/零件盘",
+      "listing_count": 3,
+      "monthly_sales": 1320,
+      "sales_share": 0.031,
+      "median_price": 28.99,
+      "median_reviews": 153,
+      "new_listing_count": 3,
+      "new_entrant_success_count": 1,
+      "decision": "continue_independent_product_research",
+      "reason": "类目内只有一个真正磁吸垫和两个相邻零件盘，样本不足；B0FXG8J58Q 已有独立 10 个直接竞品研究，继续验证但不靠本类目结论立项。"
+    },
+    {
+      "name": "multitool_edc_sheath",
+      "label": "多功能钳/EDC 工具套",
+      "listing_count": 4,
+      "monthly_sales": 1195,
+      "sales_share": 0.028,
+      "median_price": 16.49,
+      "median_reviews": 238,
+      "new_listing_count": 3,
+      "new_entrant_success_count": 2,
+      "decision": "reject_brand_compatibility",
+      "reason": "大量流量依赖 Leatherman 等品牌兼容词，存在适配、商标和价格竞争风险。"
+    },
+    {
+      "name": "multi_pocket_tool_pouch",
+      "label": "多口袋工具袋",
+      "listing_count": 4,
+      "monthly_sales": 927,
+      "sales_share": 0.022,
+      "median_price": 30.45,
+      "median_reviews": 1736,
+      "new_listing_count": 0,
+      "new_entrant_success_count": 0,
+      "decision": "reject_review_wall",
+      "reason": "成熟品牌和高评论链接占主导，没有新品成功证据。"
+    }
+  ],
+  "shape_gallery": [
+    {
+      "asin": "B0G42J9N26",
+      "form": "磁吸腰带工具夹",
+      "caption": "轻量金属夹，小平面磁吸区",
+      "monthly_sales": 349,
+      "decision": "优先验证",
+      "image": "assets/553582/B0G42J9N26.jpg"
+    },
+    {
+      "asin": "B0FSRHW388",
+      "form": "磁吸腰带工具夹",
+      "caption": "大磁吸面，中低价新品",
+      "monthly_sales": 434,
+      "decision": "优先验证",
+      "image": "assets/553582/B0FSRHW388.jpg"
+    },
+    {
+      "asin": "B0DJ3RM73J",
+      "form": "磁吸腰带工具夹",
+      "caption": "Holstery 高端头部，结构与 FTO 对标",
+      "monthly_sales": 797,
+      "decision": "优先验证",
+      "image": "assets/553582/B0DJ3RM73J.jpg"
+    },
+    {
+      "asin": "B0FXG8J58Q",
+      "form": "磁吸工作垫",
+      "caption": "可弯曲磁吸工具垫套装",
+      "monthly_sales": 981,
+      "decision": "独立研究",
+      "image": "assets/553582/B0FXG8J58Q.jpg"
+    },
+    {
+      "asin": "B0CBD4HTHW",
+      "form": "锁止式电动工具夹",
+      "caption": "销钉锁止结构，高客单但高责任风险",
+      "monthly_sales": 806,
+      "decision": "观察",
+      "image": "assets/553582/B0CBD4HTHW.jpg"
+    },
+    {
+      "asin": "B0D72S9ZDK",
+      "form": "桌面钳子收纳架",
+      "caption": "桌面/抽屉工具架，应转回正确类目验证",
+      "monthly_sales": 2132,
+      "decision": "另行研究",
+      "image": "assets/553582/B0D72S9ZDK.jpg"
+    },
+    {
+      "asin": "B0GHH8VDQ1",
+      "form": "工作手套夹",
+      "caption": "金属弹簧手套夹，需求弱且有专利集中",
+      "monthly_sales": 230,
+      "decision": "淘汰",
+      "image": "assets/553582/B0GHH8VDQ1.jpg"
+    }
+  ],
+  "representative_asins": [
+    {"asin": "B0G42J9N26", "form": "磁吸腰带工具夹", "monthly_sales": 349, "reviews": 71, "price": 15.99, "role": "优先样品基准"},
+    {"asin": "B0FSRHW388", "form": "磁吸腰带工具夹", "monthly_sales": 434, "reviews": 129, "price": 16.99, "role": "低评高销基准"},
+    {"asin": "B0DJ3RM73J", "form": "磁吸腰带工具夹", "monthly_sales": 797, "reviews": 384, "price": 29.99, "role": "高端头部/FTO 基准"},
+    {"asin": "B0FXG8J58Q", "form": "磁吸工作垫", "monthly_sales": 981, "reviews": 153, "price": 35.99, "role": "已有单品研究"},
+    {"asin": "B0CBD4HTHW", "form": "锁止式工具夹", "monthly_sales": 806, "reviews": 390, "price": 34.99, "role": "耐久与责任风险基准"},
+    {"asin": "B0D72S9ZDK", "form": "钳子桌面收纳架", "monthly_sales": 2132, "reviews": 672, "price": 16.14, "role": "跨类目研究入口"},
+    {"asin": "B0GHH8VDQ1", "form": "工作手套夹", "monthly_sales": 230, "reviews": 5, "price": 18.80, "role": "新品但需求弱"}
+  ],
+  "keywords": [
+    {"keyword": "drill holster for tool belt", "monthly_search_volume": 92, "cpc": 0.46, "first_page_avg_sales": 232, "peak": "8月"},
+    {"keyword": "tool holder belt", "monthly_search_volume": 87, "cpc": 1.36, "first_page_avg_sales": 943, "peak": "4-6月"},
+    {"keyword": "leatherman wingman sheath", "monthly_search_volume": 88, "cpc": 0.42, "first_page_avg_sales": 439, "peak": "12月"},
+    {"keyword": "milwaukee m18 tool holder", "monthly_search_volume": 93, "cpc": 1.31, "first_page_avg_sales": 184, "peak": "均衡"},
+    {"keyword": "tool belt hammer holder", "monthly_search_volume": 72, "cpc": 0.79, "first_page_avg_sales": 132, "peak": "均衡"},
+    {"keyword": "leatherman skeletool sheath", "monthly_search_volume": 73, "cpc": 0.63, "first_page_avg_sales": 522, "peak": "均衡"}
+  ],
+  "trend": {
+    "sales": [
+      {"period": "2025-09", "value": 28621},
+      {"period": "2025-10", "value": 32958},
+      {"period": "2025-11", "value": 48640},
+      {"period": "2025-12", "value": 74161},
+      {"period": "2026-01", "value": 32641},
+      {"period": "2026-02", "value": 30008},
+      {"period": "2026-03", "value": 34990},
+      {"period": "2026-04", "value": 37360},
+      {"period": "2026-05", "value": 43603},
+      {"period": "2026-06", "value": 60890},
+      {"period": "2026-07", "value": 44056},
+      {"period": "2026-08", "value": 38519}
+    ],
+    "jan_aug_yoy_growth": 0.3229,
+    "new_product_sales_share_2026_avg": 0.0298,
+    "top3_brand_sales_share_2026_avg": 0.2985,
+    "note": "11-12 月礼品季与 6 月施工季明显；2026 年 1-8 月同比增长约 32.3%，但当前头部 WUBEN 链接会放大增长。"
+  },
+  "review_coverage": {
+    "raw_review_count": 166,
+    "asin_count": 6,
+    "current_run_review_count": 72,
+    "reused_product_research_review_count": 94,
+    "customers_say_with_data": 4,
+    "note": "评论正文仅用于内部归纳，页面不公开展示原文；Customers Say 的 mention 会重叠。"
+  },
+  "review_analysis": [
+    {
+      "form": "磁吸腰带工具夹",
+      "positive": ["磁力强，螺丝、批头、钳子和锤子可随手吸附", "爬梯和移动作业时像多一只手", "体积小，可夹腰带、口袋和工具包"],
+      "negative": ["磁面偏小，用户明确要求更大版本", "标称拉力不等于垂直使用的抗滑力，重工具会下滑", "腰带夹过硬、可能刮表面，重物会坠腰", "高价款价值感存在分歧"],
+      "cut_in": "做大/小两种磁面，增加橡胶防滑面或机械止滑边；按真实工具姿态公布抗滑测试，不再只写 22/25lb；腰带夹覆盖不同厚度并增加防刮垫。"
+    },
+    {
+      "form": "锁止式电动工具夹",
+      "positive": ["移动时固定牢，取放顺手", "爬梯和片场作业效率明显提升"],
+      "negative": ["销钉或螺丝断裂、滑牙", "不同 Milwaukee/工具型号适配不稳定", "断件可能留在电动工具内，形成赔偿和责任风险", "腰带夹牢固度评价分化"],
+      "cut_in": "在没有独立 FTO、销钉疲劳测试和主流工具适配矩阵前不进入；这是高客单但高责任形态。"
+    },
+    {
+      "form": "钳子桌面收纳架",
+      "positive": ["节省抽屉空间，找工具更快", "凹槽和橡胶底可减少滑动", "固定槽比松动的可调隔片更稳定"],
+      "negative": ["宽柄钳放不下", "部分磁铁实际偏弱", "塑料隔片有易断担忧"],
+      "cut_in": "宽窄混合槽、连续橡胶底和可替换隔片是明确改进点，但应在 Tool Organizers 对应最小类目重新验证。"
+    },
+    {
+      "form": "工作手套夹",
+      "positive": ["夹力和耐用性容易理解", "使用简单，适合作业腰带或背包"],
+      "negative": ["中位售价过低", "头部专利款占销量约四分之三", "新品评论少但销量仅约 230 件/月"],
+      "cut_in": "不作为当前机会；除非组合帽夹/手套夹并能把客单价和非侵权结构同时做出来。"
+    }
+  ],
+  "opportunities": [
+    "优先验证磁吸腰带工具夹，不复制 Holstery 外观或夹持结构；先做结构检索和样品拆解。",
+    "产品切入应从真实抗滑力、磁面尺寸和腰带兼容性出发，而不是继续放大静态拉力数字。",
+    "B0FXG8J58Q 磁吸工作垫维持独立单品研究结论，类目内样本不足不能提供额外确定性。",
+    "WORKPRO 钳子架需求可见，但它属于桌面工具收纳形态，应进入对应最小类目后重新验证。"
+  ],
+  "risks": [
+    "类目语义污染严重，按 Amazon 节点汇总会把不可比形态混为一个市场。",
+    "磁吸腰带工具夹 Top3 销量占约 60%，头部品牌仍有一定集中度。",
+    "磁体存在脱落、夹伤、电子设备/磁卡干扰及运输磁场测试要求。",
+    "工具夹在高空和移动场景使用，掉落或损坏用户工具的责任风险高于普通收纳用品。",
+    "47% 卖家来自 CN/HK，说明供应链容易进入，也意味着价格跟进会快。"
+  ],
+  "next_actions": [
+    "购买 B0DJ3RM73J、B0FSRHW388、B0G42J9N26 三档样品，对比磁面尺寸、磁体结构、夹持方式和实重。",
+    "用锤、钳、套筒和批头测试静态拉脱、垂直抗滑、步行/爬梯振动、1,000 次夹取和 1 米跌落。",
+    "先做 USPTO/Google Patents 结构检索和律师 FTO，重点看腰带夹、磁体封装和止滑结构。",
+    "向 3 家供应商索取 N52 等级、磁体固定工艺、橡胶包覆、单件重量、包装后磁场测试和阶梯价。",
+    "拿到真实到岸成本后，以 $19.99 和 $24.99 两档重算 FBA、15% 佣金、12%-18% 广告及退货损耗。",
+    "若实际垂直承载无法明显优于低价款，或 FTO 无法形成差异化结构，则停止。"
+  ],
+  "sources": [
+    "category_report",
+    "category_keywords",
+    "category_trend:SalesCount",
+    "category_trend:NewProductSalesAmountShare",
+    "category_trend:AvgRatingCount",
+    "category_trend:Top3BrandSalesAmountShare",
+    "product_reviews",
+    "product_customers_say",
+    "research/B0FXG8J58Q"
+  ]
+}

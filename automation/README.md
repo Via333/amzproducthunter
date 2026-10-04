@@ -1,83 +1,56 @@
 # Weekly Category Scan Automation
 
-This folder contains the local macOS launchd automation for the weekly AMZ category scan.
-
 ## Schedule
 
-- Label: `com.amz-selection.weekly`
-- Time: every Monday at 08:30 local time
-- Entry point: `automation/run_weekly_category_scan.sh`
-- Workflow called by the runner: `python3 refresh_selection_workflow.py`
+- Keep only `com.amz-selection.weekly` enabled. The old `com.multica.amz-selection.weekly` points at a retired checkout and must remain disabled/unloaded; retain its file for history.
+- launchd checks daily at 08:30 local wall-clock time, with `RunAtLoad=false`.
+- The runner uses `TZ=Asia/Shanghai` and explicit timezone timestamps, and wraps execution in `caffeinate -i`.
+- `--scheduled` skips API calls when a verified, non-replay published generation is less than seven days old. A legacy success log or partial run cannot satisfy this condition.
+- Over eight days without a verified publication is a local critical alert. Feishu delivery is **not implemented/enabled** pending explicit recipient and data-scope approval.
+- Normal scheduled execution can call Sorftime. Tests and replay commands cannot.
 
-The runner does not scrape Amazon pages directly. It only calls the existing project workflow, which uses Sorftime CLI through the existing scripts.
+## Publication and Locking
 
-## Outputs
+`refresh_selection_workflow.py` owns an OS advisory lock at `.local/weekly-workflow.lock`. The file may remain after exit, but the lock is released by the OS even on a crash. Do not use or delete old PID lock files as a concurrency mechanism.
 
-The scheduled run writes timestamped logs to:
+Each batch is built independently under `.local/weekly_generations/<run_id>/`. Category failures, empty results, and unattempted categories count as missing coverage. More than 20% missing coverage blocks publication and exits 2; this is deliberately stricter than only returning an error above 50%.
 
-```text
-logs/weekly_category_scan_YYYYMMDD_HHMMSS.log
-logs/weekly_category_scan.latest.log
-logs/launchd.weekly_category_scan.out.log
-logs/launchd.weekly_category_scan.err.log
-```
+After validation, one atomic replacement of `.local/current_generation.json` publishes the complete batch. Consumers use `workflow_storage.current_root()`; the root-level legacy CSVs are no longer the current weekly data after the first generation is published. Never copy a few files back manually or point the pointer at replay output.
 
-The runner checks that these required outputs exist after each run:
+Per-run discovery, validation and weekly reports are also retained in the root `archive/` for traceability. Partial attempts carry forward failure bookkeeping, not success dates. Manual research stays in the workspace and is overlaid when rebuilding the dashboard. Run IDs must be unique.
 
-```text
-web/index.html
-reports/discovered_categories.csv
-reports/selection_ranked.csv
-archive/category_scan_state.csv
-data/category_shape_validation.csv
-archive/shape_opportunity_library.csv
-```
+## Logs and Checks
 
-## Re-entry Protection
+Logs are retained at `logs/weekly_category_scan_<run_id>.log` and `logs/weekly_category_scan.latest.log`. launchd stdout/stderr go to the corresponding `logs/launchd.weekly_category_scan.*.log` files.
 
-The runner has two guards:
-
-- `logs/weekly_category_scan.lock` prevents concurrent runs.
-- If the same calendar day already has a completed seed snapshot and a completed category/form snapshot, and `web/index.html` exists, the runner exits without calling Sorftime or writing a new snapshot.
-
-Use a forced rerun only after recording the reason in the project run log:
+Offline checks:
 
 ```bash
-automation/run_weekly_category_scan.sh --force
-AMZ_WEEKLY_FORCE=1 automation/run_weekly_category_scan.sh
-```
-
-## Manual Checks
-
-Validate the files without triggering a Sorftime scan:
-
-```bash
+python3 -m unittest discover -s tests
+python3 tests/smoke_selection_workflow.py
+python3 tests/audit_optimization_replays.py
+AMZ_OFFLINE=1 python3 discover_sorftime_opportunities.py --dry-run --strategy category --run-id UNIQUE_DRY_RUN_ID
 zsh -n automation/run_weekly_category_scan.sh
 plutil -lint automation/com.amz-selection.weekly.plist
-python3 tests/smoke_selection_workflow.py
 ```
 
-The smoke test writes only under `tmp/smoke_selection_workflow/<run_id>/`. It verifies fixture scoring, rejected candidates, category/form validation, and a temporary shape opportunity pool without touching live reports or the formal archive.
+The historical audit requires the local September archives, saves results under `.local/optimization_audits/`, checks live-file hashes, and must not run in CI without those inputs. The fixed smoke fixture uses a system temporary directory and a fixed analysis date. Browser acceptance uses `tests/verify_dashboard_ui.cjs` with a locally installed Playwright runtime, blocks external requests, and saves screenshots under ignored `output/playwright/`.
 
-Check whether launchd loaded the job:
-
-```bash
-launchctl print gui/501/com.amz-selection.weekly
-```
-
-Run one manual weekly scan:
-
-```bash
-automation/run_weekly_category_scan.sh
-```
+Pool repair is a separate offline operation: `python3 repair_opportunity_archive.py` previews changes; `--apply` first saves a backup, preserves all rows and proof dates, and never clears risk holds.
 
 ## Install Or Reload
 
+Inspect both labels before changes and verify no scan is running. Adapt checkout paths in the plist when installing on a different computer. Back up the installed plist first.
+
 ```bash
-cp automation/com.amz-selection.weekly.plist /Users/y33/Library/LaunchAgents/com.amz-selection.weekly.plist
-launchctl bootout gui/501 /Users/y33/Library/LaunchAgents/com.amz-selection.weekly.plist
-launchctl bootstrap gui/501 /Users/y33/Library/LaunchAgents/com.amz-selection.weekly.plist
+launchctl print gui/501/com.amz-selection.weekly
+launchctl print gui/501/com.multica.amz-selection.weekly
+launchctl disable gui/501/com.multica.amz-selection.weekly
+launchctl bootout gui/501/com.multica.amz-selection.weekly
+launchctl bootout gui/501/com.amz-selection.weekly
+cp automation/com.amz-selection.weekly.plist ~/Library/LaunchAgents/com.amz-selection.weekly.plist
+launchctl bootstrap gui/501 ~/Library/LaunchAgents/com.amz-selection.weekly.plist
 launchctl enable gui/501/com.amz-selection.weekly
 ```
 
-`bootout` may print an error when the job was not previously loaded; that is normal before first install.
+An already-unloaded label can make `bootout` fail; check status instead of ignoring other errors. Do not use `kickstart` on the weekly job merely to test installation: that initiates a real scan. `automation/run_weekly_category_scan.sh --force` is an explicit, potentially paid manual rerun.

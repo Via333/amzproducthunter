@@ -6,11 +6,12 @@ from build_category_research_page import build_html
 
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURES = ROOT / "tests/fixtures/category_research"
 
 
 class CategoryResearchPageTest(unittest.TestCase):
     def test_shape_gallery_has_filter_and_local_images(self):
-        data = json.loads((ROOT / "research/category_553582_analysis.json").read_text(encoding="utf-8"))
+        data = json.loads((FIXTURES / "category_553582_analysis.json").read_text(encoding="utf-8"))
         gallery = data["shape_gallery"]
         html = build_html(data)
 
@@ -21,7 +22,7 @@ class CategoryResearchPageTest(unittest.TestCase):
         self.assertIn("阶段 1 已通过；阶段 2 待完成", html)
         self.assertIn("../research/B0FXG8J58Q.html", html)
         for row in gallery:
-            self.assertTrue((ROOT / "web/category" / row["image"]).is_file())
+            self.assertTrue((FIXTURES / "web/category" / row["image"]).is_file())
             self.assertIn(row["image"], html)
 
 

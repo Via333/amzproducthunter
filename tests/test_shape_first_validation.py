@@ -65,6 +65,8 @@ class ShapeFirstValidationTest(unittest.TestCase):
             encoding="utf-8",
         )
         base = load_json("config/category_shape_validation_rules.json")
+        self.category_exclusions_path = self.root / "category_exclusions.json"
+        self.category_exclusions_path.write_text(json.dumps({"path_contains": []}), encoding="utf-8")
         self.rules = {
             "discovery_runs_root": str(self.runs_root),
             "seed_recommendation_contains": "Watch",
@@ -73,6 +75,7 @@ class ShapeFirstValidationTest(unittest.TestCase):
             "allow_adjacent_shape_opportunity": True,
             "allow_deep_dive_fallback": False,
             "research_root": str(self.root / "research"),
+            "category_exclusions_path": str(self.category_exclusions_path),
             "thresholds": base["thresholds"],
             "_scoring_rules": load_json("config/scoring_rules.json"),
         }
@@ -110,6 +113,57 @@ class ShapeFirstValidationTest(unittest.TestCase):
         self.assertEqual([group[1][0]["source_category_id"] for group in ranked], ["1001", "1002"])
         self.assertEqual(ranked[0][1][0]["category_health_score"], "72")
 
+    def test_ranked_categories_skip_permanently_excluded_category_before_limit(self):
+        self.category_exclusions_path.write_text(
+            json.dumps({"path_contains": [{"term": "rimming salts & sugars"}]}),
+            encoding="utf-8",
+        )
+        self.write_report("1001", [product("FOOD1", "Cocktail Rimming Salt", "CULINARY SALT", 500, 50, "Brand A")])
+        self.write_report("1002", [product("TOOL1", "Magnetic Tool Mat", "TOOL MAT", 400, 40, "Brand B")])
+        self.write_categories(
+            [
+                {
+                    "category_id": "1001",
+                    "name": "Rimming Salts & Sugars",
+                    "path": "Home & Kitchen > Bar & Wine Tools > Rimming Salts & Sugars",
+                    "scan_status": "success",
+                    "category_health_score": "90",
+                },
+                {
+                    "category_id": "1002",
+                    "name": "Tool Holders",
+                    "path": "Tools > Tool Holders",
+                    "scan_status": "success",
+                    "category_health_score": "80",
+                },
+            ]
+        )
+
+        ranked = load_ranked_categories(
+            {**self.rules, "category_ranking": "", "category_ranking_limit": 1},
+            self.run_dir,
+        )
+
+        self.assertEqual([group[1][0]["source_category_id"] for group in ranked], ["1002"])
+
+    def test_seed_category_cannot_bypass_permanent_exclusion(self):
+        self.category_exclusions_path.write_text(
+            json.dumps({"path_contains": [{"term": "rimming salts & sugars"}]}),
+            encoding="utf-8",
+        )
+        self.write_report("1001", [product("FOOD1", "Cocktail Rimming Salt", "CULINARY SALT", 500, 50, "Brand A")])
+        excluded_seed = seed(
+            "FOOD1",
+            "1001",
+            "Cocktail Rimming Salt",
+            path="Home & Kitchen > Bar & Wine Tools > Rimming Salts & Sugars",
+            name="Rimming Salts & Sugars",
+        )
+
+        rows = build_validation_rows([excluded_seed], [], self.rules, self.run_dir)
+
+        self.assertEqual(rows, [])
+
     def test_manual_asin_marks_its_category_as_seed_scope(self):
         self.write_report(
             "1001",
@@ -132,14 +186,14 @@ class ShapeFirstValidationTest(unittest.TestCase):
         self.write_report(
             "1004",
             [
-                product("V1", "Cordless Vacuum Attachment", "VACUUM TOOL", 600, 50, "Brand A", days_ago(100)),
-                product("V2", "Portable Vacuum Accessory", "VACUUM TOOL", 550, 40, "Brand B", days_ago(120)),
+                product("V1", "Cordless Vacuum Cleaner", "VACUUM TOOL", 600, 50, "Brand A", days_ago(100)),
+                product("V2", "Portable Vacuum Cleaner", "VACUUM TOOL", 550, 40, "Brand B", days_ago(120)),
                 product("V3", "Vacuum Cleaning Tool", "VACUUM TOOL", 500, 30, "Brand C", days_ago(140)),
                 product("V4", "Floor Cleaning Tool", "VACUUM TOOL", 450, 20, "Brand D", days_ago(160)),
             ],
         )
 
-        rows = build_validation_rows([seed("V1", "1004", "Cordless Vacuum Attachment")], [], self.rules, self.run_dir)
+        rows = build_validation_rows([seed("V1", "1004", "Cordless Vacuum Cleaner")], [], self.rules, self.run_dir)
         row = rows[0]
 
         self.assertEqual(row["form_excluded_share"], 0.75)
@@ -234,7 +288,7 @@ class ShapeFirstValidationTest(unittest.TestCase):
                 # closed form: same aggregate numbers, but every recent launch failed
                 product("B0SHUT1", "Boat Trash Can", "TRASH CAN", 500, 60, "Brand E", days_ago(1500)),
                 product("B0SHUT2", "Marine Trash Bin", "TRASH CAN", 420, 35, "Brand F", days_ago(1600)),
-                product("B0SHUT3", "Collapsible Boat Bin", "TRASH CAN", 30, 2, "Brand G", days_ago(200)),
+                product("B0SHUT3", "Collapsible Boat Trash Bin", "TRASH CAN", 30, 2, "Brand G", days_ago(200)),
                 product("B0SHUT4", "Boat Waste Basket", "TRASH CAN", 40, 5, "Brand H", days_ago(250)),
             ],
         )
@@ -292,12 +346,13 @@ class ShapeFirstValidationTest(unittest.TestCase):
                 product("B0BOX03", "Flashcard Storage Box with Dividers", "STORAGE BOX", 650, 110, "Brand D", days_ago(400)),
                 product("B0BOX04", "Recipe Card Box", "STORAGE BOX", 500, 40, "Brand E", days_ago(1800)),
                 product("B0BOX05", "Photo Storage Box 4x6", "STORAGE BOX", 600, 130, "Brand F", days_ago(2400)),
+                product("B0BOX06", "Index Card Storage Box", "STORAGE BOX", 600, 90, "Brand G", days_ago(200)),
             ],
         )
         seeds = select_seed_rows([seed("B0SEED1", "1004", "Trading Card Binder 4 Pocket")], self.rules)
         rows = {row["product_form"]: row for row in build_validation_rows(seeds, [], self.rules, self.run_dir)}
 
-        box = rows["storage box"]
+        box = rows["card storage box"]
         self.assertEqual(box["shape_scope"], "adjacent_form")
         self.assertEqual(box["shape_recommendation"], "Shape opportunity")
         # the seed's own form is a single listing: never an opportunity on its own
@@ -316,7 +371,7 @@ class ShapeFirstValidationTest(unittest.TestCase):
         )
         seeds = select_seed_rows([seed("B0SEED1", "1005", "Trading Card Binder")], strict)
         rows = {row["product_form"]: row for row in build_validation_rows(seeds, [], strict, self.run_dir)}
-        self.assertEqual(rows["storage box"]["shape_recommendation"], "Watch shape")
+        self.assertEqual(rows["card storage box"]["shape_recommendation"], "Watch shape")
 
     # --- health-ranked categories without seeds ---------------------------
 
@@ -327,6 +382,9 @@ class ShapeFirstValidationTest(unittest.TestCase):
                 product("B0RANK1", "Silicone Sink Caddy", "SINK CADDY", 900, 80, "Brand A", days_ago(150)),
                 product("B0RANK2", "Sink Sponge Holder", "SINK CADDY", 700, 60, "Brand B", days_ago(250)),
                 product("B0RANK3", "Kitchen Sink Organizer", "SINK CADDY", 600, 40, "Brand C", days_ago(350)),
+                product("B0RANK4", "Silicone Sink Caddy", "SINK CADDY", 700, 50, "Brand D", days_ago(250)),
+                product("B0RANK5", "Silicone Sink Caddy", "SINK CADDY", 700, 50, "Brand E", days_ago(250)),
+                product("B0RANK6", "Silicone Sink Caddy", "SINK CADDY", 700, 50, "Brand F", days_ago(250)),
             ],
         )
         ranking_path = self.root / "discovered_categories.csv"

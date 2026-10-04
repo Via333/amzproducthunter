@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run a fixed-fixture smoke test for the shape-first weekly workflow.
 
-The test writes only under tmp/smoke_selection_workflow/<run_id>/ and never calls
+The test writes only under a temporary output directory and never calls
 Sorftime. It validates every successful category, product-form conclusions, and
 shape opportunity archiving with deterministic fixture data.
 """
@@ -11,9 +11,11 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -21,18 +23,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "selection_smoke"
 FIXTURE_CANDIDATES = ROOT / "tests" / "fixtures" / "selection_smoke_candidates.csv"
-DEFAULT_OUTPUT_ROOT = ROOT / "tmp" / "smoke_selection_workflow"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run offline fixture smoke test for selection and shape validation.")
-    parser.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT), help="Root directory for smoke outputs.")
+    parser.add_argument("--output-root", help="Root directory for smoke outputs; default is a system temporary directory.")
     parser.add_argument("--run-id", help="Run id. Defaults to smoke_YYYYMMDD_HHMMSS_microseconds.")
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.output_root = args.output_root or tempfile.mkdtemp(prefix="amz-smoke-")
+    return args
 
 
 def run(command: list[str]) -> subprocess.CompletedProcess[str]:
-    completed = subprocess.run(command, cwd=ROOT, text=True, capture_output=True)
+    completed = subprocess.run(command, cwd=ROOT, text=True, capture_output=True,
+                               env={**os.environ, "AMZ_OFFLINE": "1", "AMZ_AS_OF_DATE": "2026-05-20"})
     if completed.returncode != 0:
         raise RuntimeError(
             "Command failed ({code}): {cmd}\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}".format(
@@ -108,15 +112,17 @@ def run_shape_first_smoke(args: argparse.Namespace) -> int:
             {"data": {"top100_products": [
                 shape_product("A1", "Magnetic Parts Tray", "MAGNETIC PARTS TRAY", 700, 80, "Maker A", "2026-01-10", 24),
                 shape_product("A2", "Flexible Magnetic Parts Tray", "MAGNETIC PARTS TRAY", 600, 60, "Maker B", "2025-12-05", 28),
-                shape_product("A3", "Magnetic Parts Holder Tray", "MAGNETIC PARTS TRAY", 450, 45, "Maker C", "2025-11-02", 26),
+                shape_product("A3", "Magnetic Parts Tray", "MAGNETIC PARTS TRAY", 450, 45, "Maker C", "2025-11-02", 26),
                 shape_product("A4", "Mechanic Magnetic Parts Tray", "MAGNETIC PARTS TRAY", 300, 120, "Maker D", "2023-01-01", 22),
+                shape_product("A5", "Magnetic Parts Tray", "MAGNETIC PARTS TRAY", 650, 70, "Maker J", "2026-02-01", 25),
+                shape_product("A6", "Magnetic Parts Tray", "MAGNETIC PARTS TRAY", 600, 50, "Maker K", "2026-03-01", 24),
             ]}},
         )
         write_json(
             raw_dir / "B.json",
             {"data": {"top100_products": [
                 shape_product("B1", "Duster Refills Compatible with Swiffer", "DUSTER REFILL", 1500, 100, "Maker E", "2026-01-01", 20),
-                shape_product("B2", "Refills for Swiffer Duster", "DUSTER REFILL", 1200, 80, "Maker F", "2025-12-01", 21),
+                shape_product("B2", "Duster Refills for Swiffer", "DUSTER REFILL", 1200, 80, "Maker F", "2025-12-01", 21),
                 shape_product("B3", "Replacement Duster Refills for Swiffer", "DUSTER REFILL", 1000, 60, "Maker G", "2025-11-01", 22),
                 shape_product("B4", "Premium Telescoping Microfiber Duster", "DUSTER", 700, 70, "Maker H", "2026-01-01", 140),
                 shape_product("B5", "Professional Extendable Microfiber Duster", "DUSTER", 650, 50, "Maker I", "2025-12-01", 160),

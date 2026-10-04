@@ -419,9 +419,6 @@ def infer_compliance_risk(item, defaults, category_override=None):
         "solar lights",
         "electric bike pump",
         "bike air pump",
-        "hunting",
-        "gunner",
-        "shooting",
     ]
     if any(term in text for term in high_risk_terms):
         risk = max(risk, 65)
@@ -433,7 +430,7 @@ def infer_seasonality_score(item, defaults):
     score = to_float(defaults["seasonality_score"], 20)
     if any(term in text for term in ["christmas", "halloween", "valentine", "mothers day", "easter"]):
         score = max(score, 70)
-    if any(term in text for term in ["hunting", "decoy", "turkey", "deer season"]):
+    if any(term in text for term in ["turkey hunting", "hunting season", "deer season"]):
         score = max(score, 85)
     return score
 
