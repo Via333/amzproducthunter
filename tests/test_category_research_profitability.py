@@ -5,12 +5,13 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURES = ROOT / "tests/fixtures/category_research"
 
 
 class CategoryResearchProfitabilityTest(unittest.TestCase):
     def test_every_modeled_form_has_a_margin_range(self):
         payload = json.loads(
-            (ROOT / "research/category_3397571_analysis.json").read_text(encoding="utf-8")
+            (FIXTURES / "category_3397571_analysis.json").read_text(encoding="utf-8")
         )
         estimates = payload["profitability_estimates"]
 
@@ -23,7 +24,7 @@ class CategoryResearchProfitabilityTest(unittest.TestCase):
                 self.assertLessEqual(estimate[key][0], estimate[key][1])
 
     def test_1688_quotes_are_traceable(self):
-        with (ROOT / "research/category_3397571_1688_quotes.csv").open(
+        with (FIXTURES / "category_3397571_1688_quotes.csv").open(
             encoding="utf-8", newline=""
         ) as handle:
             rows = list(csv.DictReader(handle))
@@ -35,8 +36,8 @@ class CategoryResearchProfitabilityTest(unittest.TestCase):
         self.assertTrue(all(row["url"].startswith("https://detail.1688.com/") for row in selected))
 
     def test_page_and_report_expose_profitability(self):
-        page = (ROOT / "web/category/3397571.html").read_text(encoding="utf-8")
-        report = (ROOT / "reports/category_deep_research_3397571.md").read_text(
+        page = (FIXTURES / "3397571.html").read_text(encoding="utf-8")
+        report = (FIXTURES / "category_deep_research_3397571.md").read_text(
             encoding="utf-8"
         )
 

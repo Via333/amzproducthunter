@@ -1,0 +1,91 @@
+{
+  "node_id": "3397571",
+  "category_name": "Boat Cabin Storage",
+  "category_path": "Sports & Outdoors > Boating & Sailing > Boat Cabin Products > Storage",
+  "researched_at": "2026-09-02 07:24",
+  "data_provider": "Sorftime MCP",
+  "verdict": "类目不直接立项；存在可切入形态",
+  "category_metrics": {
+    "top100_monthly_sales": 22541,
+    "top100_monthly_revenue": 568097.46,
+    "top3_product_sales_share": 0.3022,
+    "top3_brand_sales_share": 0.3683,
+    "amazon_owned_sales_share": 0.2035,
+    "low_review_sales_share": 0.6375,
+    "high_review_sales_share": 0.2288,
+    "median_price": 16.99,
+    "return_rate": 0.0756
+  },
+  "review_coverage": {
+    "raw_review_count": 37,
+    "raw_review_asin_count": 4,
+    "customers_say_asin_count": 7,
+    "note": "Customers Say mention counts overlap and are not unique review counts."
+  },
+  "forms": [
+    {"name": "cup_holder_caddy", "listing_count": 21, "monthly_sales": 5434, "sales_share": 0.241, "median_price": 18.99, "median_reviews": 122, "decision": "continue_validation"},
+    {"name": "boat_trash_can", "listing_count": 24, "monthly_sales": 4619, "sales_share": 0.205, "median_price": 21.49, "median_reviews": 34, "decision": "premium_only"},
+    {"name": "battery_box", "listing_count": 1, "monthly_sales": 3715, "sales_share": 0.165, "median_price": 10.99, "median_reviews": 2532, "decision": "reject"},
+    {"name": "adhesive_mesh_pocket", "listing_count": 9, "monthly_sales": 2928, "sales_share": 0.13, "median_price": 16.99, "median_reviews": 20, "decision": "supplier_validation"},
+    {"name": "tool_tackle_holder", "listing_count": 17, "monthly_sales": 2068, "sales_share": 0.092, "median_price": 16.99, "median_reviews": 33, "decision": "niche_watch"},
+    {"name": "hard_storage_other", "listing_count": 11, "monthly_sales": 1127, "sales_share": 0.05, "median_price": 74.79, "median_reviews": 114, "decision": "reject"},
+    {"name": "t_top_life_jacket", "listing_count": 7, "monthly_sales": 917, "sales_share": 0.041, "median_price": 38.35, "median_reviews": 105, "decision": "defer"}
+  ],
+  "representative_asins": [
+    {"asin": "B0DPG49CZT", "form": "adhesive_mesh_pocket", "monthly_sales": 1763, "reviews": 289},
+    {"asin": "B0GJ8HW2VB", "form": "clamp_on_cup_holder", "monthly_sales": 1335, "reviews": 53},
+    {"asin": "B0GM1FW3J1", "form": "multi_mount_caddy", "monthly_sales": 466, "reviews": 85},
+    {"asin": "B0BV98MSZQ", "form": "boat_trash_can", "monthly_sales": 870, "reviews": 562},
+    {"asin": "B0B2FGD3K7", "form": "magnetic_tool_holder", "monthly_sales": 200, "reviews": 56},
+    {"asin": "B09QGV5FMW", "form": "t_top_life_jacket_storage", "monthly_sales": 172, "reviews": 166}
+  ],
+  "trend": {
+    "2025-09": 10660,
+    "2025-10": 8778,
+    "2025-11": 7043,
+    "2025-12": 10206,
+    "2026-01": 6578,
+    "2026-02": 6984,
+    "2026-03": 12061,
+    "2026-04": 17965,
+    "2026-05": 23067,
+    "2026-06": 32423,
+    "2026-07": 25319,
+    "2026-08": 19791
+  },
+  "profitability_assumptions": {
+    "currency_assumption": "1 USD = 7.2 CNY for scenario modeling, not a live FX quote",
+    "amazon_referral_fee_rate": 0.15,
+    "ppc_reserve_rate_range": [0.10, 0.18],
+    "return_loss_reserve_rate_range": [0.02, 0.04],
+    "fba_fee_source": "Sorftime MCP product_detail for representative ASIN",
+    "landed_cost_definition": "estimated EXW + packaging/customization + duty/inspection allowance + inbound freight to US FBA",
+    "excluded_costs": ["income tax", "long-term storage", "coupon/discount", "mold/tooling", "patent/FTO legal fee"],
+    "method": "Use median of manually filtered comparable 1688 listings; do not average bait-price SKUs or unrelated image-search results. Apply a marine-grade uplift when the available quote lacks UV, salt-spray, adhesive, zipper, hardware, or locking requirements."
+  },
+  "profitability_estimates": [
+    {"form": "adhesive_mesh_pocket", "benchmark_asin": "B0DPG49CZT", "amazon_price_usd": 16.99, "fba_fee_usd": 4.90, "valid_1688_count": 4, "filtered_1688_median_cny": 12.25, "target_exw_cny_range": [15, 24], "landed_cost_usd_range": [3.0, 4.8], "net_margin_range": [0.06, 0.27], "confidence": "high", "decision": "viable_if_adhesive_and_uv_tests_pass"},
+    {"form": "clamp_on_cup_holder_2pack", "benchmark_asin": "B0GJ8HW2VB", "amazon_price_usd": 18.99, "fba_fee_usd": 5.77, "valid_1688_count": 4, "filtered_1688_component_median_cny": 5.75, "target_exw_cny_range": [18, 32], "landed_cost_usd_range": [4.0, 6.4], "net_margin_range_at_current_price": [-0.01, 0.22], "target_amazon_price_usd": 22.99, "net_margin_range_at_target_price": [0.10, 0.31], "confidence": "medium_low", "decision": "current_price_tight_raise_price_after_FTO"},
+    {"form": "multi_mount_caddy", "benchmark_asin": "B0GM1FW3J1", "amazon_price_usd": 17.99, "fba_fee_usd": 5.77, "valid_1688_count": 2, "filtered_1688_body_median_cny": 15.90, "target_exw_cny_range": [22, 38], "landed_cost_usd_range": [4.5, 7.0], "net_margin_range_at_current_price": [-0.08, 0.16], "target_amazon_price_usd": 24.99, "net_margin_range_at_target_price": [0.12, 0.32], "confidence": "medium_low", "decision": "only_viable_as_premium_locked_mount_system"},
+    {"form": "boat_trash_can_premium", "benchmark_asin": "B0BV98MSZQ", "amazon_price_usd": 37.95, "fba_fee_usd": 6.26, "valid_1688_count": 6, "filtered_1688_median_cny": 45.0, "target_exw_cny_range": [40, 65], "landed_cost_usd_range": [8.0, 12.0], "net_margin_range": [0.15, 0.35], "confidence": "high", "decision": "premium_only_low_price_segment_not_viable"},
+    {"form": "battery_box", "benchmark_asin": "B000Y82MHW", "amazon_price_usd": 10.99, "fba_fee_usd": 9.94, "valid_1688_count": 0, "net_margin_range": [-0.45, -0.25], "confidence": "high", "decision": "reject_fba_plus_referral_already_exceeds_economic_price"},
+    {"form": "magnetic_tool_holder_marine", "benchmark_asin": "B0B2FGD3K7", "amazon_price_usd": 39.99, "fba_fee_usd": 4.45, "valid_1688_count": 2, "filtered_1688_nonmarine_median_cny": 14.45, "target_exw_cny_range": [25, 45], "landed_cost_usd_range": [5.0, 8.0], "net_margin_range": [0.32, 0.49], "confidence": "medium_low", "decision": "economically_attractive_but_supplier_and_demand_validation_required"},
+    {"form": "hard_storage_access_hatch", "benchmark_asin": "B07Q887FF9", "amazon_price_usd": 44.99, "fba_fee_usd": 6.75, "valid_1688_count": 4, "filtered_1688_small_round_hatch_median_cny": 6.80, "target_exw_cny_range": [35, 80], "landed_cost_usd_range": [8.0, 15.0], "net_margin_range": [0.15, 0.40], "confidence": "low", "decision": "do_not_enter_without_exact_rectangular_quote_and_fit_return_model"},
+    {"form": "t_top_life_jacket_storage", "benchmark_asin": "B09QGV5FMW", "amazon_price_usd": 42.99, "fba_fee_usd": 8.03, "valid_1688_count": 1, "filtered_1688_median_cny": 65.90, "target_exw_cny_range": [70, 100], "landed_cost_usd_range": [12.5, 17.5], "net_margin_range": [0.04, 0.25], "confidence": "medium", "decision": "defer_margin_thin_after_marine_grade_upgrade"},
+    {"form": "other_soft_bag_cover", "benchmark_asin": "B0CZXZK1BW", "amazon_price_usd": 49.00, "fba_fee_usd": 8.22, "valid_1688_count": 4, "filtered_1688_median_cny": 20.25, "target_exw_cny_range": [35, 60], "landed_cost_usd_range": [8.0, 13.0], "net_margin_range": [0.20, 0.40], "confidence": "low", "decision": "watch_only_search_set_is_heterogeneous"}
+  ],
+  "sources": [
+    "category_report",
+    "category_keywords",
+    "category_trend:SalesCount",
+    "category_trend:NewProductSalesAmountShare",
+    "category_trend:AvgRatingCount",
+    "product_detail",
+    "product_reviews",
+    "product_customers_say",
+    "product_traffic_terms",
+    "ali1688_product_search_from_image",
+    "ali1688_similar_product",
+    "ali1688_product_request"
+  ]
+}
