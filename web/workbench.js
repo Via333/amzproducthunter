@@ -25,7 +25,7 @@
   const resultUrl = asin => known(asin).url || favorites.find(x => x.asin === asin)?.url || jobs.find(x => x.asin === asin && x.status === "completed")?.url;
   const stateLabel = status => ({queued:"排队中",running:"研究中",completed:"研究已生成",failed:"失败",interrupted:"已中断",cancelled:"已取消"}[status] || status);
   const decision = row => row.shape_recommendation === "Needs classification" ? "pending" : row.shape_recommendation === "Reject category/form" ? "reject" : row.classification_status === "unresolved" ? "pending" : row.shape_recommendation === "Shape opportunity" ? "opportunity" : "watch";
-  const decisionLabel = row => decision(row) === "pending" && row.classification_status === "needs_specification" ? "形态待确认" : ({reject:"已排除",pending:"用途待确认",opportunity:"机会待深研",watch:"待机会判断"}[decision(row)]);
+  const decisionLabel = row => row.classification_status === "category_proxy" && decision(row) !== "reject" ? "类目代理待核验" : decision(row) === "pending" && row.classification_status === "needs_specification" ? "形态待确认" : ({reject:"已排除",pending:"用途待确认",opportunity:"机会待深研",watch:"待机会判断"}[decision(row)]);
   const scopeLabel = kind => ({market:"整组",family:"产品组",shape:"形态",asin:"产品"}[kind] || "记录");
 
   function discardButton(kind, key, label, restore = false) {
@@ -66,9 +66,10 @@
       ${discardButton("shape", row.decision_keys?.shape, row.product_form_label || row.product_form)}
       </summary><div class="wb-shape-content">
       ${decision(row) !== "pending" ? `<div class="wb-metrics"><span>平均月销 <b>${fmt(row.form_avg_sales)}</b></span><span>评论中位 <b>${fmt(row.form_median_reviews)}</b></span><span>低评高销 <b>${fmt(row.form_low_review_high_sales_count)}</b></span><span>新进入者达标 <b>${fmt(row.form_new_entrant_success_count)} / ${fmt(row.form_new_entrant_count)}</b></span></div>` : ""}
-      ${row.assessment_scope === "product_family" && decision(row) !== "pending" ? `<div class="wb-path">竞争评估范围：${esc(row.product_family_label || row.product_form)} · ${fmt(row.family_sample_count)} 个同用途样本</div>` : ""}
+      ${row.assessment_scope === "product_family" && decision(row) !== "pending" ? `<div class="wb-path">${row.classification_status === "category_proxy" ? "类目代理统计" : "竞争评估范围"}：${esc(row.product_family_label || row.product_form)} · ${fmt(row.family_sample_count)} 个样本</div>` : ""}
       ${row.source_categories?.length ? `<div class="wb-path">来源：${row.source_categories.map(s => esc(s.name)).join(" / ")}</div>` : ""}
       <p>${esc(row.opportunity_thesis)}</p><p>${esc(row.validation_flags)}${row.next_action ? "；" + esc(row.next_action) : ""}</p>
+      <div class="wb-path">倒推到仓预算（非报价/利润）：${row.form_landed_cost_ceiling_median !== "" && row.form_landed_cost_ceiling_median != null ? "$" + Number(row.form_landed_cost_ceiling_median).toFixed(2) : "待核实 FBA 费用"} · 数据商费用覆盖 ${Math.round(Number(row.form_fee_coverage || 0) * 100)}%</div>
       ${row.classification_status === "title_rule" ? '<span class="wb-status">按标题初分，图片与规格待核验</span>' : ""}
       <div class="wb-products">${refs.map(ref => productCard(ref.asin, row.product_family_label || row.product_form, `月销 ${fmt(ref.sales)} · 评论 ${fmt(ref.reviews)}`)).join("") || '<span class="wb-empty">暂无通过基础筛选的参考产品</span>'}</div>
       </div></details>`;

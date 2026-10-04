@@ -1,4 +1,5 @@
 {
+  "generic_forms": ["unknown", "kitchen", "home", "tools", "kitchen tools", "plumbing fixture", "plug stopper", "food spatula", "hardware", "misc other", "art supplies", "sporting goods", "outdoor living", "sculpting modeling tools", "product", "home organizers and storage", "home kitchen", "sports outdoors", "office products", "patio lawn garden", "tools home improvement"],
   "overrides": [
     {"label": "stainless steel tofu press", "all_terms": ["tofu press", "stainless steel"]},
     {"label": "tofu press mould", "terms": ["tofu press mould", "tofu press mold"]},

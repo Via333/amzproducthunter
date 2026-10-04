@@ -35,9 +35,7 @@ FAMILIES = [
     ("duster", "除尘掸", r"\bduster(?:s| refill)?\b"),
 ]
 
-GENERIC = {"unknown", "kitchen", "home", "tools", "kitchen tools", "plumbing fixture",
-           "plug stopper", "food spatula", "hardware", "misc other", "art supplies",
-           "sporting goods", "outdoor living", "sculpting modeling tools", "product"}
+GENERIC = set(load_taxonomy().get("generic_forms", ["unknown"]))
 
 
 def unresolved_identity(form):

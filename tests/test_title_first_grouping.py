@@ -59,9 +59,9 @@ class TitleFirstGroupingTest(unittest.TestCase):
 
     def test_unclear_title_does_not_become_jigger_from_category(self):
         row = self.identity("10 Year Anniversary Tin Gifts for Him Her")
-        self.assertEqual(row["classification_status"], "unresolved")
+        self.assertEqual(row["classification_status"], "category_proxy")
         self.assertNotEqual(row["product_family"], "cocktail_jigger")
-        self.assertEqual(self.identity("Model 100", "FOOD BLENDER")["classification_status"], "unresolved")
+        self.assertEqual(self.identity("Model 100", "FOOD BLENDER")["classification_status"], "category_proxy")
 
     def test_title_overrides_conflicting_product_type(self):
         self.assertEqual(classify_product_form("Magnetic Tool Mat", product_type="tofu press"), "magnetic tool mat")
@@ -89,8 +89,9 @@ class TitleFirstGroupingTest(unittest.TestCase):
         report = {"data": {"top100_products": [{"asin": "UNKNOWN", "title": "Model 100",
                    "product_category": "KITCHEN", "price": 3, "monthly_sales_volume": 1}]}}
         row = build_rows_from_category_report(seed, report, rules)[0]
-        self.assertEqual(row["shape_recommendation"], "Needs classification")
-        self.assertEqual(row["shape_score"], "")
+        self.assertEqual(row["shape_recommendation"], "Watch shape")
+        self.assertEqual(row["classification_status"], "category_proxy")
+        self.assertIn("category proxy requires classification", row["validation_flags"])
 
     def test_other_product_family_does_not_impose_its_review_wall(self):
         rules = json.loads(Path("config/category_shape_validation_rules.json").read_text())

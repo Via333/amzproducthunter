@@ -346,6 +346,7 @@ class ShapeFirstValidationTest(unittest.TestCase):
                 product("B0BOX03", "Flashcard Storage Box with Dividers", "STORAGE BOX", 650, 110, "Brand D", days_ago(400)),
                 product("B0BOX04", "Recipe Card Box", "STORAGE BOX", 500, 40, "Brand E", days_ago(1800)),
                 product("B0BOX05", "Photo Storage Box 4x6", "STORAGE BOX", 600, 130, "Brand F", days_ago(2400)),
+                product("B0BOX06", "Index Card Storage Box", "STORAGE BOX", 600, 90, "Brand G", days_ago(200)),
             ],
         )
         seeds = select_seed_rows([seed("B0SEED1", "1004", "Trading Card Binder 4 Pocket")], self.rules)
@@ -381,6 +382,9 @@ class ShapeFirstValidationTest(unittest.TestCase):
                 product("B0RANK1", "Silicone Sink Caddy", "SINK CADDY", 900, 80, "Brand A", days_ago(150)),
                 product("B0RANK2", "Sink Sponge Holder", "SINK CADDY", 700, 60, "Brand B", days_ago(250)),
                 product("B0RANK3", "Kitchen Sink Organizer", "SINK CADDY", 600, 40, "Brand C", days_ago(350)),
+                product("B0RANK4", "Silicone Sink Caddy", "SINK CADDY", 700, 50, "Brand D", days_ago(250)),
+                product("B0RANK5", "Silicone Sink Caddy", "SINK CADDY", 700, 50, "Brand E", days_ago(250)),
+                product("B0RANK6", "Silicone Sink Caddy", "SINK CADDY", 700, 50, "Brand F", days_ago(250)),
             ],
         )
         ranking_path = self.root / "discovered_categories.csv"

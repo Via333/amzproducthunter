@@ -92,6 +92,11 @@ def build_current_product_groups(root, validation_rows):
     rules["_scoring_rules"] = json.loads((root / rules.get("scoring_rules_path", "config/scoring_rules.json")).read_text())
     rules["discovery_runs_root"] = str(root / rules.get("discovery_runs_root", "archive/discovery_runs"))
     rules["category_exclusions_path"] = str(root / rules.get("category_exclusions_path", "config/category_exclusions.json"))
+    run_ids = {row.get("validation_run_id") for row in validation_rows if row.get("validation_run_id")}
+    if len(run_ids) > 1:
+        return validation_rows
+    if run_ids:
+        rules["discovery_run_id"] = next(iter(run_ids))
     run_dir = resolve_discovery_run_dir(rules)
     if not run_dir:
         return validation_rows

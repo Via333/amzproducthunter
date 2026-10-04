@@ -180,8 +180,8 @@ def print_legacy_summary() -> None:
     validations = csv_count(ROOT / "data" / "category_shape_validation.csv")
     with (ROOT / "data" / "category_shape_validation.csv").open("r", encoding="utf-8-sig", newline="") as handle:
         validated_categories = len({row.get("category_path", "") for row in csv.DictReader(handle) if row.get("category_path")})
-    shape_snapshots = sorted((ROOT / "archive" / "category_shape_runs").glob("*"))
-    latest_shape_snapshot = shape_snapshots[-1] if shape_snapshots else ""
+    run_id = os.environ.get("AMZ_WEEKLY_RUN_ID", "")
+    latest_shape_snapshot = ROOT / "archive/category_shape_runs" / run_id if run_id else ""
 
     print(f"Validated categories: {validated_categories}")
     print(f"Category/form validations: {validations}")
@@ -213,6 +213,8 @@ def execute_workflow() -> None:
     current_step = ""
     generation = None
     replay_source = str((SOURCE_ROOT / args.replay_source_run).resolve()) if args.replay_source_run else ""
+    if replay_source:
+        args.no_issue_comment = True
 
     try:
         if args.mock_failure_step:
@@ -266,6 +268,9 @@ def execute_workflow() -> None:
         if not replay_source and any(c["status"] == "critical" for c in report["health_checks"]):
             raise SystemExit(2)
     except Exception as exc:  # noqa: BLE001 - the failure report must be written before exiting.
+        if generation is None and not args.report_only:
+            print(f"Workflow stopped before staging; live reports unchanged: {exc}", file=sys.stderr)
+            raise SystemExit(1) from exc
         manifest_path = ROOT / "archive/discovery_runs" / run_id / "run_manifest.json"
         manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
         partial = manifest.get("status") == "partial"

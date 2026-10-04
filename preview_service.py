@@ -98,6 +98,10 @@ class Handler(SimpleHTTPRequestHandler):
             candidate = Path(self.translate_path(self.path))
             if not candidate.is_file():
                 self.directory = str(current_root(root) / "web")
+        resolved = Path(self.translate_path(self.path)).resolve()
+        if not resolved.is_relative_to(Path(self.directory).resolve()):
+            self.send_error(403)
+            return None
         return super().send_head()
 
     def valid_host(self):

@@ -142,6 +142,7 @@
   },
   "category_seeds": [],
   "category_filters": {
+    "preference_weights": {"kitchen": 2},
     "min_depth": 1,
     "max_depth": 6,
     "leaf_only": true,

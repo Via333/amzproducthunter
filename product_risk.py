@@ -66,7 +66,10 @@ HARD_OVERSIZE_COMBINATIONS = [
 
 
 def combined_text(title: object, category: object = "", brand: object = "") -> str:
-    return " ".join(str(value or "") for value in (title, category, brand)).lower()
+    # Broad ancestors describe navigation, not the material/use of every SKU.
+    # Retain the leaf as auxiliary evidence when the title is incomplete.
+    leaf = str(category or "").split(">")[-1].strip()
+    return " ".join(str(value or "") for value in (title, leaf, brand)).lower()
 
 
 def fragile_signal(title: object, category: object = "", brand: object = "") -> tuple[int, str]:

@@ -14,6 +14,7 @@ from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from workflow_storage import run_quality
 
 
 REPORT_JSON = "weekly_scan_report.json"
@@ -30,7 +31,7 @@ SECRET_PATTERNS = [
 
 
 def now_iso() -> str:
-    return datetime.now().isoformat(timespec="seconds")
+    return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
 def sanitize(value: Any) -> str:
@@ -126,8 +127,8 @@ def top_reject_reasons(path: Path, recommendation_key: str, reject_value: str, f
         if flags_key == "key_flags":
             counter[seed_reject_reason(row)] += 1
             continue
-        flags = str(row.get(flags_key) or "")
-        counter.update(part.strip() for part in flags.split(";") if part.strip() and not is_informational_flag(part))
+        reason = row.get("decisive_reject_reason")
+        counter[reason or "legacy decision reason not recorded"] += 1
     return ", ".join(f"{reason}:{count}" for reason, count in counter.most_common(5)) or "none"
 
 
@@ -181,6 +182,16 @@ def latest_daily_shape_counts(root: Path) -> list[dict[str, Any]]:
     by_day: dict[str, Path] = {}
     if runs_root.exists():
         for run_dir in sorted(child for child in runs_root.iterdir() if child.is_dir()):
+            discovery_manifest = root / "archive/discovery_runs" / run_dir.name / "run_manifest.json"
+            if discovery_manifest.exists():
+                try:
+                    manifest = json.loads(discovery_manifest.read_text(encoding="utf-8"))
+                except json.JSONDecodeError:
+                    continue
+                if manifest.get("status") not in {"success", "success_no_candidates"} or manifest.get("data_provider") == "mcp_replay":
+                    continue
+                if "selected_categories" in manifest and not run_quality(manifest)["publishable"]:
+                    continue
             day = run_dir.name.split("_", 1)[0]
             by_day[day] = run_dir
     daily = []
@@ -333,7 +344,7 @@ def collect_metrics(root: Path, run_id: str) -> dict[str, Any]:
         1
         for row in shape_library_rows
         if row.get("archive_last_run_id") == run_id
-        and row.get("archive_status") == "active_in_latest_run"
+        and row.get("archive_status") in {"active_in_latest_run", "active"}
         and str(row.get("archive_seen_count") or "") == "1"
     )
     shape_opportunity_rows = [row for row in validation_rows if row.get("shape_recommendation") == "Shape opportunity"]
@@ -342,7 +353,7 @@ def collect_metrics(root: Path, run_id: str) -> dict[str, Any]:
         for row in shape_opportunity_rows
     )
     validated_categories = len({row.get("category_path", "") for row in validation_rows if row.get("category_path")})
-    active_pool_rows = sum(1 for row in shape_library_rows if row.get("archive_status") == "active_in_latest_run")
+    active_pool_rows = sum(1 for row in shape_library_rows if row.get("archive_status") in {"active_in_latest_run", "active"})
 
     return {
         "metrics_source": "current_run",
@@ -405,7 +416,7 @@ def build_report(
                 "message": "Selected categories returned 0 products; this run is invalid and must not replace live outputs",
             },
         )
-    if status == "failure":
+    if status in {"failure", "partial"}:
         checks.insert(
             0,
             {

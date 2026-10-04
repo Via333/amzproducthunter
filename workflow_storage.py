@@ -10,6 +10,7 @@ import re
 import shutil
 import tempfile
 import fcntl
+from datetime import datetime, timezone
 
 
 def atomic_write_text(path, text):
@@ -51,7 +52,7 @@ def run_quality(manifest, rules=None):
     # Empty, unattempted and failed categories all count as missing coverage.
     missing = max(0, selected - successful)
     share = missing / selected if selected else 1.0
-    publishable = successful > 0 and int(manifest.get("products_examined") or 0) > 0 and share <= rules.get("max_failed_share_to_publish", 0.2)
+    publishable = 0 < successful <= selected and int(manifest.get("products_examined") or 0) > 0 and share <= rules.get("max_failed_share_to_publish", 0.2)
     return {"failed_category_share": share, "missing_categories": missing,
             "publishable": publishable,
             "quality_status": "passed" if publishable else "partial"}
@@ -100,14 +101,62 @@ def prepare_generation(root, run_id):
     for name in ("research",):
         if source != root and (root / name).exists():
             shutil.copytree(root / name, target / name, dirs_exist_ok=True)
+    index = root / "archive/product_research_index.csv"
+    if source != root and index.exists():
+        shutil.copy2(index, target / "archive/product_research_index.csv")
+    merge_attempt_history(root, target)
     return target
+
+
+def merge_attempt_history(root, target):
+    """Carry retry bookkeeping across partial runs, never their success dates."""
+    state_path = target / "archive/category_scan_state.csv"
+    if not state_path.exists():
+        return
+    with state_path.open(encoding="utf-8-sig", newline="") as stream:
+        reader = csv.DictReader(stream)
+        fields = list(reader.fieldnames or [])
+        rows = {r["category_id"]: r for r in reader}
+    for name in ("consecutive_failures", "last_attempt_at", "status"):
+        if name not in fields:
+            fields.append(name)
+
+    def timestamp(value):
+        if not value:
+            return 0
+        parsed = datetime.fromisoformat(value)
+        return parsed.replace(tzinfo=timezone.utc).timestamp() if parsed.tzinfo is None else parsed.timestamp()
+
+    for directory in sorted((root / "archive/discovery_runs").glob("*")):
+        manifest_path = directory / "run_manifest.json"
+        checkpoint = directory / "category_scan_state.csv"
+        if not manifest_path.exists() or not checkpoint.exists():
+            continue
+        manifest = json.loads(manifest_path.read_text())
+        if manifest.get("data_provider") == "mcp_replay" or manifest.get("status") not in {"partial", "failure"}:
+            continue
+        with checkpoint.open(encoding="utf-8-sig", newline="") as stream:
+            for attempted in csv.DictReader(stream):
+                key = attempted["category_id"]
+                previous = rows.get(key, {"category_id": key, "name": attempted.get("name", ""), "path": attempted.get("path", "")})
+                previous_time = max(timestamp(previous.get("last_attempt_at")), timestamp(previous.get("last_scanned_at")))
+                if timestamp(attempted.get("last_attempt_at")) <= previous_time:
+                    continue
+                previous["last_attempt_at"] = attempted["last_attempt_at"]
+                previous["consecutive_failures"] = attempted.get("consecutive_failures", 0)
+                previous["status"] = "failed" if attempted.get("status") == "failed" else ("scanned" if previous.get("last_scanned_at") else "")
+                rows[key] = previous
+    atomic_write_csv(state_path, rows.values(), fields)
 
 
 def publish_generation(root, generation, manifest):
     root, generation = Path(root).resolve(), Path(generation).resolve()
     if not generation.is_relative_to(root / ".local/weekly_generations"):
         raise ValueError("Generation outside staging root")
-    if not run_quality(manifest, load_rules(root))["publishable"] or manifest.get("data_provider") == "mcp_replay":
+    if (not run_quality(manifest, load_rules(root))["publishable"]
+            or manifest.get("data_provider") == "mcp_replay"
+            or manifest.get("status") not in {"success", "success_no_candidates"}
+            or manifest.get("run_id") != generation.name):
         raise ValueError("Partial or replay results cannot be published")
     for relative in ("web/index.html", "data/category_shape_validation.csv", "archive/shape_opportunity_library.csv"):
         if not (generation / relative).is_file():

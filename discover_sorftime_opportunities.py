@@ -60,6 +60,8 @@ CHILDREN_ALIASES = [
 ]
 
 CATEGORY_STATE_FIELDS = [
+    "consecutive_failures",
+    "last_attempt_at",
     "category_id",
     "name",
     "path",
@@ -206,7 +208,7 @@ def category_preference_score(category, filters):
     score = 0
     for term in preferred:
         if term.lower() in name:
-            score += 10
+            score += filters.get("preference_weights", {}).get(term.lower(), 10)
     if category["is_leaf"]:
         score += 5
     score += category["depth"]
@@ -331,6 +333,8 @@ def select_categories(category_tree, rules, scan_state=None, exclusions=None):
             "rotation_bucket": "never_scanned" if previous_scan_count == 0 else "oldest_rescan",
             "previous_last_scanned_at": previous.get("last_scanned_at", ""),
             "previous_scan_count": previous_scan_count,
+            "consecutive_failures": as_int(previous.get("consecutive_failures")),
+            "previous_status": previous.get("status", ""),
         }
         existing = selected_by_id.get(category["category_id"])
         if existing is None or (candidate["selection_score"], candidate["depth"]) > (
@@ -341,12 +345,28 @@ def select_categories(category_tree, rules, scan_state=None, exclusions=None):
     selected = list(selected_by_id.values())
     selected.sort(
         key=lambda item: (
+            item.get("consecutive_failures", 0) >= 3,
             0 if item["previous_scan_count"] == 0 else 1,
             item["previous_last_scanned_at"] or "",
             -item["selection_score"],
             item["path"],
         )
     )
+    rotation = rules.get("rotation", {})
+    if rotation:
+        limit = int(rules["max_categories"])
+        quota_total = max(1, rotation.get("new_category_quota", 70) + rotation.get("rescan_quota", 30))
+        new_limit = round(limit * rotation.get("new_category_quota", 70) / quota_total)
+        new = [c for c in selected if not c["previous_scan_count"] and c.get("previous_status") != "failed"]
+        rescans = [c for c in selected if c not in new]
+        priorities = rules.get("_rescan_priorities", {})
+        rescans.sort(key=lambda c: (c.get("consecutive_failures", 0) >= 3,
+                                   priorities.get(c["category_id"], 2 if c.get("previous_status") == "failed" else 3),
+                                   c["previous_last_scanned_at"] or "", c["category_id"]))
+        chosen = new[:new_limit] + rescans[:limit-new_limit]
+        ids = {c["category_id"] for c in chosen}
+        chosen.extend(c for c in selected if c["category_id"] not in ids)
+        return chosen[:limit]
     return selected[: int(rules["max_categories"])]
 
 
@@ -698,7 +718,7 @@ def discovery_manifest(run_id, strategy, provider="cli", tree_source=""):
         "strategy": strategy,
         "data_provider": provider,
         "status": "running",
-        "started_at": datetime.now().isoformat(timespec="seconds"),
+        "started_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "finished_at": "",
         "category_tree_source": tree_source,
         "selected_categories": 0,
@@ -740,6 +760,8 @@ def mark_category_scanned(scan_state, category, products_examined, candidate_cou
         "lifetime_products_examined": as_int(existing.get("lifetime_products_examined")) + products_examined,
         "lifetime_candidate_count": as_int(existing.get("lifetime_candidate_count")) + candidate_count,
         "status": "scanned",
+        "consecutive_failures": 0,
+        "last_attempt_at": scanned_at,
     }
 
 
@@ -747,6 +769,7 @@ def main():
     args = parse_args()
     rules = load_json(args.rules)
     workflow_rules = load_rules(Path.cwd())
+    rules.setdefault("rotation", workflow_rules.get("rotation", {}))
     if args.max_categories is not None:
         rules["max_categories"] = max(0, args.max_categories)
     defaults = load_json(args.defaults)
@@ -776,9 +799,23 @@ def main():
             return
         candidates = collect_products_by_search(rules, defaults, domain)
     else:
-        mcp_client = SorftimeMcpClient() if provider == "mcp" else None
+        mcp_client = SorftimeMcpClient() if provider == "mcp" and not args.dry_run else None
         scan_state = read_category_scan_state(args.scan_state)
         scan_state = bootstrap_scan_state(scan_state, args.category_report)
+        pool = Path("archive/shape_opportunity_library.csv")
+        if pool.exists():
+            from datetime import timedelta
+            cutoff = (datetime.now() - timedelta(days=workflow_rules.get("rotation", {}).get("opportunity_rescan_days", 60))).isoformat()
+            with pool.open(encoding="utf-8-sig", newline="") as handle:
+                rules["_rescan_priorities"] = {str(r.get("source_category_id")): 0 for r in csv.DictReader(handle)
+                    if (r.get("last_validated_at") or r.get("archive_last_seen") or "") < cutoff
+                    and r.get("archive_status") in {"active", "active_in_latest_run", "stale_needs_rescan"}}
+        previous_shapes = Path("data/category_shape_validation.csv")
+        if previous_shapes.exists():
+            with previous_shapes.open(encoding="utf-8-sig", newline="") as handle:
+                for r in csv.DictReader(handle):
+                    if r.get("shape_recommendation") == "Watch shape":
+                        rules.setdefault("_rescan_priorities", {}).setdefault(str(r.get("source_category_id")), 1)
         exclusions = load_category_exclusions(args.category_exclusions)
         if args.replay_run_dir:
             replay_dir = Path(args.replay_run_dir)
@@ -800,10 +837,24 @@ def main():
             manifest["category_tree_source"] = "archived_run"
             manifest["replay_source"] = str(replay_dir)
         else:
+            if args.dry_run and not args.category_tree_json:
+                cache = Path(args.category_tree_cache)
+                if not cache.exists():
+                    raise SystemExit("Dry run requires a cached tree or --category-tree-json; no live calls allowed")
+                args.category_tree_json = str(cache)
+            if mcp_client:
+                mcp_client.preflight()
             category_tree, tree_source = load_category_tree(args, rules, domain, provider, mcp_client)
             manifest["category_tree_source"] = tree_source
             manifest["provider_call_count"] = mcp_client.tool_call_count if mcp_client else 0
             categories = select_categories(category_tree, rules, scan_state, exclusions)
+            if args.dry_run:
+                eligible = select_categories(category_tree, {**rules, "max_categories": 100000}, scan_state, exclusions)
+                remaining = sum(not c["previous_scan_count"] for c in eligible)
+                rotation = rules.get("rotation", {})
+                quota = rotation.get("new_category_quota", 70)
+                new_slots = max(1, round(int(rules["max_categories"]) * quota / max(1, quota + rotation.get("rescan_quota", 30))))
+                print(f"Eligible categories: {len(eligible)}; unscanned: {remaining}; new slots per run: {new_slots}; estimated remaining coverage weeks: {(remaining + new_slots - 1) // new_slots}")
         manifest["selected_categories"] = len(categories)
         update_discovery_checkpoint(run_dir, manifest, categories, candidates)
         print(f"Selected {len(categories)} categories. Staged report: {run_dir / 'categories.csv'}")
@@ -813,8 +864,6 @@ def main():
 
         consecutive_failures = 0
         network_rules = workflow_rules.get("network", {})
-        if mcp_client:
-            mcp_client.preflight()
         for category in categories:
             try:
                 if args.replay_run_dir:
@@ -844,6 +893,13 @@ def main():
                 category["scan_status"] = "failed"
                 category["scan_error"] = str(exc).splitlines()[-1][:500]
                 manifest["failed_categories"] += 1
+                if not args.replay_run_dir:
+                    prior = scan_state.get(category["category_id"], {})
+                    scan_state[category["category_id"]] = {**prior, "category_id": category["category_id"],
+                        "name": category["name"], "path": category["path"], "status": "failed",
+                        "consecutive_failures": as_int(prior.get("consecutive_failures")) + 1,
+                        "last_attempt_at": datetime.now().astimezone().isoformat(timespec="seconds")}
+                    write_category_scan_state(scan_state, run_dir / "category_scan_state.csv")
                 consecutive_failures += 1
                 manifest["failed_category_details"].append(
                     {
@@ -856,7 +912,7 @@ def main():
                 print(f"Category failed, continuing: {category['path']}: {category['scan_error']}", file=sys.stderr)
                 if is_non_retryable_sorftime_error(category["scan_error"]):
                     manifest["status"] = "failure"
-                    manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
+                    manifest["finished_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
                     manifest["error"] = category["scan_error"]
                     update_discovery_checkpoint(run_dir, manifest, categories, candidates)
                     raise SystemExit(
@@ -881,7 +937,7 @@ def main():
             if products_examined == 0:
                 category["products_examined"] = 0
                 category["candidate_count"] = 0
-                category["scan_completed_at"] = datetime.now().isoformat(timespec="seconds")
+                category["scan_completed_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
                 category["scan_status"] = "empty"
                 category["scan_error"] = "Sorftime returned no product records"
                 manifest["empty_categories"] += 1
@@ -890,7 +946,7 @@ def main():
                 continue
             candidates.extend(category_candidates)
             consecutive_failures = 0
-            scanned_at = datetime.now().isoformat(timespec="seconds")
+            scanned_at = datetime.now().astimezone().isoformat(timespec="seconds")
             category["products_examined"] = products_examined
             category["candidate_count"] = len(category_candidates)
             category["scan_completed_at"] = scanned_at
@@ -957,7 +1013,7 @@ def main():
     if not candidates:
         if strategy == "category" and not manifest["successful_categories"]:
             manifest["status"] = "failure"
-            manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
+            manifest["finished_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
             manifest["error"] = "No selected category returned product records"
             update_discovery_checkpoint(run_dir, manifest, categories, candidates)
             raise SystemExit(
@@ -971,7 +1027,7 @@ def main():
             write_category_report(categories, args.category_report)
         manifest["candidate_count"] = 0
         manifest["status"] = "success_no_candidates"
-        manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
+        manifest["finished_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
         update_discovery_checkpoint(run_dir, manifest, categories, candidates)
         print(f"Discovery completed with no eligible candidates; wrote an empty result to {output_path}")
         if args.score:
@@ -986,7 +1042,7 @@ def main():
     write_candidates(candidates, run_dir / "candidates_selected.csv")
     manifest["candidate_count"] = len(candidates)
     manifest["status"] = "success"
-    manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
+    manifest["finished_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
     update_discovery_checkpoint(
         run_dir,
         manifest,

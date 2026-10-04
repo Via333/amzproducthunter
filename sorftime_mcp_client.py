@@ -98,12 +98,11 @@ def unpack_tool_result(response: dict[str, Any]) -> Any:
 
 
 class SorftimeMcpClient:
-    def __init__(self, url: str | None = None, timeout: int = 120, max_attempts: int = 3):
+    def __init__(self, url: str | None = None, timeout: int = 120, max_attempts: int | None = None):
         if os.environ.get("AMZ_OFFLINE") == "1":
             raise RuntimeError("Sorftime is disabled during offline validation")
         self._url = url or load_mcp_url()
         self._timeout = timeout
-        self._max_attempts = max(1, max_attempts)
         self._session_id = ""
         self._initialized = False
         self._request_id = 0
@@ -111,6 +110,7 @@ class SorftimeMcpClient:
         self.request_attempt_count = 0
         from workflow_storage import load_rules
         self.retry_rules = load_rules(Path(__file__).resolve().parent).get("network", {})
+        self._max_attempts = max(1, max_attempts if max_attempts is not None else self.retry_rules.get("max_attempts", 3))
 
     def preflight(self, max_seconds=None, interval=None):
         max_seconds = self.retry_rules.get("preflight_max_seconds", 900) if max_seconds is None else max_seconds
@@ -145,7 +145,7 @@ class SorftimeMcpClient:
                 headers["Mcp-Session-Id"] = self._session_id
             else:
                 headers.pop("Mcp-Session-Id", None)
-            delay = min(self.retry_rules.get("retry_max_seconds", 60), self.retry_rules.get("retry_base_seconds", 2) * (3 ** (attempt - 1))) * random.uniform(0.7, 1.3)
+            delay = min(self.retry_rules.get("retry_max_seconds", 60), self.retry_rules.get("retry_base_seconds", 2) * (3 ** (attempt - 1)) * random.uniform(0.7, 1.3))
             request = urllib.request.Request(self._url, data=body, headers=headers, method="POST")
             self.request_attempt_count += 1
             try:

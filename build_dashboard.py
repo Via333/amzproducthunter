@@ -16,17 +16,30 @@ from product_risk import has_valid_category, infer_compliance_risk, infer_fragil
 from dashboard_catalog import build_catalog
 from research_workbench import opportunity_keys
 from product_market_validation import build_current_product_groups
+from opportunity_feedback import feedback_state
 
 
-from workflow_storage import atomic_write_text, current_root
+from workflow_storage import atomic_write_text, current_root, run_quality, load_rules
 import os
 ROOT = Path(os.environ["AMZ_WORKFLOW_ROOT"]) if os.environ.get("AMZ_WORKFLOW_ROOT") else current_root(Path(__file__).resolve().parent)
 WEB_DIR = ROOT / "web"
 OUTPUT = WEB_DIR / "index.html"
+SOURCE_ROOT = Path(__file__).resolve().parent
+
+
+def data_path(relative_path):
+    path = Path(relative_path)
+    if path.is_absolute():
+        return path
+    manual = str(path).startswith(("research/", "archive/keyword_search_runs/", "reports/product_opportunity_research_")) or str(path) in {
+        "archive/product_research_index.csv", "archive/category_research_index.csv", "archive/keyword_search_index.csv"}
+    if manual and not os.environ.get("AMZ_WORKFLOW_ROOT") and (SOURCE_ROOT / path).exists():
+        return SOURCE_ROOT / path
+    return ROOT / path
 
 
 def read_csv(relative_path: str) -> list[dict[str, str]]:
-    path = ROOT / relative_path
+    path = data_path(relative_path)
     if not path.exists():
         return []
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
@@ -36,9 +49,7 @@ def read_csv(relative_path: str) -> list[dict[str, str]]:
 def read_csv_reference(path_text: str) -> list[dict[str, str]]:
     if not path_text:
         return []
-    path = Path(path_text)
-    if not path.is_absolute():
-        path = ROOT / path
+    path = data_path(path_text)
     if not path.exists():
         return []
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
@@ -46,14 +57,14 @@ def read_csv_reference(path_text: str) -> list[dict[str, str]]:
 
 
 def read_text(relative_path: str) -> str:
-    path = ROOT / relative_path
+    path = data_path(relative_path)
     if not path.exists():
         return ""
     return path.read_text(encoding="utf-8")
 
 
 def read_json(relative_path: str) -> dict:
-    path = ROOT / relative_path
+    path = data_path(relative_path)
     if not path.exists():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
@@ -350,6 +361,9 @@ def normalize_shape_validation(rows: list[dict[str, str]]) -> list[dict[str, obj
                 "product_family_label": row.get("product_family_label", ""),
                 "product_form_label": row.get("product_form_label", ""),
                 "classification_status": row.get("classification_status", ""),
+                "form_landed_cost_ceiling_median": row.get("form_landed_cost_ceiling_median", ""),
+                "form_fee_coverage": row.get("form_fee_coverage", 0),
+                "form_fee_source": row.get("form_fee_source", "missing"),
                 "assessment_scope": row.get("assessment_scope", ""),
                 **{key: row.get(key) for key in (
                     "market_id", "market_label", "source_categories", "family_sources",
@@ -1678,6 +1692,8 @@ def build_html() -> str:
     category_scan_rows = normalize_category_scan_state(read_csv("archive/category_scan_state.csv"))
     current_category_rows = normalize_category_report(read_csv("reports/discovered_categories.csv"))
     exclusion_rows = normalize_exclusion_rules(discovery_cfg, exclusion_cfg)
+    proposals = read_json("reports/category_exclusion_proposals.json") or []
+    proposal_rows = "".join(f'<tr><td>{escape(str(p.get("path", "")))}</td><td>{float(p.get("excluded_share", 0)):.0%}</td><td>{escape(str(p.get("reason", "")))}</td></tr>' for p in proposals)
     keyword_search_rows = normalize_keyword_search_index(read_csv("archive/keyword_search_index.csv"))
     latest_keyword_ranked_rows = []
     if keyword_search_rows:
@@ -1687,8 +1703,24 @@ def build_html() -> str:
             latest_keyword_ranked_rows = normalize_selection(read_csv_reference(latest_index_row[0].get("ranked_csv", "")))
     seed_archive_rows = normalize_archive(read_csv("archive/opportunity_library.csv"))
     source_shape_rows = read_csv("data/category_shape_validation.csv")
+    source_run_ids = {row.get("validation_run_id") for row in source_shape_rows if row.get("validation_run_id")}
+    batch_status = ""
+    if len(source_run_ids) == 1:
+        source_run = next(iter(source_run_ids))
+        manifest = read_json(f"archive/discovery_runs/{source_run}/run_manifest.json")
+        if manifest and "selected_categories" in manifest:
+            quality = run_quality(manifest, load_rules(ROOT))
+            label = "历史回放" if manifest.get("data_provider") == "mcp_replay" else "数据批次"
+            batch_status = f'<p class="subtle">{label} {escape(source_run)} · 成功 {manifest.get("successful_categories", 0)}/{manifest.get("selected_categories", 0)} 类目 · 采集时间 {escape(str(manifest.get("finished_at", "")))}</p>'
+            if not quality["publishable"]:
+                batch_status += '<p role="status" class="callout">历史批次覆盖不完整，未达到当前发布门槛；不代表完整市场结论。</p>'
     shape_validation_rows = normalize_shape_validation(build_current_product_groups(ROOT, source_shape_rows))
-    shape_archive_rows = normalize_shape_archive(read_csv("archive/shape_opportunity_library.csv"))
+    archive_source_rows = read_csv("archive/shape_opportunity_library.csv")
+    for row in archive_source_rows:
+        state, source = feedback_state(row)
+        if state:
+            row["archive_status"], row["review_hold_source"] = state, source
+    shape_archive_rows = normalize_shape_archive(archive_source_rows)
     selection_lookup = {str(row.get("asin", "")): row for row in selection_rows if row.get("asin")}
     product_research_index = read_csv("archive/product_research_index.csv")
     product_research_archive = normalize_product_research_archive(product_research_index, selection_lookup)
@@ -1751,7 +1783,7 @@ def build_html() -> str:
         "visual_product_form",
     )
 
-    shape_archive_active_count = sum(1 for row in shape_archive_rows if row.get("archive_status") == "active_in_latest_run")
+    shape_archive_active_count = sum(1 for row in shape_archive_rows if row.get("archive_status") in {"active_in_latest_run", "active"})
     shape_opportunity_count = sum(1 for row in shape_validation_rows if row.get("shape_recommendation") == "Shape opportunity")
     watch_shape_count = sum(1 for row in shape_validation_rows if row.get("shape_recommendation") == "Watch shape")
     validated_category_count = len(
@@ -1862,7 +1894,7 @@ def build_html() -> str:
         "latestKeywordResults": latest_keyword_ranked_rows,
         "seedArchive": seed_archive_rows,
         "shapeValidation": shape_validation_rows,
-        "productCatalog": build_catalog(ROOT, source_shape_rows),
+        "productCatalog": build_catalog(ROOT, source_shape_rows, manual_root=ROOT if os.environ.get("AMZ_WORKFLOW_ROOT") else SOURCE_ROOT),
         "archive": shape_archive_rows,
         "productResearchArchive": product_research_archive,
         "forms": form_rows,
@@ -3236,6 +3268,7 @@ def build_html() -> str:
         <div class="timestamp">生成时间：{escape(generated_at)}</div>
       </div>
 
+      {batch_status}
       {coverage_warning_html}
 
       <div class="kpi-grid">
@@ -3339,6 +3372,7 @@ def build_html() -> str:
       </section>
 
       <section id="keyword-search">
+        <details><summary>待确认排除类目（{len(proposals)}）</summary><div class="table-wrap"><table><thead><tr><th>类目</th><th>排除比例</th><th>产品级原因</th></tr></thead><tbody>{proposal_rows}</tbody></table></div></details>
         <div class="section-head">
           <div>
             <h2>关键词选品</h2>
@@ -3402,7 +3436,15 @@ def build_html() -> str:
           <input id="archiveSearch" type="search" placeholder="搜索机会 / ASIN / 类目">
           <select id="archiveStatus">
             <option value="">全部状态</option>
-            <option value="active_in_latest_run" selected>最近归档时有效</option>
+            <option value="current" selected>有效与待复扫</option>
+            <option value="active">历史验证有效</option>
+            <option value="active_in_latest_run">本轮验证有效</option>
+            <option value="stale_needs_rescan">待复扫</option>
+            <option value="failed_on_rescan">复扫未通过</option>
+            <option value="ip_review_required">知识产权风险拦截</option>
+            <option value="suppressed_by_user">人工舍弃</option>
+            <option value="rejected_by_research">研究拦截</option>
+            <option value="seasonal_confirmed">季节风险待复核</option>
             <option value="not_in_latest_run">未在最近归档轮次出现</option>
             <option value="invalidated_by_rule">已被新规则判定失效</option>
           </select>
@@ -4130,7 +4172,7 @@ def build_html() -> str:
       const status = document.getElementById("archiveStatus").value;
       const rows = (DATA.archive || [])
         .filter(row => !window.AmzWorkbench?.isDiscarded(row))
-        .filter(row => !status || row.archive_status === status)
+        .filter(row => !status || (status === "current" ? ["active", "active_in_latest_run", "stale_needs_rescan"].includes(row.archive_status) : row.archive_status === status))
         .filter(row => {{
           if (!q) return true;
           return [row.seed_asin, row.seed_title, row.product_form, row.category_path, row.opportunity_thesis, row.research_status].join(" ").toLowerCase().includes(q);
@@ -4145,13 +4187,13 @@ def build_html() -> str:
 
       const html = Array.from(grouped.entries()).map(([category, groupRows]) => {{
         groupRows.sort((a, b) => Number(b.archive_best_score || b.shape_score || 0) - Number(a.archive_best_score || a.shape_score || 0));
-        const activeCount = groupRows.filter(row => row.archive_status === "active_in_latest_run").length;
+        const activeCount = groupRows.filter(row => ["active_in_latest_run", "active"].includes(row.archive_status)).length;
         return `
           <article class="category-group">
             <div class="category-group-head">
               <div>
                 <h3>${{esc(category)}}</h3>
-                <span class="muted-small">${{fmtInt(groupRows.length)}} 个机会，${{fmtInt(activeCount)}} 个本轮仍出现</span>
+                <span class="muted-small">${{groupRows.length}} 个历史形态，${{activeCount}} 个验证有效</span>
               </div>
               <div class="validation-metrics">
                 <div class="validation-metric"><span class="shape-cell-label">最高分</span><strong>${{fmtOne(Math.max(...groupRows.map(row => Number(row.archive_best_score || row.shape_score || 0))))}}</strong></div>
@@ -4168,13 +4210,13 @@ def build_html() -> str:
                     <span class="muted-small">${{esc(row.seed_asin)}} · ${{esc(row.seed_title_short || "-")}}</span>
                     <div class="pool-actions">
                       ${{window.AmzWorkbench?.discardButton("shape", row.decision_keys?.shape, row.product_form || "形态") || ""}}
-                      <span class="pill ${{row.archive_status === "active_in_latest_run" ? "green" : "gray"}}">${{row.archive_status === "active_in_latest_run" ? "本轮仍出现" : row.archive_status === "invalidated_by_rule" ? "已失效" : "历史机会"}}</span>
+                      <span class="pill ${{["active", "active_in_latest_run"].includes(row.archive_status) ? "green" : "gray"}}">${{({{active:"历史验证有效",active_in_latest_run:"本轮验证有效",stale_needs_rescan:"待复扫",failed_on_rescan:"复扫未通过",invalidated_by_rule:"已失效",ip_review_required:"知识产权风险拦截",suppressed_by_user:"人工舍弃",rejected_by_research:"研究拦截",seasonal_confirmed:"季节风险待复核"}})[row.archive_status] || "历史机会"}}</span>
                       ${{row.research_page ? `<a class="pill green" href="${{esc(researchHref(row.research_page))}}" target="_blank" rel="noreferrer">单品研究</a>` : ""}}
                       <a class="pill gray" href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">Listing</a>
                     </div>
                   </div>
                   <div><span class="shape-cell-label">历史最高</span><strong>${{fmtOne(row.archive_best_score)}}</strong></div>
-                  <div><span class="shape-cell-label">本轮分</span><strong>${{fmtOne(row.archive_latest_score)}}</strong></div>
+                  <div><span class="shape-cell-label">最近归档分</span><strong>${{fmtOne(row.archive_latest_score)}}</strong></div>
                   <div><span class="shape-cell-label">月销</span><strong>${{fmtInt(row.form_avg_sales)}}</strong></div>
                   <div><span class="shape-cell-label">评论中位</span><strong>${{fmtInt(row.form_median_reviews)}}</strong></div>
                   <div>
