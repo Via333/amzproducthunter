@@ -1,0 +1,17 @@
+{
+  "profiles": [
+    {
+      "id": "pancake_batter_dispenser",
+      "title_pattern": "(?i)(?:pancake|batter).*(?:dispenser|bottle)",
+      "candidates": [
+        {"id": "pancake_maker", "label": "迷你煎饼机", "pattern": "(?i)\\bpancake maker\\b", "role": "同场景设备", "next_check": "比较出料口与小孔尺寸；电器不直接纳入低风险实物套装。"},
+        {"id": "waffle_maker", "label": "华夫饼机", "pattern": "(?i)\\bwaffle (?:maker|iron)\\b", "role": "同场景设备", "next_check": "验证面糊容量和注入控制；仅作场景关联，暂不组合电器。"},
+        {"id": "cupcake_pan", "label": "纸杯蛋糕模盘", "pattern": "(?i)\\b(?:cupcake|muffin) (?:pan|tin|mold)s?\\b", "role": "同场景容器", "next_check": "核对模孔与每孔用量、包装体积和食品接触材料。"},
+        {"id": "mixing_ball", "label": "搅拌球", "pattern": "(?i)\\b(?:(?:whisk|mixing|shaker|blender) ball|ball whisk)s?\\b", "role": "已有配件 / 补件", "next_check": "目标套装已含搅拌球，先核对缺件和搅拌表现，不把重复加配件当成新需求。"},
+        {"id": "brush", "label": "清洁刷", "pattern": "(?i)\\b(?:cleaning |bottle |small )?brush(?:es)?\\b", "role": "已有配件 / 清洁", "next_check": "目标套装已附刷具，只有刷不到瓶口、螺纹等位置时才验证改进刷型。"},
+        {"id": "spatula", "label": "硅胶刮刀", "pattern": "(?i)\\bspatulas?\\b", "role": "相邻套装配件", "next_check": "核对是否已随目标 SKU 附送；验证装料、刮壁是否省事，避免重复赠品。"},
+        {"id": "seal", "label": "备用密封圈", "pattern": "(?i)\\b(?:o-ring|seal|washer ring)s?\\b", "role": "售后 / 耐用假设", "next_check": "评论提及不等于要求加配；先区分漏装、装配错误和设计缺陷，再验证材质、尺寸与耐久。"}
+      ]
+    }
+  ]
+}

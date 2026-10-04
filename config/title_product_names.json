@@ -1,0 +1,1863 @@
+{
+  "entries": [
+    {
+      "key": "decorating_tweezers",
+      "label": "烘焙装饰镊子",
+      "form": "decorating tweezers",
+      "aliases": [
+        "cake tweezers",
+        "decorating tweezers",
+        "sprinkle tweezers",
+        "tweezers"
+      ],
+      "context": "cake|cookie|baking|sprinkles?|fondant",
+      "specification_required": true
+    },
+    {
+      "key": "decorating_tweezers",
+      "label": "烘焙装饰镊子",
+      "form": "decorating tweezers",
+      "aliases": [
+        "sprinkles tool",
+        "sprinkle tool"
+      ],
+      "context": "sprinkles? tool for (?:cake|cookie) tweezers",
+      "specification_required": true
+    },
+    {
+      "key": "cooling_rack",
+      "label": "烘焙冷却架",
+      "form": "cooling rack",
+      "aliases": [
+        "cooling rack",
+        "cooling baking rack",
+        "baking cooling rack",
+        "wire baking rack",
+        "baking rack",
+        "roasting rack",
+        "cooling grid",
+        "cooking rack",
+        "wire roasting rack"
+      ]
+    },
+    {
+      "key": "garbage_disposal",
+      "label": "厨余垃圾处理机",
+      "form": "garbage disposal",
+      "aliases": [
+        "garbage disposal",
+        "garbage disposer",
+        "food waste disposer",
+        "waste disposer",
+        "food waste disposal",
+        "food disposer",
+        "sink disposer"
+      ]
+    },
+    {
+      "key": "sink_seal",
+      "label": "水槽密封圈",
+      "form": "sink seal",
+      "aliases": [
+        "sink seal",
+        "sink gasket",
+        "flange gasket"
+      ],
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "disposal_splash_guard",
+      "label": "垃圾处理器防溅挡片",
+      "form": "garbage disposal splash guard",
+      "aliases": [
+        "disposal splash guard",
+        "sink baffle",
+        "disposal baffle",
+        "splash guard"
+      ],
+      "context": "disposal|disposer|sink",
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "disposal_air_switch",
+      "label": "垃圾处理器气动开关",
+      "form": "garbage disposal air switch",
+      "aliases": [
+        "air switch"
+      ],
+      "context": "disposal|disposer",
+      "accessory": true
+    },
+    {
+      "key": "disposal_flange",
+      "label": "垃圾处理器安装法兰",
+      "form": "garbage disposal flange",
+      "aliases": [
+        "disposal flange",
+        "sink flange"
+      ],
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "disposal_coupler",
+      "label": "垃圾处理器连接件",
+      "form": "disposal coupler",
+      "aliases": [
+        "flex coupler",
+        "collar adapter",
+        "dishwasher connector kit"
+      ],
+      "context": "disposal|insinkerator|insink erator|in sink erator",
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "shower_filter_cartridge",
+      "label": "淋浴过滤替换芯",
+      "form": "shower filter cartridge",
+      "aliases": [
+        "replacement filter",
+        "filter cartridge",
+        "replacement cartridge",
+        "refill filter"
+      ],
+      "context": "shower|showerhead|bath tub",
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "shower_filter",
+      "label": "淋浴过滤器",
+      "form": "shower filter",
+      "aliases": [
+        "shower filter",
+        "showerhead filter",
+        "shower head filter"
+      ],
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "shower_seal",
+      "label": "花洒密封垫圈",
+      "form": "shower gasket",
+      "aliases": [
+        "shower head gasket",
+        "showerhead gasket",
+        "rubber washer"
+      ],
+      "context": "shower|showerhead",
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "shower_holder",
+      "label": "花洒支架",
+      "form": "shower holder",
+      "aliases": [
+        "shower head holder",
+        "showerhead holder",
+        "shower holder",
+        "shower bracket"
+      ],
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "shower_hose",
+      "label": "花洒软管",
+      "form": "shower hose",
+      "aliases": [
+        "shower hose"
+      ],
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "showerhead",
+      "label": "淋浴花洒",
+      "form": "showerhead",
+      "aliases": [
+        "shower head",
+        "showerhead",
+        "handheld shower",
+        "hand held shower",
+        "rain shower",
+        "rainfall shower",
+        "rainfall combo"
+      ],
+      "specification_required": true,
+      "variants": [
+        {
+          "key": "filtered",
+          "label": "带过滤",
+          "pattern": "\\bfiltered\\b"
+        },
+        {
+          "key": "handheld",
+          "label": "手持式",
+          "pattern": "\\b(?:handheld|hand held)\\b"
+        },
+        {
+          "key": "dual",
+          "label": "双头式",
+          "pattern": "\\b(?:dual|double|2 in 1)\\b"
+        },
+        {
+          "key": "fixed",
+          "label": "固定式",
+          "pattern": "\\b(?:fixed|overhead|rainfall|rainhead)\\b"
+        }
+      ]
+    },
+    {
+      "key": "kitchen_faucet",
+      "label": "厨房水龙头",
+      "form": "kitchen faucet",
+      "aliases": [
+        "kitchen faucet",
+        "kitchen sink faucet",
+        "kitchen sink tap"
+      ],
+      "specification_required": true,
+      "variants": [
+        {
+          "key": "touchless",
+          "label": "感应式",
+          "pattern": "\\b(?:touchless|motion sensor|hands free)\\b"
+        },
+        {
+          "key": "pull down",
+          "label": "抽拉式",
+          "pattern": "\\bpull (?:down|out)\\b"
+        }
+      ]
+    },
+    {
+      "key": "pot_filler",
+      "label": "灶台注水龙头",
+      "form": "pot filler faucet",
+      "aliases": [
+        "pot filler",
+        "potfiller"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "bathroom_faucet",
+      "label": "浴室水龙头",
+      "form": "bathroom faucet",
+      "aliases": [
+        "bathroom faucet",
+        "bathroom sink faucet",
+        "lavatory faucet"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "faucet_aerator",
+      "label": "水龙头起泡器",
+      "form": "faucet aerator",
+      "aliases": [
+        "faucet aerator",
+        "tap aerator",
+        "water aerator"
+      ],
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "faucet_hole_cover",
+      "label": "水槽龙头孔盖",
+      "form": "faucet hole cover",
+      "aliases": [
+        "faucet hole cover",
+        "sink hole cover",
+        "tap hole plate"
+      ],
+      "accessory": true
+    },
+    {
+      "key": "faucet_cartridge",
+      "label": "水龙头阀芯",
+      "form": "faucet cartridge",
+      "aliases": [
+        "faucet cartridge",
+        "valve cartridge",
+        "replacement cartridge"
+      ],
+      "accessory": true,
+      "specification_required": true,
+      "context": "faucet|tap|valve"
+    },
+    {
+      "key": "concrete_mold",
+      "label": "混凝土铺路/路沿模具",
+      "form": "concrete mold",
+      "aliases": [
+        "concrete mold",
+        "cement mold",
+        "paver mold",
+        "paving mold",
+        "stepping stone mold",
+        "flagstone mold",
+        "concrete form",
+        "curb mold",
+        "curbing mold",
+        "flex form",
+        "garden path maker",
+        "walk path maker",
+        "walk maker",
+        "brick template",
+        "paver model",
+        "concrete model paver"
+      ],
+      "specification_required": true,
+      "patterns": [
+        "\\b(?:concrete|cement|paver|paving|stepping stone)\\b(?:\\s+\\w+){0,5}\\s+(?:mold|mould|form)\\b"
+      ],
+      "context": "concrete|cement|paver|paving|stepping stone|curb|flagstone|walk"
+    },
+    {
+      "key": "concrete_stamp",
+      "label": "混凝土纹理压模",
+      "form": "concrete texture stamp",
+      "aliases": [
+        "concrete stamp",
+        "concrete stamping",
+        "concrete texture roller",
+        "concrete roller",
+        "mat stamp"
+      ]
+    },
+    {
+      "key": "garden_edging",
+      "label": "花园边界围挡",
+      "form": "garden edging",
+      "aliases": [
+        "garden edging",
+        "landscape edging",
+        "lawn edging"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "piping_kit",
+      "label": "裱花袋与裱花嘴套装",
+      "form": "piping bags and tips set",
+      "aliases": [
+        "piping bags and tips set",
+        "piping bags with tips",
+        "piping bag set with tips",
+        "pastry bags and tips set",
+        "frosting piping kit",
+        "piping kit",
+        "piping bag and icing tip set"
+      ]
+    },
+    {
+      "key": "piping_bag",
+      "label": "裱花袋",
+      "form": "piping bag",
+      "aliases": [
+        "piping bag",
+        "pastry bag",
+        "decorating bag",
+        "icing bag",
+        "icing pouch"
+      ],
+      "specification_required": true,
+      "variants": [
+        {
+          "key": "disposable",
+          "label": "一次性",
+          "pattern": "\\b(?:disposable|tipless)\\b"
+        },
+        {
+          "key": "reusable",
+          "label": "可重复使用",
+          "pattern": "\\b(?:reusable|silicone|cotton)\\b"
+        }
+      ]
+    },
+    {
+      "key": "piping_tip",
+      "label": "裱花嘴",
+      "form": "piping tip",
+      "aliases": [
+        "piping tip",
+        "icing tip",
+        "decorating tip",
+        "piping nozzle",
+        "icing nozzle",
+        "decorating nozzle",
+        "pastry tip",
+        "pastry tube",
+        "frosting tip"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "piping_coupler",
+      "label": "裱花嘴连接器",
+      "form": "piping coupler",
+      "aliases": [
+        "piping coupler",
+        "icing coupler",
+        "coupler"
+      ],
+      "context": "icing|piping|cake|pastry",
+      "accessory": true
+    },
+    {
+      "key": "icing_spatula",
+      "label": "蛋糕抹刀",
+      "form": "icing spatula",
+      "aliases": [
+        "icing spatula",
+        "offset spatula",
+        "cake spatula",
+        "frosting spatula",
+        "frosting knife",
+        "palette knife",
+        "icing knife",
+        "cream spatula",
+        "decorating knife",
+        "cake palette knife",
+        "cake spatula",
+        "cake icing spatula",
+        "cake decorating spatula"
+      ],
+      "context": "cake|icing|frosting|baking",
+      "specification_required": true,
+      "variants": [
+        {
+          "key": "offset",
+          "label": "曲柄",
+          "pattern": "\\b(?:offset|angled)\\b"
+        },
+        {
+          "key": "straight",
+          "label": "直柄",
+          "pattern": "\\bstraight\\b"
+        }
+      ]
+    },
+    {
+      "key": "sandwich_cutter",
+      "label": "三明治切边封口器",
+      "form": "sandwich cutter",
+      "aliases": [
+        "sandwich cutter",
+        "sandwich sealer",
+        "uncrustable maker",
+        "decruster",
+        "sandwich decruster",
+        "sandwich maker sealer",
+        "uncrustable sandwich maker"
+      ]
+    },
+    {
+      "key": "biscuit_cutter",
+      "label": "饼干切模",
+      "form": "cookie cutter",
+      "aliases": [
+        "biscuit cutter",
+        "circle cutter",
+        "round cutter"
+      ]
+    },
+    {
+      "key": "cookie_press",
+      "label": "饼干挤压成型器",
+      "form": "cookie press",
+      "aliases": [
+        "cookie press",
+        "biscuit press",
+        "cookie gun"
+      ]
+    },
+    {
+      "key": "hand_pie_mold",
+      "label": "馅饼压制封口模具",
+      "form": "hand pie mold",
+      "aliases": [
+        "hand pie mold",
+        "pie press",
+        "pie mold",
+        "pie maker mold",
+        "pie dough mold"
+      ]
+    },
+    {
+      "key": "cake_ring",
+      "label": "烘焙成型圈",
+      "form": "cake ring",
+      "aliases": [
+        "cake ring",
+        "tart ring",
+        "pastry ring",
+        "crumpet ring",
+        "muffin ring",
+        "mousse ring",
+        "cooking ring",
+        "pancake ring",
+        "food ring",
+        "bun ring",
+        "cookie ring",
+        "forming ring",
+        "cake mold",
+        "pastry mold",
+        "ring mold"
+      ],
+      "specification_required": true,
+      "context": "cake|pastry|muffin|tart|crumpet|mousse|cooking|baking|pancake|food|cookie|forming ring"
+    },
+    {
+      "key": "decorating_stencil",
+      "label": "蛋糕/饼干装饰模板",
+      "form": "decorating stencil",
+      "aliases": [
+        "stencil",
+        "painting template"
+      ],
+      "context": "cake|cookie|icing|baking|pastry",
+      "specification_required": true
+    },
+    {
+      "key": "flour_sifter",
+      "label": "面粉筛",
+      "form": "flour sifter",
+      "aliases": [
+        "flour sifter",
+        "flour sieve",
+        "baking sifter"
+      ],
+      "specification_required": true,
+      "variants": [
+        {
+          "key": "hand crank",
+          "label": "手摇式",
+          "pattern": "\\bhand crank\\b"
+        },
+        {
+          "key": "squeeze",
+          "label": "挤压手柄式",
+          "pattern": "\\b(?:squeeze|squeezable)\\b"
+        },
+        {
+          "key": "mesh",
+          "label": "网筛",
+          "pattern": "\\b(?:mesh|sieve)\\b"
+        }
+      ]
+    },
+    {
+      "key": "powder_duster",
+      "label": "烘焙撒粉工具",
+      "form": "powder duster",
+      "aliases": [
+        "dusting wand",
+        "sugar shaker",
+        "sugar duster",
+        "sugar sifter",
+        "flour duster",
+        "powder shaker",
+        "duster",
+        "sifter"
+      ],
+      "context": "powdered sugar|sugar shaker|sugar duster|dusting wand|powder shaker|flour duster"
+    },
+    {
+      "key": "matcha_sifter",
+      "label": "抹茶粉筛",
+      "form": "matcha sifter",
+      "aliases": [
+        "matcha sifter",
+        "matcha strainer"
+      ]
+    },
+    {
+      "key": "coffee_sifter",
+      "label": "咖啡粉筛",
+      "form": "coffee sifter",
+      "aliases": [
+        "coffee sifter",
+        "coffee sieve"
+      ]
+    },
+    {
+      "key": "cheesecloth",
+      "label": "奶酪过滤纱布",
+      "form": "cheesecloth",
+      "aliases": [
+        "cheesecloth",
+        "cheese cloth",
+        "butter muslin"
+      ]
+    },
+    {
+      "key": "yogurt_strainer",
+      "label": "酸奶过滤器",
+      "form": "yogurt strainer",
+      "aliases": [
+        "yogurt strainer",
+        "greek yogurt maker",
+        "yoghurt strainer"
+      ]
+    },
+    {
+      "key": "cheese_mold",
+      "label": "奶酪沥水模具",
+      "form": "cheese mold",
+      "aliases": [
+        "cheese mold",
+        "cheese making basket",
+        "cheese basket",
+        "cheese mould"
+      ]
+    },
+    {
+      "key": "rennet",
+      "label": "凝乳酶",
+      "form": "rennet",
+      "aliases": [
+        "rennet",
+        "cheese coagulant"
+      ]
+    },
+    {
+      "key": "baking_mat",
+      "label": "烘焙/揉面垫",
+      "form": "baking mat",
+      "aliases": [
+        "baking mat",
+        "pastry mat",
+        "dough mat",
+        "rolling mat",
+        "kneading mat"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "bread_sling",
+      "label": "面包烘焙提拉垫",
+      "form": "bread sling",
+      "aliases": [
+        "bread sling",
+        "dutch oven liner",
+        "bread baking sling"
+      ]
+    },
+    {
+      "key": "oven_liner",
+      "label": "烤箱底部垫",
+      "form": "oven liner",
+      "aliases": [
+        "oven liner"
+      ]
+    },
+    {
+      "key": "air_fryer_liner",
+      "label": "空气炸锅内衬",
+      "form": "air fryer liner",
+      "aliases": [
+        "air fryer liner",
+        "air fryer basket liner"
+      ]
+    },
+    {
+      "key": "baking_paper",
+      "label": "烘焙纸",
+      "form": "baking paper",
+      "aliases": [
+        "parchment paper",
+        "parchment sheet",
+        "baking paper"
+      ]
+    },
+    {
+      "key": "baking_pan",
+      "label": "烘焙烤盘",
+      "form": "baking pan",
+      "aliases": [
+        "baking pan",
+        "baking sheet",
+        "sheet pan",
+        "cookie sheet",
+        "baking tray"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "cleaning_cloth",
+      "label": "清洁抹布",
+      "form": "cleaning cloth",
+      "aliases": [
+        "cleaning cloth",
+        "microfiber cloth",
+        "microfibre cloth",
+        "dishcloth",
+        "dish cloth",
+        "cleaning towel",
+        "dish rag",
+        "dishrag",
+        "washcloth",
+        "cleaning rag",
+        "handi wipes",
+        "dish towel",
+        "microfiber towel",
+        "microfibre towel",
+        "kitchen towel"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "cleaning_sponge",
+      "label": "清洁海绵",
+      "form": "cleaning sponge",
+      "aliases": [
+        "scrub sponge",
+        "dish sponge",
+        "kitchen sponge",
+        "cleaning sponge",
+        "magic sponge",
+        "cleaning eraser",
+        "melamine sponge",
+        "scrubber sponge",
+        "sponge",
+        "magic eraser",
+        "melamine pad"
+      ],
+      "specification_required": true,
+      "context": "cleaning|scrub|scrubber|dish|dishes|kitchen|melamine|eraser|bathroom|non scratch"
+    },
+    {
+      "key": "scouring_pad",
+      "label": "清洁百洁布/钢丝球",
+      "form": "scouring pad",
+      "aliases": [
+        "scouring pad",
+        "scrubber pad",
+        "scrub pad",
+        "steel wool",
+        "copper scrubber",
+        "stainless steel scrubber"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "pumice_cleaner",
+      "label": "清洁浮石",
+      "form": "pumice scouring stick",
+      "aliases": [
+        "pumice stone",
+        "pumice scouring stick",
+        "scouring stick",
+        "pumice stick",
+        "pumice cleaning stone"
+      ],
+      "context": "cleaning|toilet|bowl|stain|scour"
+    },
+    {
+      "key": "squeegee",
+      "label": "玻璃/地面刮水器",
+      "form": "squeegee",
+      "aliases": [
+        "squeegee",
+        "water blade"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "disposable_glove",
+      "label": "一次性手套",
+      "form": "disposable glove",
+      "aliases": [
+        "disposable glove",
+        "exam glove",
+        "nitrile glove",
+        "vinyl glove",
+        "latex glove",
+        "glove"
+      ],
+      "specification_required": true,
+      "context": "disposable|nitrile|vinyl|latex|exam|medical"
+    },
+    {
+      "key": "cleaning_glove",
+      "label": "清洁手套",
+      "form": "cleaning glove",
+      "aliases": [
+        "cleaning glove",
+        "dishwashing glove",
+        "dish washing glove",
+        "dusting glove",
+        "rubber glove"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "toilet_wiping_aid",
+      "label": "如厕擦拭辅助工具",
+      "form": "toilet wiping aid",
+      "aliases": [
+        "toilet aid",
+        "wiping aid",
+        "butt wiper",
+        "bottom wiper",
+        "bottom wiping tool",
+        "bottom buddy",
+        "easywipe",
+        "comfort wipe",
+        "toilet wiping tool",
+        "comfort wiper",
+        "toilet tissue aid"
+      ],
+      "context": "toilet|wiping|wiper|bottom|butt|easywipe"
+    },
+    {
+      "key": "bottle_pourer",
+      "label": "瓶口倒液嘴",
+      "form": "bottle pourer",
+      "aliases": [
+        "bottle pourer",
+        "liquor pourer",
+        "oil pourer",
+        "pour spout",
+        "pourer spout",
+        "bottle spout",
+        "oil spout",
+        "speed pourer",
+        "pourers",
+        "oil dispenser spout"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "bottle_pourer_adapter",
+      "label": "倒液嘴转接套",
+      "form": "pour spout adapter",
+      "aliases": [
+        "pour spout adapter",
+        "liquor pourer adapter"
+      ],
+      "accessory": true
+    },
+    {
+      "key": "bottle_stopper",
+      "label": "酒瓶塞",
+      "form": "bottle stopper",
+      "aliases": [
+        "bottle stopper",
+        "wine stopper",
+        "champagne stopper"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "wine_marker",
+      "label": "酒杯识别饰物/标记",
+      "form": "wine glass marker",
+      "aliases": [
+        "wine glass charm",
+        "wine charm",
+        "glass charm",
+        "drink marker",
+        "glass marker",
+        "glass tag"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "beverage_tub",
+      "label": "饮料冰桶",
+      "form": "beverage tub",
+      "aliases": [
+        "beverage tub",
+        "party tub",
+        "drink tub",
+        "ice bucket",
+        "champagne bucket",
+        "wine bucket",
+        "storage tub",
+        "galvanized tub",
+        "galvanized rectangle tub",
+        "beer bucket",
+        "metal bucket"
+      ],
+      "specification_required": true,
+      "context": "beverage|drink|ice|beer|wine|champagne|party|parties"
+    },
+    {
+      "key": "cocktail_shaker",
+      "label": "调酒摇杯",
+      "form": "cocktail shaker",
+      "aliases": [
+        "cocktail shaker",
+        "boston shaker",
+        "cobbler shaker",
+        "martini shaker"
+      ],
+      "specification_required": true,
+      "variants": [
+        {
+          "key": "boston",
+          "label": "波士顿式",
+          "pattern": "\\bboston\\b"
+        },
+        {
+          "key": "cobbler",
+          "label": "三段式",
+          "pattern": "\\bcobbler\\b"
+        }
+      ]
+    },
+    {
+      "key": "shaker_lid",
+      "label": "调酒摇杯盖",
+      "form": "cocktail shaker lid",
+      "aliases": [
+        "shaker lid",
+        "replacement lid"
+      ],
+      "context": "cocktail|shaker",
+      "accessory": true
+    },
+    {
+      "key": "cocktail_strainer",
+      "label": "调酒滤冰器",
+      "form": "cocktail strainer",
+      "aliases": [
+        "cocktail strainer",
+        "bar strainer",
+        "hawthorne strainer",
+        "julep strainer"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "cocktail_muddler",
+      "label": "调酒捣棒",
+      "form": "cocktail muddler",
+      "aliases": [
+        "muddler"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "straw_puncher",
+      "label": "饮料杯盖吸管打孔器",
+      "form": "straw puncher",
+      "aliases": [
+        "straw puncher",
+        "straw hole puncher",
+        "lid puncher"
+      ]
+    },
+    {
+      "key": "ice_pick",
+      "label": "碎冰锥",
+      "form": "ice pick",
+      "aliases": [
+        "ice pick",
+        "ice chipper"
+      ]
+    },
+    {
+      "key": "ice_bag",
+      "label": "手动碎冰袋",
+      "form": "lewis ice bag",
+      "aliases": [
+        "lewis ice bag",
+        "ice crushing bag"
+      ]
+    },
+    {
+      "key": "ice_crusher",
+      "label": "碎冰机",
+      "form": "ice crusher",
+      "aliases": [
+        "ice crusher",
+        "ice shaver",
+        "ice chopper"
+      ],
+      "specification_required": true,
+      "variants": [
+        {
+          "key": "manual",
+          "label": "手动式",
+          "pattern": "\\b(?:manual|hand crank)\\b"
+        },
+        {
+          "key": "electric",
+          "label": "电动式",
+          "pattern": "\\b(?:electric|powered)\\b"
+        }
+      ]
+    },
+    {
+      "key": "mixer_beater",
+      "label": "打蛋器/搅拌机替换头",
+      "form": "mixer beater",
+      "aliases": [
+        "replacement beater",
+        "mixer beater",
+        "flat beater",
+        "scraper beater",
+        "flex edge beater",
+        "beater accessory",
+        "beater paddle",
+        "beater",
+        "stirrer"
+      ],
+      "accessory": true,
+      "context": "replacement|kitchenaid|kitchen aid|mixer|attachment|accessory|accessories|hobart|breville"
+    },
+    {
+      "key": "electric_mixer",
+      "label": "电动搅拌机",
+      "form": "electric mixer",
+      "aliases": [
+        "stand mixer",
+        "hand mixer",
+        "electric mixer",
+        "electric eggbeater",
+        "handheld mixer"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "manual_whisk",
+      "label": "手动打蛋器",
+      "form": "manual whisk",
+      "aliases": [
+        "egg beater",
+        "wire whisk",
+        "balloon whisk",
+        "rotary beater",
+        "manual eggbeater",
+        "whisk"
+      ],
+      "specification_required": true,
+      "context": "egg|cooking|kitchen|whisk|baking|manual"
+    },
+    {
+      "key": "tea_organizer",
+      "label": "茶包收纳",
+      "form": "tea organizer",
+      "aliases": [
+        "tea bag organizer",
+        "tea bag holder",
+        "tea organizer",
+        "tea box",
+        "tea storage box",
+        "tea chest",
+        "tea bag storage",
+        "tea storage chest",
+        "tea bag box",
+        "tea storage container",
+        "tea packet organizer",
+        "sugar packet organizer"
+      ],
+      "specification_required": true,
+      "variants": [
+        {
+          "key": "drawer",
+          "label": "抽屉式",
+          "pattern": "\\bdrawer\\b"
+        },
+        {
+          "key": "box",
+          "label": "分格盒",
+          "pattern": "\\b(?:box|chest|compartment)\\b"
+        }
+      ]
+    },
+    {
+      "key": "tea_drawer",
+      "label": "茶包收纳",
+      "form": "tea bag drawer",
+      "aliases": [
+        "tea bag drawer"
+      ]
+    },
+    {
+      "key": "tea_canister",
+      "label": "茶叶罐",
+      "form": "tea tin",
+      "aliases": [
+        "tea tin",
+        "tea canister"
+      ]
+    },
+    {
+      "key": "favor_box",
+      "label": "礼品糖果包装盒",
+      "form": "favor box",
+      "aliases": [
+        "favor box",
+        "candy box",
+        "teapot box",
+        "gift bag"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "funnel",
+      "label": "漏斗",
+      "form": "funnel",
+      "aliases": [
+        "funnel"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "jug_cap",
+      "label": "液体容器盖",
+      "form": "jug cap",
+      "aliases": [
+        "jug cap",
+        "ripper cap",
+        "bottle cap"
+      ],
+      "specification_required": true,
+      "accessory": true
+    },
+    {
+      "key": "furniture_cart",
+      "label": "家具搬运车",
+      "form": "furniture cart",
+      "aliases": [
+        "furniture cart",
+        "furniture dolly"
+      ]
+    },
+    {
+      "key": "drain_assembly",
+      "label": "排水组件",
+      "form": "drain assembly",
+      "aliases": [
+        "drain assembly",
+        "clicker drain",
+        "pop up drain",
+        "sink drain",
+        "drain kit",
+        "tub drain trim",
+        "pop up stopper",
+        "stopper plug"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "overflow_cover",
+      "label": "浴缸溢水口盖",
+      "form": "overflow drain cover",
+      "aliases": [
+        "overflow drain cover",
+        "overflow cover"
+      ],
+      "accessory": true
+    },
+    {
+      "key": "drain_hose",
+      "label": "排水软管",
+      "form": "drain hose",
+      "aliases": [
+        "drain hose",
+        "drain pipe",
+        "discharge tube",
+        "p trap",
+        "drain adapter"
+      ],
+      "specification_required": true,
+      "accessory": true
+    },
+    {
+      "key": "fishing_trap",
+      "label": "捕鱼笼/网笼",
+      "form": "drop fishing net",
+      "aliases": [
+        "fish trap",
+        "crab trap",
+        "minnow trap",
+        "crab net",
+        "drop net"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "net_bag",
+      "label": "渔获收纳网",
+      "form": "live fish basket",
+      "aliases": [
+        "keep net",
+        "keepnet",
+        "fish basket",
+        "fish cage",
+        "fish storage net"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "fish_board",
+      "label": "鱼尺",
+      "form": "fish measuring board",
+      "aliases": [
+        "fish measuring board",
+        "bump board"
+      ]
+    },
+    {
+      "key": "power_adapter",
+      "label": "电源适配器",
+      "form": "power adapter",
+      "aliases": [
+        "power adapter",
+        "ac adapter",
+        "power supply"
+      ],
+      "specification_required": true,
+      "accessory": true
+    },
+    {
+      "key": "glass_filler",
+      "label": "饮水注杯龙头",
+      "form": "glass filler",
+      "aliases": [
+        "glass filler"
+      ]
+    },
+    {
+      "key": "shower_spray",
+      "label": "淋浴芳香喷雾",
+      "form": "aromatherapy shower spray",
+      "aliases": [
+        "shower spray",
+        "steam shower spray"
+      ],
+      "context": "aromatherapy|essential oil|spa|eucalyptus|lavender|oz"
+    },
+    {
+      "key": "shower_body_jet",
+      "label": "淋浴侧喷组件",
+      "form": "shower body spray",
+      "aliases": [
+        "body spray trim",
+        "body spray jet",
+        "shower body spray"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "cake_decorating_kit",
+      "label": "蛋糕/饼干装饰工具套装",
+      "form": "cake decorating kit",
+      "aliases": [
+        "cake decorating kit",
+        "cake decoration tool set",
+        "cake decorating tool",
+        "cake decorating supplies kit",
+        "cookie decorating kit",
+        "cookie decorating tool",
+        "royal icing tool",
+        "cookie decorating supplies kit",
+        "cake icing kit",
+        "frost form"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "icing_dispenser",
+      "label": "裱花挤注器",
+      "form": "icing dispenser",
+      "aliases": [
+        "icing dispenser",
+        "frosting dispenser",
+        "cupcake injector",
+        "dessert decorator",
+        "cookie decorator",
+        "icing gun",
+        "decorating pen",
+        "chocolate writing pen",
+        "deviled egg injector"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "squeeze_bottle",
+      "label": "挤压瓶",
+      "form": "squeeze bottle",
+      "aliases": [
+        "squeeze bottle",
+        "icing bottle",
+        "applicator bottle",
+        "writer bottle",
+        "writing bottle",
+        "piping bottle"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "cake_stand",
+      "label": "蛋糕转台/支架",
+      "form": "cake stand",
+      "aliases": [
+        "cake turntable",
+        "cake stand",
+        "cake tier stacking kit",
+        "cake tier kit",
+        "cake decorating turntable"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "cake_heating_core",
+      "label": "蛋糕导热芯",
+      "form": "cake heating core",
+      "aliases": [
+        "cake heating core",
+        "heating rod"
+      ],
+      "specification_required": true,
+      "context": "cake|baking"
+    },
+    {
+      "key": "dipping_tool",
+      "label": "甜点蘸涂工具",
+      "form": "dipping tool",
+      "aliases": [
+        "dipping tool"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "cannoli_mold",
+      "label": "卷筒甜点模具",
+      "form": "cannoli mold",
+      "aliases": [
+        "cannoli tube",
+        "cannoli mold",
+        "canolli shell mold"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "egg_ring",
+      "label": "煎蛋成型圈",
+      "form": "egg ring",
+      "aliases": [
+        "egg ring",
+        "omelet ring"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "pastry_cutter",
+      "label": "面点切割工具",
+      "form": "pastry cutter",
+      "aliases": [
+        "pastry scraper",
+        "pastry cutter",
+        "dough spatula",
+        "ravioli cutter",
+        "cutter wheel"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "dumpling_mold",
+      "label": "饺子/意面成型模具",
+      "form": "dumpling mold",
+      "aliases": [
+        "dumpling mold",
+        "dumpling wrapper",
+        "ravioli mold",
+        "ravioli maker"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "mooncake_mold",
+      "label": "月饼压模",
+      "form": "mooncake mold",
+      "aliases": [
+        "mooncake mold",
+        "moon cake mold",
+        "moon cake maker"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "cheese_starter",
+      "label": "奶酪发酵原料",
+      "form": "cheese starter",
+      "aliases": [
+        "starter culture",
+        "cheese culture",
+        "calf lipase"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "milk_container",
+      "label": "牛奶存储容器",
+      "form": "milk container",
+      "aliases": [
+        "milk can",
+        "milk jug",
+        "milk bucket"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "washing_basin",
+      "label": "洗涤盆",
+      "form": "washing basin",
+      "aliases": [
+        "wash basin",
+        "washing basin",
+        "dish tub",
+        "wash tub",
+        "washtub",
+        "dish basin"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "heat_protection_mat",
+      "label": "台面隔热垫",
+      "form": "heat protection mat",
+      "aliases": [
+        "heat resistant mat",
+        "silicone mat",
+        "countertop protector",
+        "air fryer mat"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "steamer_liner",
+      "label": "蒸笼垫",
+      "form": "steamer liner",
+      "aliases": [
+        "steamer liner",
+        "steamer mesh mat"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "steamer_rack",
+      "label": "蒸锅支架",
+      "form": "steamer rack",
+      "aliases": [
+        "steamer rack",
+        "steamer insert",
+        "steaming rack"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "cleaning_brush",
+      "label": "清洁刷",
+      "form": "cleaning brush",
+      "aliases": [
+        "cleaning brush",
+        "dishwand",
+        "dish wand",
+        "dish brush",
+        "tub scrubber",
+        "tile scrubber"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "scrubber_refill",
+      "label": "清洁刷替换头",
+      "form": "scrubber refill",
+      "aliases": [
+        "replacement head",
+        "sponge refill",
+        "dishwand refill"
+      ],
+      "specification_required": true,
+      "context": "scrub|scrubbing|dish|dishwand|cleaning",
+      "accessory": true
+    },
+    {
+      "key": "water_filter_cartridge",
+      "label": "水过滤替换芯",
+      "form": "water filter cartridge",
+      "aliases": [
+        "filter cartridge"
+      ],
+      "specification_required": true,
+      "context": "water|chlorine|sediment|filtration|aquabliss",
+      "accessory": true
+    },
+    {
+      "key": "strainer_sieve",
+      "label": "过滤网筛",
+      "form": "strainer sieve",
+      "aliases": [
+        "sieve",
+        "sifter",
+        "mesh strainer"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "fishing_net",
+      "label": "渔网",
+      "form": "fishing net",
+      "aliases": [
+        "fishing net",
+        "fish net",
+        "fishingnet"
+      ],
+      "specification_required": true,
+      "refinements": [
+        {
+          "pattern": "\\b(?:landing net|baitwell net|floating fishing net|fish landing net)\\b",
+          "key": "landing_net",
+          "label": "抄鱼网"
+        },
+        {
+          "pattern": "\\b(?:cast net|casting net)\\b",
+          "key": "cast_net",
+          "label": "撒网"
+        }
+      ]
+    },
+    {
+      "key": "seine_net",
+      "label": "拉网",
+      "form": "seine net",
+      "aliases": [
+        "seine net"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "whiskey_stone",
+      "label": "酒用冰石",
+      "form": "whiskey stone",
+      "aliases": [
+        "whiskey stone",
+        "chilling rock",
+        "reusable ice cube"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "mixing_glass",
+      "label": "调酒搅拌杯",
+      "form": "cocktail mixing glass",
+      "aliases": [
+        "cocktail mixing glass",
+        "mixing glass"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "drain_hair_catcher",
+      "label": "排水口过滤器",
+      "form": "drain strainer",
+      "aliases": [
+        "hair catcher",
+        "drain protector",
+        "drain saver"
+      ],
+      "specification_required": true,
+      "context": "drain|sink|tub|shower"
+    },
+    {
+      "key": "generic_faucet",
+      "label": "水龙头",
+      "form": "faucet",
+      "aliases": [
+        "faucet",
+        "tap"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "drink_dispenser",
+      "label": "饮料分配器",
+      "form": "beverage dispenser",
+      "aliases": [
+        "beverage dispenser",
+        "drink dispenser"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "bottle_opener",
+      "label": "开瓶器",
+      "form": "bottle opener",
+      "aliases": [
+        "bottle opener"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "churro_maker",
+      "label": "吉事果挤压器",
+      "form": "churro maker",
+      "aliases": [
+        "churro maker",
+        "churro gun",
+        "churro press"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "paint_marker",
+      "label": "彩绘标记笔",
+      "form": "paint marker",
+      "aliases": [
+        "paint pen",
+        "paint marker"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "kids_net",
+      "label": "儿童捕捞/昆虫网",
+      "form": "kids fishing net",
+      "aliases": [
+        "kids fishing net",
+        "butterfly net",
+        "child fishing net"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "fondant_cutter",
+      "label": "翻糖/果蔬造型切模",
+      "form": "fondant cutter",
+      "aliases": [
+        "fondant cutter",
+        "flower cutter",
+        "petal cutter",
+        "fruit cutter",
+        "vegetable cutter"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "cake_disc",
+      "label": "蛋糕抹面定位圆盘",
+      "form": "cake disc",
+      "aliases": [
+        "cake disc",
+        "acrylic disc"
+      ],
+      "specification_required": true,
+      "context": "cake|icing"
+    },
+    {
+      "key": "window_cleaning_kit",
+      "label": "窗户清洁工具套装",
+      "form": "window cleaning kit",
+      "aliases": [
+        "window cleaning kit",
+        "window washing kit",
+        "window cleaning tool",
+        "total pro cleaning kit"
+      ],
+      "specification_required": true,
+      "context": "window"
+    },
+    {
+      "key": "floor_broom",
+      "label": "地面清扫工具",
+      "form": "floor broom",
+      "aliases": [
+        "broom"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "shower_arm",
+      "label": "花洒连接臂",
+      "form": "shower arm",
+      "aliases": [
+        "shower arm",
+        "showerarm"
+      ],
+      "specification_required": true,
+      "accessory": true
+    },
+    {
+      "key": "drain_installation_kit",
+      "label": "排水安装套件",
+      "form": "drain installation kit",
+      "aliases": [
+        "disposal installation kit",
+        "sink pivot rod"
+      ],
+      "specification_required": true,
+      "accessory": true
+    },
+    {
+      "key": "spatula",
+      "label": "厨房刮铲",
+      "form": "kitchen spatula",
+      "aliases": [
+        "silicone spatula",
+        "kitchen scraper",
+        "spatula"
+      ],
+      "specification_required": true,
+      "context": "cooking|baking|kitchen|jar|batter"
+    },
+    {
+      "key": "crepe_spreader",
+      "label": "可丽饼摊平工具",
+      "form": "crepe spreader",
+      "aliases": [
+        "crepe spreader"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "whisk_ball",
+      "label": "摇摇杯搅拌球",
+      "form": "whisk ball",
+      "aliases": [
+        "shaker ball",
+        "mixer ball"
+      ],
+      "specification_required": true,
+      "accessory": true
+    },
+    {
+      "key": "bread_proofing_mat",
+      "label": "面团发酵加热垫",
+      "form": "bread proofing mat",
+      "aliases": [
+        "bread proofing mat",
+        "bread proofer"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "butter_churn",
+      "label": "手动制黄油器",
+      "form": "butter churn",
+      "aliases": [
+        "butter maker",
+        "butter churn"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "ice_mallet",
+      "label": "手动碎冰锤袋",
+      "form": "ice mallet",
+      "aliases": [
+        "ice mallet",
+        "lewis bag",
+        "ice tapper"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "slushie_machine",
+      "label": "冰沙机",
+      "form": "slushie machine",
+      "aliases": [
+        "slushie machine",
+        "slushie maker"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "tortilla_press",
+      "label": "饼皮压制器",
+      "form": "tortilla press",
+      "aliases": [
+        "tortilla press"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "measuring_cup",
+      "label": "量杯",
+      "form": "measuring cup",
+      "aliases": [
+        "measuring cup"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "drum_beater",
+      "label": "鼓槌",
+      "form": "drum beater",
+      "aliases": [
+        "drum beater"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "carpet_beater",
+      "label": "地毯拍尘器",
+      "form": "carpet beater",
+      "aliases": [
+        "carpet beater"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "weaving_beater",
+      "label": "织布打纬工具",
+      "form": "weaving beater",
+      "aliases": [
+        "tapestry beater",
+        "weaving beater"
+      ],
+      "specification_required": true
+    },
+    {
+      "key": "disposal_switch",
+      "label": "垃圾处理器控制开关",
+      "form": "disposal switch",
+      "aliases": [
+        "disposal switch",
+        "rocker wall switch"
+      ],
+      "patterns": [
+        "\\bdisposal\\s+(?:(?:wireless|rocker|wall|remote)\\s+){0,3}switch\\b"
+      ],
+      "context": "disposal|disposer",
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "disposal_stopper",
+      "label": "垃圾处理器止水塞",
+      "form": "disposal stopper",
+      "aliases": [
+        "disposal stopper",
+        "magnetic stopper"
+      ],
+      "context": "disposal|disposer",
+      "accessory": true,
+      "specification_required": true
+    },
+    {
+      "key": "disposal_strainer",
+      "label": "垃圾处理器滤塞",
+      "form": "disposal strainer",
+      "aliases": [
+        "disposal strainer"
+      ],
+      "accessory": true,
+      "specification_required": true
+    }
+  ]
+}

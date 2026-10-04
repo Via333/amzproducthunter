@@ -139,11 +139,12 @@ def oversize_signal(title: object, category: object = "", brand: object = "") ->
             return 90, f"{capacity} liter capacity"
         if capacity >= 25:
             return 70, f"{capacity} liter capacity"
-    for match in re.finditer(r"\b(\d{2,3}(?:\.\d+)?)\s*(?:in|inch|inches)\b", text):
+    # Consume the whole decimal: 1.45 inches must never be read as 45 inches.
+    for match in re.finditer(r"(?<![\w.])(\d{1,3}(?:\.\d+)?)\s*(?:in|inch|inches)\b", text):
         dimension = float(match.group(1))
         if dimension >= 24:
             return 70, f"{dimension:g} inch dimension"
-    for match in re.finditer(r"\b(\d{2,3}(?:\.\d+)?)\s*[\"“”″]", text):
+    for match in re.finditer(r"(?<![\w.])(\d{1,3}(?:\.\d+)?)\s*[\"“”″]", text):
         dimension = float(match.group(1))
         if dimension >= 24:
             return 70, f"{dimension:g} inch dimension"

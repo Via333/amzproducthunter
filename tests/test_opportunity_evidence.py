@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
-from business_feasibility import build_business_feasibility
+from business_feasibility import QUOTE_FIELDS, build_business_feasibility
 from auto_research_shortlist import select_shortlist
 from demand_analysis import analyze_demand
 from discover_sorftime_opportunities import load_category_tree, product_passes_filters
@@ -197,6 +197,14 @@ class EvidenceTest(unittest.TestCase):
         self.assertIn("wall-mounted", form)
         self.assertIn("storage box", form)
 
+    def test_title_can_correct_incorrect_product_type_for_rolling_pin(self) -> None:
+        form = classify_product_form(
+            "Aisoso French Rolling Pin for Baking, Wooden Dough Roller",
+            "Kitchen & Dining > Baking Tools > Rolling Pins",
+            "VACUUM CLEANER",
+        )
+        self.assertEqual(form, "rolling pin")
+
     def test_taxonomy_strips_brand_and_keeps_combo_as_an_attribute(self) -> None:
         branded = classify_product_form(
             "Holaloha Toilet Bowl Brush",
@@ -222,6 +230,45 @@ class EvidenceTest(unittest.TestCase):
         )
         self.assertEqual(wall, "wall-mounted ball holder")
         self.assertEqual(floor, "floor sports equipment organizer")
+
+    def test_taxonomy_separates_shapes_inside_broad_leaf_categories(self) -> None:
+        examples = {
+            "Foldable Fishing Landing Net for Kayak": "landing fishing net",
+            "Crab Drop Net with Rope": "drop fishing net",
+            "Garbage Disposal Splash Guard for Kitchen Sink": "garbage disposal splash guard",
+            "Garbage Disposal Air Switch Kit Dual Outlet": "garbage disposal air switch",
+            "Cocktail Shaker Set Bartender Kit with Stand": "cocktail shaker set",
+            "Electric Whiskey Smoker Kit with Wood Chips": "whiskey smoker kit",
+            "Tea Organizer with Drawers for Tea Bags": "tea bag drawer",
+            "Wooden Tea Box with Compartments": "tea storage box",
+            "Tea Tin Metal Canister with Lid": "tea tin",
+            "Three Tier Matcha Station": "matcha station",
+            "Kids Fishing Net with Butterfly Net": "kids fishing net",
+            "Floating Fish Basket for Live Bait": "live fish basket",
+        }
+        for title, expected in examples.items():
+            with self.subTest(title=title):
+                self.assertEqual(classify_product_form(title, product_type="GENERIC PRODUCT"), expected)
+
+    def test_electrical_disposal_switches_and_smoker_kits_are_excluded(self) -> None:
+        self.assertTrue(
+            hard_exclusion_reason(
+                {
+                    "product_name": "Garbage Disposal Air Switch Kit Dual Outlet",
+                    "category": "Kitchen Fixtures > Garbage Disposal Parts",
+                    "brand": "Generic",
+                }
+            )
+        )
+        self.assertTrue(
+            hard_exclusion_reason(
+                {
+                    "product_name": "Electric Whiskey Smoker Kit with Wood Chips",
+                    "category": "Kitchen & Dining > Bar Sets",
+                    "brand": "Generic",
+                }
+            )
+        )
 
     def test_shared_product_exclusions_cover_logistics_and_food_contact(self) -> None:
         self.assertTrue(
@@ -261,19 +308,94 @@ class EvidenceTest(unittest.TestCase):
         self.assertIn("basic", demand_types)
         self.assertIn("fulfillment_noise", demand_types)
 
-    def test_business_feasibility_requires_supplier_quote(self) -> None:
-        with tempfile.TemporaryDirectory(dir=ROOT / "tmp") as temporary:
+    def test_business_feasibility_requires_1688_same_product_median(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
             research_dir = Path(temporary)
             with (research_dir / "top_products.csv").open("w", encoding="utf-8", newline="") as handle:
                 writer = csv.DictWriter(handle, fieldnames=["asin", "competitor_type", "price"])
                 writer.writeheader()
                 writer.writerow({"asin": "A", "competitor_type": "seed", "price": "30"})
             result = build_business_feasibility(research_dir, ROOT / "config" / "business_feasibility_rules.json")
-            self.assertEqual(result["status"], "needs_supplier_quote")
+            self.assertEqual(result["status"], "needs_1688_same_product_quotes")
+            self.assertFalse(result["profitability_verified"])
+            self.assertIsNone(result["unit_cost"])
+            self.assertIsNone(result["contribution_margin"])
             self.assertIsNone(result["initial_inventory_cash"])
 
+    def test_business_feasibility_uses_median_of_three_deduplicated_1688_matches(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            research_dir = Path(temporary)
+            with (research_dir / "top_products.csv").open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["asin", "competitor_type", "price"])
+                writer.writeheader()
+                writer.writerow({"asin": "A", "competitor_type": "seed", "price": "30"})
+            rows = []
+            for product_id, cost in (("1", 12), ("2", 18), ("3", 24), ("3", 99)):
+                rows.append({
+                    "source_platform": "1688",
+                    "source_product_id": product_id,
+                    "source_url": f"https://detail.1688.com/offer/{product_id}.html",
+                    "quote_status": "benchmark",
+                    "match_status": "same_product",
+                    "price_scope": "exact_sku",
+                    "normalized_unit_cost_cny": cost,
+                    "cny_per_usd": 7,
+                })
+            rows.append({
+                "source_platform": "1688",
+                "source_product_id": "noise",
+                "quote_status": "benchmark",
+                "match_status": "rejected",
+                "price_scope": "exact_sku",
+                "normalized_unit_cost_cny": 1,
+                "cny_per_usd": 7,
+            })
+            with (research_dir / "supplier_quotes.csv").open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=QUOTE_FIELDS, extrasaction="ignore")
+                writer.writeheader()
+                writer.writerows(rows)
+
+            result = build_business_feasibility(research_dir, ROOT / "config" / "business_feasibility_rules.json")
+
+            self.assertEqual(result["status"], "1688_cost_benchmarked")
+            self.assertEqual(result["data_source"], "1688_same_product_median")
+            self.assertEqual(result["quote_sample_count"], 3)
+            self.assertEqual(result["procurement_cost_cny"], 18)
+            self.assertEqual(result["unit_cost"], 2.57)
+            self.assertIsNotNone(result["contribution_margin"])
+            self.assertIsNone(result["moq"])
+            self.assertIsNone(result["initial_inventory_cash"])
+
+    def test_listing_display_price_is_not_profit_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            research_dir = Path(temporary)
+            with (research_dir / "top_products.csv").open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["asin", "competitor_type", "price"])
+                writer.writeheader()
+                writer.writerow({"asin": "A", "competitor_type": "seed", "price": "30"})
+            with (research_dir / "supplier_quotes.csv").open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=QUOTE_FIELDS, extrasaction="ignore")
+                writer.writeheader()
+                for product_id in ("1", "2", "3"):
+                    writer.writerow({
+                        "source_platform": "1688",
+                        "source_product_id": product_id,
+                        "quote_status": "benchmark",
+                        "match_status": "same_product",
+                        "price_scope": "listing_display",
+                        "normalized_unit_cost_cny": 10,
+                        "cny_per_usd": 7,
+                    })
+
+            result = build_business_feasibility(research_dir, ROOT / "config" / "business_feasibility_rules.json")
+
+            self.assertFalse(result["profitability_verified"])
+            self.assertEqual(result["quote_sample_count"], 0)
+            self.assertEqual(result["candidate_quote_count"], 3)
+            self.assertIsNone(result["contribution_margin"])
+
     def test_fresh_category_tree_cache_avoids_network(self) -> None:
-        with tempfile.TemporaryDirectory(dir=ROOT / "tmp") as temporary:
+        with tempfile.TemporaryDirectory() as temporary:
             cache = Path(temporary) / "tree.json"
             expected = {"Data": [{"NodeId": "1", "name": "Home"}]}
             cache.write_text(json.dumps(expected), encoding="utf-8")
@@ -344,7 +466,7 @@ class EvidenceTest(unittest.TestCase):
         self.assertEqual([row["source_asin"] for row in shortlist], ["VALID"])
 
     def test_observability_does_not_mix_previous_run_outputs(self) -> None:
-        with tempfile.TemporaryDirectory(dir=ROOT / "tmp") as temporary:
+        with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             old_selection = root / "archive" / "selection_runs" / "old_run"
             old_selection.mkdir(parents=True)
@@ -358,7 +480,7 @@ class EvidenceTest(unittest.TestCase):
             self.assertEqual(metrics["discovery_status"], "not_started")
 
     def test_empty_selection_still_writes_a_valid_csv(self) -> None:
-        with tempfile.TemporaryDirectory(dir=ROOT / "tmp") as temporary:
+        with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / "selection.csv"
             write_selection_csv([], output)
             self.assertTrue(output.exists())

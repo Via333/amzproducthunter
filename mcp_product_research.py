@@ -13,7 +13,7 @@ from pathlib import Path
 from statistics import mean, median
 from typing import Any
 
-from business_feasibility import QUOTE_FIELDS, write_business_feasibility
+from business_feasibility import QUOTE_FIELDS, quote_rows_from_1688, write_business_feasibility
 from demand_analysis import DEMAND_FIELDS, analyze_demand
 from market_structure import analyze_market
 from product_opportunity_research import (
@@ -84,7 +84,7 @@ def number(value: Any, default: float = 0.0) -> float:
 def write_csv(path: Path, rows: list[dict[str, Any]], fields: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
+        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore", lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -357,9 +357,19 @@ def direct_supplier_matches(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     matches = []
     for row in rows:
         title = str(row.get("title") or "")
-        if "工具垫" in title and any(term in title for term in ("磁", "磁铁", "磁吸")):
+        is_magnetic_mat = "工具垫" in title and any(term in title for term in ("磁", "磁铁", "磁吸"))
+        is_three_piece_set = any(term in title.lower() for term in ("3件套", "三件套", "3 件套"))
+        if is_magnetic_mat and is_three_piece_set:
             matches.append(row)
     return matches
+
+
+def supplier_pack_count(row: dict[str, Any]) -> int:
+    title = str(row.get("title") or "").lower()
+    if any(term in title for term in ("3件套", "三件套", "3 件套")):
+        return 3
+    match = re.search(r"(\d+)\s*件套", title)
+    return int(match.group(1)) if match else 1
 
 
 def keyword_rows(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -470,7 +480,7 @@ def build_deep_analysis(
             "lowest_visible_price_cny": min((number(row.get("price")) for row in suppliers if number(row.get("price")) > 0), default=0),
             "top_match_30d_sales": max((number(row.get("sales_of_30d")) for row in suppliers), default=0),
             "top_match_repurchase_rate": max((number(row.get("repurchase_rate")) for row in suppliers), default=0),
-            "assessment": "同图货源很多，说明制造门槛不高、跟卖速度会快；价格仅是图搜展示价，必须核对 3 件套、磁铁等级、拉力、皮面和包装后才能计入利润。",
+            "assessment": "同图货源很多，说明制造门槛不高、跟卖速度会快；三件套同款展示价去重后的中位数只用于规划利润，磁铁等级、拉力、皮面和包装仍须正式询价确认。",
         },
         "opportunities": [
             "把“垫子”升级为工位系统：零件分区、拆装顺序标记、可擦写标签或模块化拼接。",
@@ -503,7 +513,14 @@ def build_deep_analysis(
     }
 
 
-def report_markdown(asin: str, title: str, deep: dict[str, Any], products: list[dict[str, Any]], forms: list[dict[str, Any]]) -> str:
+def report_markdown(
+    asin: str,
+    title: str,
+    deep: dict[str, Any],
+    products: list[dict[str, Any]],
+    forms: list[dict[str, Any]],
+    business: dict[str, Any],
+) -> str:
     facts = deep["facts"]
     market = deep["market"]
     lines = [
@@ -527,6 +544,12 @@ def report_markdown(asin: str, title: str, deep: dict[str, Any], products: list[
         f"- 同形态样本：{market['direct_competitor_count']} 个，样本月销 {market['direct_form_monthly_sales']:,.0f}，目标 ASIN 占 {market['seed_share_of_direct_sample']:.1%}。",
         f"- 关键词 magnetic tool mat 月搜索 {market['keyword_monthly_search_volume']:,.0f}，CPC 约 ${market['keyword_cpc']:.2f}。",
         f"- 注意：{market['keyword_caveat']}",
+        "",
+        "## 利润核算",
+        "",
+        f"- 1688 同款同规格有效样本：{business.get('quote_sample_count', 0)} 条；采购价中位数：¥{number(business.get('procurement_cost_cny')):.2f}。" if business.get("profitability_verified") else f"- **利润未验证：已找到 {business.get('candidate_quote_count', 0)} 条 1688 候选，但尚未核对到至少 3 条同规格 SKU 价。**",
+        f"- 折算采购成本：${number(business.get('unit_cost')):.2f}/可售单元；贡献利润：${number(business.get('contribution_profit')):.2f}；贡献利润率：{number(business.get('contribution_margin')):.1%}。" if business.get("profitability_verified") else "- 商品展示最低价不计入采购成本，利润率留空。",
+        "- 采购成本使用 1688 同款去重报价中位数；包装、头程、广告和退货中未取得实价的部分仍为规划假设。",
         "",
         "## 机会",
         "",
@@ -573,6 +596,10 @@ def main() -> None:
     sales_trend_raw = client.call_tool("product_trend", {"asin": asin, "amz_site": "US", "product_trend_type": "SalesVolume"})
     price_trend_raw = client.call_tool("product_trend", {"asin": asin, "amz_site": "US", "product_trend_type": "Price"})
     keyword_detail = data_of(client.call_tool("keyword_detail", {"keyword": "magnetic tool mat", "keyword_support_site": "US"})) or {}
+    if not isinstance(customers_say, dict):
+        customers_say = {}
+    if not isinstance(keyword_detail, dict):
+        keyword_detail = {}
     keyword_results = as_list(client.call_tool("keyword_search_results", {"keyword": "magnetic tool mat", "keyword_support_site": "US", "page": 1, "position_type": 1}))
     product_search = as_list(client.call_tool("product_search_from_name", {"name": search_term, "amz_site": "US", "page": 1}))
 
@@ -613,6 +640,12 @@ def main() -> None:
     suppliers = direct_supplier_matches(
         as_list(client.call_tool("ali1688_product_search_from_image", {"image_url": image_urls(detail)[0], "page": 1}))
     )
+    supplier_quotes = quote_rows_from_1688(
+        suppliers,
+        cny_per_usd=number(rules.get("planning_cny_per_usd"), 7.0),
+        match_reason="以 Amazon 主图搜索；标题同时包含磁性工具垫和三件套，按一个三件套可售单元计价。",
+        pack_count_getter=supplier_pack_count,
+    )
     sales_trend = parse_trend(sales_trend_raw)
     price_trend = parse_trend(price_trend_raw)
     forms = build_form_rows(products)
@@ -632,7 +665,7 @@ def main() -> None:
     write_csv(output_dir / "demand_analysis.csv", demand, DEMAND_FIELDS)
     write_csv(output_dir / "image_review_queue.csv", products, IMAGE_FIELDS)
     write_csv(output_dir / "visual_labels.csv", products, IMAGE_FIELDS)
-    write_csv(output_dir / "supplier_quotes.csv", [], QUOTE_FIELDS)
+    write_csv(output_dir / "supplier_quotes.csv", supplier_quotes, QUOTE_FIELDS)
     price_bands = market.get("price_bands") or []
     write_csv(output_dir / "price_bands.csv", price_bands, ["price_band", "listing_count", "monthly_sales", "sales_share", "median_reviews"])
     (output_dir / "market_structure.json").write_text(json.dumps(market, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -647,9 +680,9 @@ def main() -> None:
         "supplier_match_count": len(suppliers),
         "generated_at": deep["generated_at"],
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    write_business_feasibility(output_dir, Path(rules.get("business_feasibility_rules", "config/business_feasibility_rules.json")))
+    business = write_business_feasibility(output_dir, Path(rules.get("business_feasibility_rules", "config/business_feasibility_rules.json")))
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(report_markdown(asin, str(detail.get("title") or asin), deep, products, forms), encoding="utf-8")
+    report_path.write_text(report_markdown(asin, str(detail.get("title") or asin), deep, products, forms, business), encoding="utf-8")
     print(f"MCP calls: {client.tool_call_count}")
     print(f"Direct competitors: {len(direct)}")
     print(f"Reviews: {len(reviews)} across {len(review_targets)} ASINs")

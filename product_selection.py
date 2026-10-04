@@ -240,12 +240,13 @@ def text_contains_any(value, terms):
     return ""
 
 
-def hard_exclusion_reason(row, config):
-    reason = configured_hard_exclusion_reason(row)
+def hard_exclusion_reason(row, config, *, require_valid_category=None):
+    reason = configured_hard_exclusion_reason(row, require_valid_category=require_valid_category)
     if reason:
         return reason
     cfg = config.get("hard_exclusions", {})
-    if cfg.get("require_valid_category", False) and not has_valid_category(row.get("category", "")):
+    require_category = cfg.get("require_valid_category", False) if require_valid_category is None else require_valid_category
+    if require_category and not has_valid_category(row.get("category", "")):
         return "missing or invalid category evidence"
     title_match = text_contains_any(row.get("product_name", ""), cfg.get("title_contains", []))
     if title_match:

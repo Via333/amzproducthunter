@@ -20,6 +20,7 @@ class McpProductResearchTest(unittest.TestCase):
             {"title": "汽修磁吸工具垫三件套", "price": 18.8},
             {"title": "不锈钢磁性零件碗", "price": 7.5},
             {"title": "硅胶维修工具垫", "price": 9.9},
+            {"title": "折叠式磁性工具垫", "price": 8.8},
         ]
 
         self.assertEqual(direct_supplier_matches(rows), [rows[0]])

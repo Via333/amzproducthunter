@@ -19,6 +19,7 @@ from import_sorftime_candidates import to_float
 from product_risk import infer_compliance_risk, infer_fragile_risk, infer_oversize_risk
 from product_selection import amazon_listing_url, brand_moat_reason, hard_exclusion_reason
 from product_taxonomy import classify_product_form
+from product_family import product_identity
 
 
 OUTPUT_FIELDS = [
@@ -38,9 +39,20 @@ OUTPUT_FIELDS = [
     "category_health_rank",
     "data_quality",
     "product_form",
+    "product_family",
+    "product_family_label",
+    "product_form_label",
+    "classification_status",
     "shape_scope",
     "shape_score",
     "shape_recommendation",
+    "assessment_scope",
+    "family_sample_count",
+    "family_total_sales",
+    "family_median_reviews",
+    "family_top10_median_reviews",
+    "family_top_brand_share",
+    "family_top10_sales_share",
     "category_sample_count",
     "category_total_sales",
     "category_top10_sales_share",
@@ -408,7 +420,8 @@ def normalized_category_product(product, category_path, category_brands=None):
         "online_date": str(product.get("online_date", "") or "").strip(),
         "seller_address": seller_code,
         "is_fba": delivery_type in {"fba", "amzfba"},
-        "product_form": product_form_from_category_product(product, category_path, category_brands),
+        **product_identity(product.get("title", ""), category_path,
+                           product_form_from_category_product(product, category_path, category_brands)),
     }
 
 
@@ -541,13 +554,16 @@ def new_entrant_metrics(form_products, thresholds, now=None):
     }
 
 
-def product_exclusion_reason(product, scoring_rules):
+def product_exclusion_reason(product, scoring_rules, *, require_valid_category=None):
+    source_reason = product.get("source_exclusion_reason")
+    if source_reason and not (require_valid_category is False and source_reason == "missing or invalid category evidence"):
+        return product["source_exclusion_reason"]
     row = {
         "product_name": product.get("title", ""),
         "category": product.get("bsr_category", ""),
         "brand": product.get("brand", ""),
     }
-    reason = hard_exclusion_reason(row, scoring_rules) or brand_moat_reason(row, scoring_rules)
+    reason = hard_exclusion_reason(row, scoring_rules, require_valid_category=require_valid_category) or brand_moat_reason(row, scoring_rules)
     if reason:
         return reason
     title = row["product_name"]
@@ -567,11 +583,11 @@ def form_summary_rows(rows, thresholds=None, now=None, scoring_rules=None):
     scoring_rules = scoring_rules or {}
     grouped = defaultdict(list)
     for row in rows:
-        grouped[row.get("product_form") or "unknown"].append(row)
+        grouped[(row.get("product_family", ""), row.get("product_form") or "unknown")].append(row)
     category_sales = sum(to_float(row.get("monthly_sales"), 0) for row in rows)
     brand_names = category_brand_names(rows)
     summaries = []
-    for product_form, form_products in grouped.items():
+    for (_, product_form), form_products in grouped.items():
         exclusion_reasons = [product_exclusion_reason(row, scoring_rules) for row in form_products]
         brand_dependent_flags = [is_brand_dependent(row, brand_names) for row in form_products]
         eligible_products = [
@@ -591,9 +607,19 @@ def form_summary_rows(rows, thresholds=None, now=None, scoring_rules=None):
         exclusion_counts = Counter(reason for reason in exclusion_reasons if reason)
         prices = [to_float(row.get("price"), 0) for row in eligible_products if to_float(row.get("price"), 0) > 0]
         entrant = new_entrant_metrics(eligible_products, thresholds, now)
+        # A shared form with unverified specifications cannot be cleared by row order.
+        status_order = {"unresolved": 0, "needs_specification": 1, "title_rule": 2, "legacy_form": 3}
+        identity = min(eligible_products or form_products, key=lambda p: (
+            status_order.get(p.get("classification_status"), 4),
+            p.get("product_form_label", ""), p.get("asin", ""),
+        ))
         summaries.append(
             {
                 "product_form": product_form,
+                "product_family": form_products[0].get("product_family", ""),
+                "product_family_label": form_products[0].get("product_family_label", ""),
+                "product_form_label": identity.get("product_form_label", ""),
+                "classification_status": identity.get("classification_status", ""),
                 "count": len(eligible_products),
                 "direct_count": len(eligible_products),
                 "keyword_count": 0,
@@ -678,12 +704,22 @@ def build_rows_from_category_report(seeds, report, rules, run_id=""):
     raw_products = extract_category_report_products(report)
     category_brands = [product.get("brand", "") for product in raw_products if product.get("brand")]
     products = [normalized_category_product(product, category_path, category_brands) for product in raw_products]
-    products = [product for product in products if product.get("asin")]
+    products = list({product["asin"]: product for product in products if product.get("asin")}.values())
+    return build_rows_from_products(seeds, products, rules, run_id)
+
+
+def build_rows_from_products(seeds, products, rules, run_id=""):
+    """Evaluate already-normalized, ASIN-deduplicated product observations."""
+    representative = seeds[0]
     if not products:
         return []
 
     thresholds = rules.get("thresholds", {})
     metrics = category_market_metrics(products)
+    family_metrics = {
+        family: category_market_metrics([p for p in products if p.get("product_family") == family])
+        for family in {p.get("product_family", "") for p in products}
+    }
     seed_forms = seed_forms_in_report(seeds, products)
     has_seed = any(seed.get("source_asin") for seed in seeds)
     rows = []
@@ -701,6 +737,16 @@ def build_rows_from_category_report(seeds, report, rules, run_id=""):
             "validation_run_id": run_id,
             "data_quality": "category_top100",
             "product_form": product_form,
+            "product_family": form.get("product_family", ""),
+            "product_family_label": form.get("product_family_label", ""),
+            "product_form_label": form.get("product_form_label", ""),
+            "classification_status": form.get("classification_status", ""),
+            "assessment_scope": "product_family",
+            **{
+                f"family_{key}": family_metrics[form.get("product_family", "")].get(f"category_{key}", 0)
+                for key in ("sample_count", "total_sales", "median_reviews", "top10_median_reviews",
+                            "top_brand_share", "top10_sales_share")
+            },
             "shape_scope": scope,
             "form_count": form.get("count", 0),
             "form_direct_count": form.get("direct_count", 0),
@@ -862,15 +908,16 @@ def evaluate_shape_row(row, rules):
     form_median_reviews = to_float(row.get("form_median_reviews"), 0)
     form_low_gap = to_float(row.get("form_low_review_high_sales_count"), 0)
     form_count = to_float(row.get("form_count"), 0)
-    top_brand_share = to_float(row.get("category_top_brand_share"), 0)
-    category_top10_reviews = to_float(row.get("category_top10_median_reviews"), 0)
-    category_median_reviews = to_float(row.get("category_median_reviews"), 0)
-    top10_sales_share = to_float(row.get("category_top10_sales_share"), 0)
+    competition_scope = "family" if row.get("assessment_scope") == "product_family" else "category"
+    top_brand_share = to_float(row.get(f"{competition_scope}_top_brand_share"), 0)
+    category_top10_reviews = to_float(row.get(f"{competition_scope}_top10_median_reviews"), 0)
+    category_median_reviews = to_float(row.get(f"{competition_scope}_median_reviews"), 0)
+    top10_sales_share = to_float(row.get(f"{competition_scope}_top10_sales_share"), 0)
     form_top3_sales_share = to_float(row.get("form_top3_sales_share"), 0)
-    category_sample_count = to_float(row.get("category_sample_count"), 0)
+    category_sample_count = to_float(row.get(f"{competition_scope}_sample_count"), 0)
 
     flags = [part.strip() for part in str(row.get("validation_flags", "")).split(";") if part.strip()]
-    if normalize_text(row.get("product_form")) in GENERIC_FORM_NAMES:
+    if normalize_text(row.get("product_form")) in GENERIC_FORM_NAMES or row.get("classification_status") in {"unresolved", "needs_specification"}:
         flags.append("generic form classification")
     if data_quality == "seed_only":
         flags.append("needs category Top100")
@@ -984,6 +1031,8 @@ def evaluate_shape_row(row, rules):
         recommendation = "Reject category/form"
     elif not has_top100:
         recommendation = "Needs category Top100"
+    elif has_generic_form and not {"excluded products", "brand-dependent accessory"}.intersection(flags):
+        recommendation = "Needs classification"
     elif has_always_reject:
         recommendation = "Reject category/form"
     elif has_hard_flag and form_low_gap < thresholds["form_min_low_review_high_sales"]:
@@ -1003,7 +1052,7 @@ def evaluate_shape_row(row, rules):
     else:
         recommendation = "Reject category/form"
 
-    row["shape_score"] = shape_score
+    row["shape_score"] = "" if has_generic_form else shape_score
     row["shape_recommendation"] = recommendation
     row["validation_flags"] = "; ".join(dict.fromkeys(flags))
     row["opportunity_thesis"] = opportunity_thesis(row)
@@ -1024,6 +1073,10 @@ def opportunity_thesis(row):
     rec = row.get("shape_recommendation", "")
     form = row.get("product_form", "")
     entrant = entrant_sentence(row)
+    if rec == "Needs classification":
+        if row.get("classification_status") == "needs_specification":
+            return "已按标题确认产品用途，但材质或结构尚未确认；留在同用途产品组待核验，不按混合规格评分淘汰。"
+        return "当前分类规则尚未识别出具体产品，不代表所有标题都缺少信息；需逐个区分规则漏识别与标题过于宽泛的情况。暂不将本组视为同用途、同形态，也不评分或据此淘汰。"
     if rec == "Shape opportunity":
         text = (
             f"{form} 形态已通过类目 Top100 验证：月销均值 {row.get('form_avg_sales')}，"
@@ -1039,11 +1092,16 @@ def opportunity_thesis(row):
         return f"{form} 目前只是种子入口，还不能判定机会；需要拉最小类目 Top100 后按形态复核。"
     flags = str(row.get("validation_flags", "") or "")
     reason = f"（{flags}）" if flags else ""
-    return f"{form} 当前类目/形态竞争结构不适合直接进入机会档案{reason}。"
+    scope = "同用途产品组/形态" if row.get("assessment_scope") == "product_family" else "类目/形态"
+    return f"{form} 当前{scope}未通过自动筛选{reason}。"
 
 
 def next_action(row):
     rec = row.get("shape_recommendation", "")
+    if rec == "Needs classification":
+        if row.get("classification_status") == "needs_specification":
+            return "补主图与详情中的材质、结构、关键尺寸和适配规格，在同用途组内细分形态后重算。"
+        return "标题有明确品名的，补识别规则后重新归组；只有宽泛用途或型号的，补主图与详情后再确认。不能将宽泛类别标签视为一种产品。"
     if rec == "Shape opportunity":
         if row.get("form_reference_asins"):
             return "从参考新进入者 ASIN 里挑 1-2 个做单品研究，再进供应商验证"
@@ -1088,6 +1146,25 @@ def category_seed_from_row(row, **overrides):
     }
     seed.update(overrides)
     return seed
+
+
+def category_exclusion_reason(category_path, config_path="config/category_exclusions.json"):
+    path = Path(config_path)
+    if not path.exists():
+        return ""
+    category = normalize_text(category_path)
+    config = load_json(path)
+    for raw_item in config.get("path_contains", []):
+        item = {"term": raw_item} if isinstance(raw_item, str) else raw_item
+        term = normalize_text(item.get("term", ""))
+        if term and term in category:
+            return f"excluded category: {item.get('term')}"
+    return ""
+
+
+def validation_category_exclusion_reason(category_path, rules):
+    config_path = rules.get("category_exclusions_path", "config/category_exclusions.json")
+    return category_exclusion_reason(category_path, config_path)
 
 
 def manual_asin_seeds(asins, discovery_run_dir):
@@ -1154,6 +1231,8 @@ def load_ranked_categories(rules, discovery_run_dir, exclude_keys=()):
     )
     selected = []
     for row in scored:
+        if validation_category_exclusion_reason(row.get("path", ""), rules):
+            continue
         pseudo_seed = category_seed_from_row(row)
         key = category_key(pseudo_seed)
         if not key or key in exclude_keys:
@@ -1180,6 +1259,9 @@ def build_validation_rows(seeds, deep_rows, rules, discovery_run_dir=None, extra
 
     for _key, category_seeds in groups:
         representative = category_seeds[0]
+        category_path = representative.get("source_category_path") or representative.get("category", "")
+        if validation_category_exclusion_reason(category_path, rules):
+            continue
         asin = representative.get("source_asin", "")
         category_report = load_category_report(representative, discovery_run_dir)
         if category_report:
@@ -1200,6 +1282,7 @@ def build_validation_rows(seeds, deep_rows, rules, discovery_run_dir=None, extra
         "Shape opportunity": 0,
         "Watch shape": 1,
         "Needs category Top100": 2,
+        "Needs classification": 2,
         "Reject category/form": 3,
     }
     rows.sort(
@@ -1222,19 +1305,6 @@ def shape_archive_key(row):
 
 def should_archive_shape(row):
     return row.get("shape_recommendation") == "Shape opportunity"
-
-
-def category_exclusion_reason(category_path, config_path="config/category_exclusions.json"):
-    path = Path(config_path)
-    if not path.exists():
-        return ""
-    category = normalize_text(category_path)
-    config = load_json(path)
-    for item in config.get("path_contains", []):
-        term = normalize_text(item.get("term", ""))
-        if term and term in category:
-            return f"excluded category: {item.get('term')}"
-    return ""
 
 
 def archived_shape_invalidation_reason(row):
@@ -1361,6 +1431,7 @@ def write_report(path, rows):
         f"- 通过形态机会：{sum(1 for row in rows if row.get('shape_recommendation') == 'Shape opportunity')}",
         f"- 观察形态：{sum(1 for row in rows if row.get('shape_recommendation') == 'Watch shape')}",
         f"- 待补 Top100：{sum(1 for row in rows if row.get('shape_recommendation') == 'Needs category Top100')}",
+        f"- 待分类：{sum(1 for row in rows if row.get('shape_recommendation') == 'Needs classification')}",
         f"- 覆盖类目：{len({row.get('category_path', '') for row in rows})}",
         "",
         "## 形态排序",
@@ -1437,7 +1508,8 @@ def main():
 
     print(f"Manual/legacy seeds: {len(seeds)} across {len(seed_category_keys)} categories")
     print(f"Health-ranked categories without seeds: {len(ranked_categories)}")
-    print(f"Validated categories: {len(seed_category_keys) + len(ranked_categories)}")
+    validated_categories = len({row.get("category_path", "") for row in rows if row.get("category_path")})
+    print(f"Validated categories: {validated_categories}")
     print(f"Validation rows: {len(rows)}")
     print(f"Category Top100 source: {discovery_run_dir or 'none'}")
     print(f"CSV: {output_csv}")

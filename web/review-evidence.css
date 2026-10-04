@@ -1,0 +1,55 @@
+#review-evidence { scroll-margin-top: 16px; }
+.review-tabs { display: flex; border-bottom: 1px solid #d9dee8; gap: 8px; }
+.review-tabs [role="tab"] {
+  display: inline-flex; justify-content: center; align-items: center; gap: 8px;
+  min-height: 44px; padding: 10px 16px; border: 0; border-bottom: 3px solid transparent;
+  background: transparent; color: #536176; font: inherit; font-weight: 600; cursor: pointer;
+}
+.review-tabs [role="tab"][aria-selected="true"] { color: #2364d2; border-bottom-color: #2364d2; }
+.review-tabs [role="tab"]:hover { background: #f2f5f9; }
+.review-tabs [role="tab"] span { font-size: 12px; color: #657184; font-variant-numeric: tabular-nums; }
+.review-tabs [role="tab"]:focus-visible,
+#review-evidence [tabindex]:focus-visible,
+.review-unclassified > summary:focus-visible { outline: 2px solid #2364d2; outline-offset: -2px; }
+.review-note { color: #657184; margin: 12px 0; font-size: 12px; }
+.review-empty { padding: 24px 0; margin: 0; color: #657184; }
+.review-table-wrap { max-height: 640px; }
+.review-table { table-layout: fixed; }
+.review-table th { position: sticky; top: 0; z-index: 1; }
+.review-table th:first-child { width: 16%; }
+.review-table th:nth-child(2) { width: 10%; }
+.review-table th:nth-child(3) { width: 6%; }
+.review-table th:nth-child(4), .review-table th:nth-child(5) { width: 10%; }
+.review-table td { overflow-wrap: anywhere; }
+.review-excerpt > span { margin-top: 8px; }
+.review-original { margin: 0; white-space: pre-line; }
+.review-translation { margin: 10px 0 0; padding-top: 8px; border-top: 1px solid #e4e8ef; color: #172033; line-height: 1.65; white-space: pre-line; }
+.review-translation .review-language { margin: 0 0 4px; color: #657184; font-size: 12px; }
+.review-translation.pending { color: #657184; font-size: 12px; }
+.review-unclassified { margin-top: 14px; }
+.review-unclassified > summary { cursor: pointer; padding: 10px 0; color: #536176; }
+.review-insight-table th:first-child { width: 34%; }
+.review-insight-table th:nth-child(2) { width: 7%; }
+.review-insight-table th:nth-child(3) { width: auto; }
+.review-insight-table > tbody > tr > td:first-child > b { font-size: 15px; }
+.review-need { margin: 12px 0; line-height: 1.65; }
+.review-need > span { display: block; color: #657184; margin-bottom: 3px; }
+.review-basis { color: #875600; font-size: 12px; margin: 10px 0; }
+.review-source { margin: 0 0 8px; font-size: 12px; color: #657184; }
+.review-citation { padding: 10px 0; overflow-wrap: anywhere; }
+.review-citation + .review-citation { border-top: 1px solid #e4e8ef; }
+.review-full > summary, .review-more > summary { cursor: pointer; padding: 8px 0; color: #2364d2; }
+.review-full[open] { padding: 8px; background: #f6f7f9; }
+.review-pending { max-height: 480px; overflow: auto; }
+.review-pending .review-original { white-space: pre-line; }
+@media (max-width: 640px) {
+  .review-tabs { gap: 0; }
+  .review-tabs [role="tab"] { flex: 1; min-width: 0; gap: 5px; padding: 10px 6px; flex-wrap: wrap; }
+  .review-table-wrap { max-height: 70vh; }
+  .review-table, .review-table tbody { display: block; min-width: 0; }
+  .review-table thead { display: none; }
+  .review-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid #d9dee8; }
+  .review-table td { display: block; min-width: 0; border: 0; text-align: left; white-space: normal; }
+  .review-table td:first-child, .review-table td.review-excerpt { grid-column: 1 / -1; }
+  .review-table td::before { content: attr(data-label); display: block; color: #657184; font-size: 12px; margin-bottom: 4px; }
+}

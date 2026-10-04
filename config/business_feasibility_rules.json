@@ -1,6 +1,8 @@
 {
   "referral_fee_rate": 0.15,
-  "default_cost_rate": 0.28,
+  "planning_cny_per_usd": 7.0,
+  "minimum_1688_same_product_samples": 3,
+  "default_packaging_rate": 0.0,
   "default_shipping_rate": 0.08,
   "default_fba_fee_rate": 0.18,
   "minimum_fba_fee": 3.5,

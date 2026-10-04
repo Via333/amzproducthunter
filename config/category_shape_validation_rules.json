@@ -7,6 +7,7 @@
   "output_csv": "data/category_shape_validation.csv",
   "output_report": "reports/category_shape_validation.md",
   "archive_dir": "archive",
+  "category_exclusions_path": "config/category_exclusions.json",
   "seed_limit": 0,
   "seed_recommendation_contains": "Watch",
   "thresholds": {

@@ -1,7 +1,8 @@
 {
   "domain": "1",
   "marketplace": "US",
-  "method": "KeywordSearchResults",
+  "transport": "mcp",
+  "method": "product_search_from_name",
   "pages": 5,
   "page_size": 20,
   "max_results": 100,

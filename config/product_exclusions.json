@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "require_valid_category": true,
   "title_contains": [
     "battery",
@@ -29,7 +29,6 @@
     "genuine recoil starter",
     "recoil starter assy",
     "knife",
-    "gun",
     "weapon",
     "laser",
     "pesticide",
@@ -39,11 +38,6 @@
     "ventilator",
     "exhaust fan",
     "flexible duct",
-    "steam cleaner",
-    "steam mop",
-    "handheld steam",
-    "portable steamer",
-    "vacuum",
     "solar pathway lights",
     "solar lights",
     "solar powered",
@@ -63,8 +57,6 @@
     "memory foam pillow",
     "bed pillows",
     "queen pillow",
-    "hunting",
-    "decoy",
     "scoot n shoot",
     "80qt rolling cooler",
     "rolling cooler cart",
@@ -77,9 +69,18 @@
     "food storage bag",
     "food storage container",
     "cookie jar",
-    "sweets jar"
+    "sweets jar",
+    "garbage disposal air switch",
+    "disposal air switch",
+    "whiskey smoker",
+    "cocktail smoker"
   ],
   "category_contains": [
+    "hazmat",
+    "hazardous material",
+    "battery",
+    "batteries",
+    "chemical",
     "beauty",
     "health",
     "grocery",
@@ -88,22 +89,102 @@
     "jewelry",
     "fashion",
     "toys",
-    "automotive",
     "electronics",
     "cell phones",
     "wireless",
     "baby",
-    "industrial",
-    "vacuums",
-    "floor care",
-    "steam cleaners",
-    "steam mops",
-    "handheld steamers",
-    "hunting",
-    "shooting",
     "furniture",
     "rugs",
     "patio furniture"
+  ],
+  "review_categories": [
+    {
+      "name": "工业用品 / Industrial",
+      "allowed": "通用轻小耗材、紧固件、工具收纳和无源配件",
+      "blocked": "电气动力部件、危险品、强防护声明、超大重货"
+    },
+    {
+      "name": "汽车用品及替换件 / Automotive",
+      "allowed": "通用收纳、理线、清洁工具和无需车型适配的配件",
+      "blocked": "制动、转向、气囊、发动机等安全部件及车型专用件"
+    },
+    {
+      "name": "狩猎及射击 / Hunting & Shooting",
+      "allowed": "不涉及武器的通用收纳包、绑带和户外配件",
+      "blocked": "武器、弹药、枪械配件；大件和高风险用途另行拦截"
+    },
+    {
+      "name": "吸尘及蒸汽清洁 / Vacuums & Steam Cleaners",
+      "allowed": "通用滤袋、滤网、刷头、拖把垫和无源收纳配件",
+      "blocked": "电器整机、电机、电池及品牌专用兼容件"
+    },
+    {
+      "name": "地面清洁 / Floor Care",
+      "allowed": "轻小手动清洁工具和通用耗材",
+      "blocked": "清洁电器、长杆、大套装、超大重货及化学清洁剂"
+    }
+  ],
+  "product_rules": [
+    {
+      "id": "garbage_disposal_equipment",
+      "reason": "厨余处理电器整机，不符合当前低售后风险范围",
+      "subject_only": true,
+      "title_patterns": [
+        "\\b(?:garbage dispos(?:al|er)s?|(?:food )?waste dispos(?:al|er)s?|(?:food|sink) disposers?)\\b"
+      ],
+      "accessory_patterns": [
+        "\\b(?:garbage dispos(?:al|er)s?|(?:food )?waste dispos(?:al|er)s?|sink disposers?)\\s+(?:(?!(?:with|and|includes?)\\b)[a-z0-9]+\\s+){0,6}(?:guards?|baffles?|stoppers?|plugs?|seals?|gaskets?|flanges?|couplers?|adapters?|switch(?:es)?|buttons?|hoses?|tubes?|pipes?|brush(?:es)?|cleaners?|parts?|accessor(?:y|ies)|installation kits?)\\b"
+      ]
+    },
+    {
+      "id": "powered_equipment",
+      "reason": "清洁电器整机或动力部件，不符合当前低售后风险范围",
+      "subject_only": true,
+      "title_patterns": [
+        "\\b(?:vacuums?|vacuum cleaners?|steam cleaners?|steam mops?|handheld steamers?|portable steamers?|robot(?:ic)? mops?|floor scrubbers?|ultrasonic cleaners?)\\b",
+        "\\b(?:(?:electric|vacuum|blower|fan|dc|ac|stepper|servo) motors?|air compressors?|welders?|(?:electric|motorized) (?:pumps?|saws?|drills?|grinders?))\\b"
+      ],
+      "accessory_patterns": [
+        "\\b(?:vacuum(?: cleaner)?|steam cleaner|steam mop|floor scrubber) (?:(?:replacement|hepa|foam|dust|microfiber) ){0,2}(?:filters?|bags?|pads?|attachments?|nozzles?|brush (?:heads?|rolls?)|hoses?|belts?|holders?|racks?|stands?|gauges?|accessor(?:y|ies))\\b",
+        "\\bvacuum (?:storage|compression|seal) bags?\\b",
+        "\\b(?:manual|hand) (?:floor scrubbers?|vacuum pumps?)\\b",
+        "\\b(?:electric|cordless|power) (?:drill|tool|saw) (?:holders?|holsters?|racks?|pouches?|organizers?)\\b",
+        "\\b(?:filters?|mop pads?|dust bags?|brush heads?|nozzles?)\\b"
+      ],
+      "leaf_patterns": [
+        "^(?:steam cleaners?|steam mops?|handheld steamers?|handheld vacuums?|upright vacuums?|canister vacuums?|stick vacuums?|robotic vacuums?|wet dry vacuums?|floor scrubbers?|electric motors?|air compressors?|welders?)$"
+      ]
+    },
+    {
+      "id": "weapon_related",
+      "reason": "武器、弹药或枪械相关产品，不在当前经营范围",
+      "title_patterns": [
+        "\\b(?:guns?|firearms?|pistols?|rifles?|shotguns?|revolvers?|ammunition|ammo|bullets?|crossbows?|broadheads?|gunpowder|scopes?|hunting bows?|archery bows?)\\b"
+      ],
+      "category_patterns": [
+        "\\b(?:guns?|firearms?|pistols?|rifles?|shotguns?|ammunition|ammo|reloading|crossbows?|broadheads?|archery bows?)\\b"
+      ]
+    },
+    {
+      "id": "automotive_safety_parts",
+      "reason": "汽车安全或动力部件，适配及产品责任风险高",
+      "category_context": "\\b(?:automotive|motorcycle|powersports)\\b",
+      "title_patterns": [
+        "\\b(?:brake (?:pads?|rotors?|calipers?|discs?)|air ?bags?|steering (?:racks?|shafts?|wheels?)|tie rods?|wheel bearings?|fuel injectors?|spark plugs?|ignition coils?|engine (?:parts?|mounts?)|clutch assemblies|clutch assembly|oxygen sensors?|abs sensors?)\\b"
+      ],
+      "category_patterns": [
+        "\\b(?:brake systems?|brake pads?|air bags?|steering systems?|engines? (?:and )?engine parts|fuel injection|ignition parts|transmissions? (?:and )?parts)\\b"
+      ]
+    },
+    {
+      "id": "vehicle_specific_fitment",
+      "reason": "汽车专用型号或原厂替换件，需要适配及授权复核",
+      "category_context": "\\b(?:automotive|motorcycle|powersports)\\b",
+      "title_patterns": [
+        "\\b(?:oem|oe replacement|direct fit|vehicle specific|model specific)\\b",
+        "\\b(?:fits?|for) (?:19|20)\\d{2}\\b"
+      ]
+    }
   ],
   "brand_contains": [
     "Amazon Basics",
@@ -155,11 +236,6 @@
     "ventilator",
     "exhaust fan",
     "flexible duct",
-    "steam cleaner",
-    "steam mop",
-    "handheld steam",
-    "portable steamer",
-    "vacuum",
     "solar pathway lights",
     "solar lights",
     "solar powered",
@@ -178,8 +254,6 @@
     "memory foam pillow",
     "bed pillows",
     "queen pillow",
-    "industrial",
-    "floor care",
     "furniture",
     "80qt rolling cooler",
     "rolling cooler cart",

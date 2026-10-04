@@ -248,7 +248,8 @@ def category_exclusion_reason(category, filters, exclusions):
     path = category["path"].lower()
     for term in filters.get("exclude_name_contains", []):
         if str(term).lower() in path:
-            return f"基础排除：路径包含 {term}"
+            reason = filters.get("exclusion_reasons", {}).get(str(term), f"路径包含 {term}")
+            return f"基础排除：{reason}（匹配 {term}）"
 
     category_id = str(category["category_id"])
     for item in exclusions.get("category_ids", []):
@@ -706,6 +707,8 @@ def discovery_manifest(run_id, strategy, provider="cli", tree_source=""):
         "successful_categories": 0,
         "empty_categories": 0,
         "failed_categories": 0,
+        "excluded_categories": 0,
+        "excluded_category_details": [],
         "products_examined": 0,
         "eligible_candidates_before_dedupe": 0,
         "eligible_candidates_after_dedupe": 0,
@@ -776,13 +779,27 @@ def main():
         mcp_client = SorftimeMcpClient() if provider == "mcp" else None
         scan_state = read_category_scan_state(args.scan_state)
         scan_state = bootstrap_scan_state(scan_state, args.category_report)
+        exclusions = load_category_exclusions(args.category_exclusions)
         if args.replay_run_dir:
             replay_dir = Path(args.replay_run_dir)
-            categories = read_category_report(replay_dir / "categories.csv")
+            archived_categories = read_category_report(replay_dir / "categories.csv")
+            categories = []
+            for category in archived_categories:
+                reason = category_exclusion_reason(category, rules["category_filters"], exclusions)
+                if reason:
+                    manifest["excluded_category_details"].append(
+                        {
+                            "category_id": category.get("category_id", ""),
+                            "path": category.get("path", ""),
+                            "reason": reason,
+                        }
+                    )
+                    continue
+                categories.append(category)
+            manifest["excluded_categories"] = len(manifest["excluded_category_details"])
             manifest["category_tree_source"] = "archived_run"
             manifest["replay_source"] = str(replay_dir)
         else:
-            exclusions = load_category_exclusions(args.category_exclusions)
             category_tree, tree_source = load_category_tree(args, rules, domain, provider, mcp_client)
             manifest["category_tree_source"] = tree_source
             manifest["provider_call_count"] = mcp_client.tool_call_count if mcp_client else 0
