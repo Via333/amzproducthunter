@@ -18,7 +18,9 @@ from research_workbench import opportunity_keys
 from product_market_validation import build_current_product_groups
 
 
-ROOT = Path(__file__).resolve().parent
+from workflow_storage import atomic_write_text, current_root
+import os
+ROOT = Path(os.environ["AMZ_WORKFLOW_ROOT"]) if os.environ.get("AMZ_WORKFLOW_ROOT") else current_root(Path(__file__).resolve().parent)
 WEB_DIR = ROOT / "web"
 OUTPUT = WEB_DIR / "index.html"
 
@@ -4387,7 +4389,7 @@ def build_html() -> str:
 
 def main() -> None:
     WEB_DIR.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(build_html(), encoding="utf-8")
+    atomic_write_text(OUTPUT, build_html())
     print(OUTPUT)
 
 

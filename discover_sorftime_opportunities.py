@@ -4,6 +4,7 @@ import csv
 import json
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -23,6 +24,7 @@ from category_health import CATEGORY_HEALTH_FIELDS, category_health_from_records
 from product_risk import has_valid_category
 from product_exclusions import hard_exclusion_reason as configured_hard_exclusion_reason
 from sorftime_mcp_client import SorftimeMcpClient
+from workflow_storage import atomic_write_csv, load_rules, run_quality
 
 
 CATEGORY_ID_ALIASES = [
@@ -223,11 +225,7 @@ def write_category_scan_state(scan_state, path):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     rows = sorted(scan_state.values(), key=lambda row: (row.get("path", ""), row.get("category_id", "")))
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=CATEGORY_STATE_FIELDS, extrasaction="ignore", lineterminator="\n")
-        writer.writeheader()
-        for row in rows:
-            writer.writerow({field: row.get(field, "") for field in CATEGORY_STATE_FIELDS})
+    atomic_write_csv(path, rows, CATEGORY_STATE_FIELDS)
 
 
 def as_int(value, default=0):
@@ -722,6 +720,7 @@ def discovery_manifest(run_id, strategy, provider="cli", tree_source=""):
 def update_discovery_checkpoint(run_dir, manifest, categories, candidates):
     run_path = Path(run_dir)
     run_path.mkdir(parents=True, exist_ok=True)
+    manifest.update(run_quality(manifest, load_rules(Path.cwd())))
     write_json_atomic(run_path / "run_manifest.json", manifest)
     write_category_report(categories, run_path / "categories.csv")
     write_candidates(dedupe_candidates(candidates), run_path / "candidates_partial.csv")
@@ -747,6 +746,7 @@ def mark_category_scanned(scan_state, category, products_examined, candidate_cou
 def main():
     args = parse_args()
     rules = load_json(args.rules)
+    workflow_rules = load_rules(Path.cwd())
     if args.max_categories is not None:
         rules["max_categories"] = max(0, args.max_categories)
     defaults = load_json(args.defaults)
@@ -809,9 +809,12 @@ def main():
         print(f"Selected {len(categories)} categories. Staged report: {run_dir / 'categories.csv'}")
 
         if args.dry_run:
-            write_category_report(categories, args.category_report)
             return
 
+        consecutive_failures = 0
+        network_rules = workflow_rules.get("network", {})
+        if mcp_client:
+            mcp_client.preflight()
         for category in categories:
             try:
                 if args.replay_run_dir:
@@ -835,12 +838,13 @@ def main():
                     category_candidates, products_examined = collect_products_for_category(
                         category, rules, defaults, domain
                     )
-            except RuntimeError as exc:
+            except (RuntimeError, OSError, ValueError) as exc:
                 if mcp_client:
                     manifest["provider_call_count"] = mcp_client.tool_call_count
                 category["scan_status"] = "failed"
                 category["scan_error"] = str(exc).splitlines()[-1][:500]
                 manifest["failed_categories"] += 1
+                consecutive_failures += 1
                 manifest["failed_category_details"].append(
                     {
                         "category_id": category["category_id"],
@@ -859,6 +863,20 @@ def main():
                         "Sorftime rejected the request. Live discovery outputs were preserved; "
                         f"see {run_dir / 'run_manifest.json'}."
                     )
+                if mcp_client and consecutive_failures >= network_rules.get("circuit_breaker_consecutive_failures", 5):
+                    time.sleep(network_rules.get("circuit_breaker_pause_seconds", 300))
+                    try:
+                        mcp_client._initialized = False
+                        mcp_client.preflight(max_seconds=0)
+                    except RuntimeError:
+                        manifest["circuit_breaker_open"] = True
+                        break
+                    # A successful handshake does not prove product queries work.
+                    if manifest.get("circuit_probe_used"):
+                        manifest["circuit_breaker_open"] = True
+                        break
+                    manifest["circuit_probe_used"] = True
+                    consecutive_failures = 0
                 continue
             if products_examined == 0:
                 category["products_examined"] = 0
@@ -871,6 +889,7 @@ def main():
                 print(f"Category returned no products: {category['path']}", file=sys.stderr)
                 continue
             candidates.extend(category_candidates)
+            consecutive_failures = 0
             scanned_at = datetime.now().isoformat(timespec="seconds")
             category["products_examined"] = products_examined
             category["candidate_count"] = len(category_candidates)
@@ -879,7 +898,7 @@ def main():
             category["scan_error"] = ""
             if not args.replay_run_dir:
                 mark_category_scanned(scan_state, category, products_examined, len(category_candidates), scanned_at)
-                write_category_scan_state(scan_state, args.scan_state)
+                write_category_scan_state(scan_state, run_dir / "category_scan_state.csv")
             manifest["successful_categories"] += 1
             manifest["products_examined"] += products_examined
             manifest["eligible_candidates_before_dedupe"] = len(candidates)
@@ -904,6 +923,21 @@ def main():
                         flags=category.get("category_health_flags") or "no flags",
                     )
                 )
+
+    if strategy == "category" and not args.products_json:
+        manifest.update(run_quality(manifest, workflow_rules))
+        if not manifest["publishable"]:
+            manifest["status"] = "partial"
+            manifest["finished_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
+            manifest["error"] = "Scan coverage below publication threshold"
+            if mcp_client:
+                manifest["request_attempt_count"] = mcp_client.request_attempt_count
+            update_discovery_checkpoint(run_dir, manifest, categories, candidates)
+            raise SystemExit(2)
+        if not args.replay_run_dir:
+            write_category_scan_state(scan_state, args.scan_state)
+        if mcp_client:
+            manifest["request_attempt_count"] = mcp_client.request_attempt_count
 
     eligible_candidates = dedupe_candidates(candidates)
     candidates = balanced_candidate_sample(eligible_candidates, int(rules["max_candidates"]))

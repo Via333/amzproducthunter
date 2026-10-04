@@ -13,7 +13,9 @@ from urllib.parse import quote
 from research_required_checks import CHECK_TITLES, apply_research_gate, build_required_checks
 
 
-ROOT = Path(__file__).resolve().parent
+import os
+from workflow_storage import atomic_write_text
+ROOT = Path(os.environ.get("AMZ_WORKFLOW_ROOT") or Path(__file__).resolve().parent)
 INDEX_PATH = ROOT / "archive" / "product_research_index.csv"
 WEB_RESEARCH_DIR = ROOT / "web" / "research"
 
@@ -1615,7 +1617,7 @@ def main() -> None:
         asin = row.get("asin", "").strip()
         if not asin:
             continue
-        (WEB_RESEARCH_DIR / f"{asin}.html").write_text(build_page(row), encoding="utf-8")
+        atomic_write_text(WEB_RESEARCH_DIR / f"{asin}.html", build_page(row))
     print(f"Built {len(rows)} product research pages into {WEB_RESEARCH_DIR}")
 
 

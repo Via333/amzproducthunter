@@ -20,6 +20,7 @@ from product_risk import infer_compliance_risk, infer_fragile_risk, infer_oversi
 from product_selection import amazon_listing_url, brand_moat_reason, hard_exclusion_reason
 from product_taxonomy import classify_product_form
 from product_family import product_identity
+from workflow_storage import atomic_write_csv, atomic_write_text, load_rules
 
 
 OUTPUT_FIELDS = [
@@ -104,6 +105,8 @@ OUTPUT_FIELDS = [
 
 
 ARCHIVE_FIELDS = [
+    "last_validated_run_id",
+    "last_validated_at",
     "shape_archive_key",
     "archive_first_seen",
     "archive_last_seen",
@@ -189,10 +192,12 @@ def write_csv(path, rows, fields):
         for key in row:
             if key not in all_fields:
                 all_fields.append(key)
-    with output_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=all_fields, extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(rows)
+    atomic_write_csv(output_path, rows, all_fields)
+
+
+def analysis_now():
+    date = os.environ.get("AMZ_AS_OF_DATE")
+    return datetime.fromisoformat(date) if date else datetime.now()
 
 
 def avg(values):
@@ -434,7 +439,7 @@ def sales_share(rows, limit):
 def recent_listing_share(rows, months=12):
     cutoff_days = months * 30.5
     ages = []
-    now = datetime.now()
+    now = analysis_now()
     for row in rows:
         raw_date = str(row.get("online_date", "") or "").strip()
         if not raw_date:
@@ -488,7 +493,7 @@ def listing_age_days(raw_date, now=None):
         listed_at = datetime.strptime(raw_date[:10], "%Y-%m-%d")
     except ValueError:
         return None
-    return ((now or datetime.now()) - listed_at).days
+    return ((now or analysis_now()) - listed_at).days
 
 
 def category_brand_names(rows, min_length=4):
@@ -1345,7 +1350,10 @@ def update_shape_archive(rows, archive_dir, run_id):
     archive_path = archive_dir / "shape_opportunity_library.csv"
     existing = read_csv_rows(archive_path)
     by_archive_key = {row.get("shape_archive_key", ""): row for row in existing if row.get("shape_archive_key", "")}
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now = analysis_now().strftime("%Y-%m-%d %H:%M:%S")
+    validated_categories = {row.get("source_category_id") or row.get("category_path") for row in rows if row.get("data_quality") == "category_top100"}
+    protected = {"invalidated_by_rule", "suppressed_by_user", "rejected_by_research", "ip_review_required", "seasonal_confirmed"}
+    stale_days = load_rules(Path.cwd()).get("opportunity_stale_days", 90)
     active_keys = set()
     for row in rows:
         if not should_archive_shape(row):
@@ -1355,6 +1363,9 @@ def update_shape_archive(rows, archive_dir, run_id):
             continue
         active_keys.add(key)
         prior = by_archive_key.get(key, {})
+        if prior.get("archive_status") in protected:
+            active_keys.discard(key)
+            continue
         score = to_float(row.get("shape_score"), 0)
         best_score = max(to_float(prior.get("archive_best_score"), 0), score)
         same_run = str(prior.get("archive_last_run_id", "")) == str(run_id)
@@ -1369,6 +1380,8 @@ def update_shape_archive(rows, archive_dir, run_id):
                 "archive_latest_score": row.get("shape_score", ""),
                 "archive_status": "active_in_latest_run",
                 "archive_last_run_id": run_id,
+                "last_validated_run_id": run_id,
+                "last_validated_at": now,
                 "research_status": prior.get("research_status") or "needs_supplier_validation",
                 "archive_notes": prior.get("archive_notes", ""),
             }
@@ -1376,6 +1389,8 @@ def update_shape_archive(rows, archive_dir, run_id):
         by_archive_key[key] = merged
 
     for key, row in by_archive_key.items():
+        if row.get("archive_status") in protected:
+            continue
         if key not in active_keys:
             reason = archived_shape_invalidation_reason(row)
             if reason:
@@ -1384,8 +1399,19 @@ def update_shape_archive(rows, archive_dir, run_id):
                 existing_notes = str(row.get("archive_notes", "") or "")
                 if note not in existing_notes:
                     row["archive_notes"] = "; ".join(part for part in (existing_notes, note) if part)
+            elif (row.get("source_category_id") or row.get("category_path")) in validated_categories:
+                row["archive_status"] = "failed_on_rescan"
+                row["last_validated_at"] = now
+                row["last_validated_run_id"] = run_id
             else:
-                row["archive_status"] = "not_in_latest_run"
+                row.setdefault("last_validated_at", row.get("archive_last_seen", ""))
+                row.setdefault("last_validated_run_id", row.get("archive_last_run_id", ""))
+                age = listing_age_days(row.get("last_validated_at"))
+                if row.get("archive_status") == "not_in_latest_run":
+                    row["archive_status"] = "stale_needs_rescan"
+                    row["archive_notes"] = (row.get("archive_notes", "") + "; rotation status repaired; current evidence requires rescan").strip("; ")
+                elif row.get("archive_status") in {"active_in_latest_run", "active"}:
+                    row["archive_status"] = "stale_needs_rescan" if age is None or age > stale_days else "active"
 
     archive_rows = list(by_archive_key.values())
     archive_rows.sort(
@@ -1462,7 +1488,7 @@ def write_report(path, rows):
         )
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text("\n".join(lines), encoding="utf-8")
+    atomic_write_text(output_path, "\n".join(lines))
 
 
 def markdown_link(label, url):

@@ -500,13 +500,14 @@ def issue_comment(report: dict[str, Any]) -> str:
 
 
 def write_report_files(root: Path, report: dict[str, Any]) -> tuple[Path, Path, Path]:
+    from workflow_storage import atomic_write_json, atomic_write_text
     reports_dir = root / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
     json_path = reports_dir / REPORT_JSON
     md_path = reports_dir / REPORT_MD
     markdown = report_markdown(report)
-    json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    md_path.write_text(markdown, encoding="utf-8")
+    atomic_write_json(json_path, report)
+    atomic_write_text(md_path, markdown)
 
     archive_dir = root / "archive" / "weekly_scan_reports" / str(report["run_id"])
     archive_dir.mkdir(parents=True, exist_ok=True)

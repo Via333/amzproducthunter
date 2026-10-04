@@ -4,10 +4,7 @@
     "disabled_reason": "Weekly discovery now uses MCP; automatic deep research remains manual until its CLI calls are migrated.",
     "max_candidates": 4,
     "minimum_score": 52,
-    "recommendations": [
-      "Go to supplier validation",
-      "Watch or collect more data"
-    ],
+    "recommendations": ["Go to supplier validation", "Watch or collect more data"],
     "freshness_days": 30,
     "minimum_cached_products": 50,
     "max_compliance_risk": 79,
@@ -15,5 +12,21 @@
     "max_oversize_risk": 64,
     "require_valid_category": true,
     "continue_on_error": true
-  }
+  },
+  "run_quality": {
+    "max_failed_share_to_publish": 0.2,
+    "max_failed_share_before_error": 0.5
+  },
+  "opportunity_stale_days": 90,
+  "network": {
+    "max_attempts": 3,
+    "retry_base_seconds": 2,
+    "retry_max_seconds": 60,
+    "circuit_breaker_consecutive_failures": 5,
+    "circuit_breaker_pause_seconds": 300,
+    "preflight_interval_seconds": 60,
+    "preflight_max_seconds": 900
+  },
+  "rotation": {"new_category_quota": 70, "rescan_quota": 30, "opportunity_rescan_days": 60},
+  "alert_stale_days": 8
 }

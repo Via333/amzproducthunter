@@ -15,6 +15,7 @@ import threading
 from urllib.parse import parse_qs, urlsplit
 
 from research_workbench import Workbench
+from workflow_storage import current_root
 
 ROOT = Path(__file__).resolve().parent
 
@@ -85,6 +86,20 @@ class ResearchWorker:
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def send_head(self):
+        # Pin each response to one committed generation; manual research pages
+        # remain in the workspace and are not hidden by a weekly snapshot.
+        path = urlsplit(self.path).path
+        root = self.server.store.root
+        if path in {"/", "/index.html"}:
+            self.directory = str(current_root(root) / "web")
+        else:
+            self.directory = str(root / "web")
+            candidate = Path(self.translate_path(self.path))
+            if not candidate.is_file():
+                self.directory = str(current_root(root) / "web")
+        return super().send_head()
+
     def valid_host(self):
         return self.headers.get("Host") in self.server.allowed_hosts
 

@@ -11,6 +11,10 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+import shutil
+
+from workflow_storage import (atomic_write_json, current_root, load_rules, prepare_generation,
+                              publish_generation, run_quality, workflow_lock)
 
 from weekly_scan_observability import (
     build_report,
@@ -23,6 +27,7 @@ from weekly_scan_observability import (
 
 
 ROOT = Path(__file__).resolve().parent
+SOURCE_ROOT = ROOT
 
 
 def parse_args() -> argparse.Namespace:
@@ -32,6 +37,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-id", default=os.environ.get("AMZ_WEEKLY_RUN_ID", ""), help="Override report run id.")
     parser.add_argument("--log-path", default=os.environ.get("AMZ_WEEKLY_LOG_FILE", ""), help="Current run log path for the report.")
     parser.add_argument("--report-only", action="store_true", help="Skip Sorftime/scoring/validation and report on existing local outputs.")
+    parser.add_argument("--scheduled", action="store_true", help="Skip if a verified live generation was published in the last seven days.")
     parser.add_argument(
         "--replay-source-run",
         help="Rebuild from one archived MCP discovery run without new Sorftime calls.",
@@ -53,6 +59,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def run(command: list[str], step_name: str) -> None:
+    command = list(command)
+    if len(command) > 1 and command[1].endswith(".py"):
+        command[0] = sys.executable
+        command[1] = str(SOURCE_ROOT / command[1])
     try:
         subprocess.run(command, cwd=ROOT, check=True)
     except subprocess.CalledProcessError as exc:
@@ -107,6 +117,8 @@ def validate_required_outputs(run_id: str) -> None:
 
     manifest_path = ROOT / "archive" / "discovery_runs" / run_id / "run_manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not run_quality(manifest, load_rules(ROOT))["publishable"]:
+        raise RuntimeError("Insufficient scan coverage; live outputs must not be published")
     if manifest.get("status") not in {"success", "success_no_candidates"}:
         raise RuntimeError(f"Discovery manifest is not successful: {manifest.get('status') or 'unknown'}")
     if int(manifest.get("successful_categories") or 0) <= 0 or int(manifest.get("products_examined") or 0) <= 0:
@@ -179,12 +191,28 @@ def print_legacy_summary() -> None:
 
 
 def main() -> None:
+    with workflow_lock(SOURCE_ROOT):
+        execute_workflow()
+
+
+def execute_workflow() -> None:
+    global ROOT
     args = parse_args()
+    if args.scheduled:
+        from weekly_schedule import published_age_days
+        age = published_age_days(SOURCE_ROOT)
+        if age is not None and 0 <= age < 7:
+            print("A verified weekly generation is less than seven days old; no API calls.")
+            return
+        if age is None or age > load_rules(SOURCE_ROOT).get("alert_stale_days", 8):
+            print("CRITICAL: no verified publication in the last eight days; attempting scheduled recovery.")
     started_at = now_iso()
     run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
     os.environ["AMZ_WEEKLY_RUN_ID"] = run_id
     log_path = resolve_log_path(args.log_path)
     current_step = ""
+    generation = None
+    replay_source = str((SOURCE_ROOT / args.replay_source_run).resolve()) if args.replay_source_run else ""
 
     try:
         if args.mock_failure_step:
@@ -192,16 +220,30 @@ def main() -> None:
             raise RuntimeError(f"Mock failure requested for {args.mock_failure_step}")
 
         if not args.report_only:
-            for step_name, command in workflow_steps(run_id, args.replay_source_run or ""):
+            if (SOURCE_ROOT / "archive/discovery_runs" / run_id).exists():
+                raise ValueError("Run id already exists; use a new run id to preserve history")
+            generation = prepare_generation(SOURCE_ROOT, run_id)
+            ROOT = generation
+            os.environ["AMZ_WORKFLOW_ROOT"] = str(generation)
+            os.environ["AMZ_SOURCE_ROOT"] = str(SOURCE_ROOT)
+            if replay_source:
+                source_manifest = json.loads((Path(replay_source) / "run_manifest.json").read_text())
+                os.environ["AMZ_AS_OF_DATE"] = str(source_manifest.get("finished_at") or source_manifest.get("started_at"))[:10]
+                os.environ["AMZ_OFFLINE"] = "1"
+            for step_name, command in workflow_steps(run_id, replay_source):
                 current_step = step_name
                 run(command, step_name)
+                if step_name == "discover_sorftime_opportunities":
+                    manifest = json.loads((ROOT / "archive/discovery_runs" / run_id / "run_manifest.json").read_text())
+                    if not run_quality(manifest, load_rules(ROOT))["publishable"]:
+                        raise RuntimeError("Partial discovery: publication blocked")
             current_step = "required_outputs"
             validate_required_outputs(run_id)
 
         if args.report_only:
             status, report_failed_step, report_error = existing_report_status(run_id)
         else:
-            status, report_failed_step, report_error = "success", "", ""
+            status, report_failed_step, report_error = ("replay" if replay_source else "success"), "", ""
         report = build_report(
             root=ROOT,
             run_id=run_id,
@@ -214,12 +256,23 @@ def main() -> None:
             stale_days=args.stale_days,
         )
         write_and_post_report(args, report)
+        if generation:
+            retain_run_archives(SOURCE_ROOT, generation, run_id)
+            if not replay_source:
+                publish_generation(SOURCE_ROOT, generation, manifest)
+            else:
+                print(f"Offline replay only, current generation unchanged: {generation}")
         print_legacy_summary()
+        if not replay_source and any(c["status"] == "critical" for c in report["health_checks"]):
+            raise SystemExit(2)
     except Exception as exc:  # noqa: BLE001 - the failure report must be written before exiting.
+        manifest_path = ROOT / "archive/discovery_runs" / run_id / "run_manifest.json"
+        manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+        partial = manifest.get("status") == "partial"
         report = build_report(
             root=ROOT,
             run_id=run_id,
-            status="failure",
+            status="partial" if partial else "failure",
             started_at=started_at,
             log_path=log_path,
             failed_step=current_step,
@@ -228,8 +281,18 @@ def main() -> None:
             stale_days=args.stale_days,
         )
         write_and_post_report(args, report)
+        if generation:
+            retain_run_archives(SOURCE_ROOT, generation, run_id)
         print(f"Weekly selection workflow failed: {exc}", file=sys.stderr)
-        raise SystemExit(1) from exc
+        raise SystemExit(2 if partial else 1) from exc
+
+
+def retain_run_archives(root, generation, run_id):
+    for kind in ("discovery_runs", "category_shape_runs", "weekly_scan_reports"):
+        source = generation / "archive" / kind / run_id
+        target = root / "archive" / kind / run_id
+        if source.exists():
+            shutil.copytree(source, target, dirs_exist_ok=True)
 
 
 if __name__ == "__main__":

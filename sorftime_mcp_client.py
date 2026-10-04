@@ -8,6 +8,10 @@ or an environment variable and is never written to project files or logs.
 from __future__ import annotations
 
 import json
+import http.client
+import random
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 import os
 import time
 import tomllib
@@ -95,6 +99,8 @@ def unpack_tool_result(response: dict[str, Any]) -> Any:
 
 class SorftimeMcpClient:
     def __init__(self, url: str | None = None, timeout: int = 120, max_attempts: int = 3):
+        if os.environ.get("AMZ_OFFLINE") == "1":
+            raise RuntimeError("Sorftime is disabled during offline validation")
         self._url = url or load_mcp_url()
         self._timeout = timeout
         self._max_attempts = max(1, max_attempts)
@@ -102,6 +108,22 @@ class SorftimeMcpClient:
         self._initialized = False
         self._request_id = 0
         self.tool_call_count = 0
+        self.request_attempt_count = 0
+        from workflow_storage import load_rules
+        self.retry_rules = load_rules(Path(__file__).resolve().parent).get("network", {})
+
+    def preflight(self, max_seconds=None, interval=None):
+        max_seconds = self.retry_rules.get("preflight_max_seconds", 900) if max_seconds is None else max_seconds
+        interval = self.retry_rules.get("preflight_interval_seconds", 60) if interval is None else interval
+        deadline = time.monotonic() + max_seconds
+        while True:
+            try:
+                self.initialize()
+                return
+            except RuntimeError as exc:
+                if any(code in str(exc) for code in ("HTTP 401", "HTTP 403")) or time.monotonic() >= deadline:
+                    raise
+                time.sleep(min(interval, max(0, deadline - time.monotonic())))
 
     def _next_id(self) -> int:
         self._request_id += 1
@@ -114,13 +136,18 @@ class SorftimeMcpClient:
             "MCP-Protocol-Version": "2025-06-18",
             "User-Agent": "amz-product-hunter/1.0",
         }
-        if self._session_id:
-            headers["Mcp-Session-Id"] = self._session_id
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
 
         last_error: Exception | None = None
+        renewed_session = False
         for attempt in range(1, self._max_attempts + 1):
+            if self._session_id:
+                headers["Mcp-Session-Id"] = self._session_id
+            else:
+                headers.pop("Mcp-Session-Id", None)
+            delay = min(self.retry_rules.get("retry_max_seconds", 60), self.retry_rules.get("retry_base_seconds", 2) * (3 ** (attempt - 1))) * random.uniform(0.7, 1.3)
             request = urllib.request.Request(self._url, data=body, headers=headers, method="POST")
+            self.request_attempt_count += 1
             try:
                 with urllib.request.urlopen(request, timeout=self._timeout) as response:
                     session_id = response.headers.get("Mcp-Session-Id")
@@ -131,15 +158,30 @@ class SorftimeMcpClient:
                         return {}
                     return parse_http_payload(response_body, response.headers.get("Content-Type", ""))
             except urllib.error.HTTPError as exc:
-                detail = exc.read().decode("utf-8", errors="replace")[:500]
-                message = f"Sorftime MCP HTTP {exc.code}: {detail or exc.reason}"
-                if exc.code in {401, 403, 429} or not 500 <= exc.code < 600:
+                # Never log response bodies or URLs, which may contain credentials.
+                message = f"Sorftime MCP HTTP {exc.code}"
+                if exc.code == 404 and self._session_id and payload.get("method") == "tools/call" and not renewed_session:
+                    renewed_session = True
+                    self._session_id, self._initialized = "", False
+                    self.initialize()
+                elif exc.code == 429:
+                    raw = (exc.headers or {}).get("Retry-After", "")
+                    try:
+                        delay = max(0, float(raw))
+                    except ValueError:
+                        try:
+                            delay = max(0, (parsedate_to_datetime(raw) - datetime.now(timezone.utc)).total_seconds())
+                        except (ValueError, TypeError):
+                            pass
+                    if delay > self.retry_rules.get("retry_max_seconds", 60):
+                        raise RuntimeError("Sorftime MCP HTTP 429: retry delay exceeds budget") from exc
+                elif not 500 <= exc.code < 600:
                     raise RuntimeError(message) from exc
                 last_error = RuntimeError(message)
-            except (urllib.error.URLError, TimeoutError) as exc:
-                last_error = exc
+            except (OSError, http.client.HTTPException, json.JSONDecodeError, UnicodeDecodeError) as exc:
+                last_error = RuntimeError(type(exc).__name__)
             if attempt < self._max_attempts:
-                time.sleep(attempt * 2)
+                time.sleep(delay)
         raise RuntimeError(f"Sorftime MCP request failed after {self._max_attempts} attempts: {last_error}")
 
     def initialize(self) -> None:
@@ -167,6 +209,7 @@ class SorftimeMcpClient:
 
     def call_tool(self, name: str, arguments: dict[str, Any]) -> Any:
         self.initialize()
+        self.tool_call_count += 1
         response = self._post(
             {
                 "jsonrpc": "2.0",
@@ -175,5 +218,4 @@ class SorftimeMcpClient:
                 "params": {"name": name, "arguments": arguments},
             }
         )
-        self.tool_call_count += 1
         return unpack_tool_result(response)
