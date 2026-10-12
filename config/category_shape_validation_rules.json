@@ -44,7 +44,11 @@
     "brand_dependent_share": 0.5,
     "form_excluded_share": 0.5,
     "price_min": 12,
-    "price_max": 80
+    "price_max": 80,
+    "seasonal_watch_share": 0.3,
+    "seasonal_reject_share": 0.6,
+    "product_type_confirm_share": 0.8,
+    "product_type_confirm_min_count": 5
   },
   "category_limit": 0,
   "allow_adjacent_shape_opportunity": true,

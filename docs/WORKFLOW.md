@@ -41,7 +41,7 @@ python3 refresh_selection_workflow.py
 
 ```text
 Sorftime MCP 类目扫描（类目树缓存、每类目一次 Top100、逐类目断点）
--> 所有成功类目计算健康度
+-> 所有成功类目计算健康度（节日主题销量按占比扣减）
 -> category_shape_validation.py 拆分并验证每个类目的全部形态
 -> build_product_research_pages.py 重建已归档单品研究页
 -> build_dashboard.py 重建网页工作台
@@ -290,9 +290,12 @@ config/import_defaults.json                  成本、物流、FBA 等估算默�
 - 形态入池：形态样本 `>=2`、形态月销均值 `>=150` 或形态总月销 `>=800`、形态评论中位数 `<=300` 或低评高销样本 `>=2`；同时检查 Top10 和形态 Top3 销量集中度。`shape_score >=65` 且无硬 flag 才是 `Shape opportunity`。
 - 形态分权重：需求 0.25、可进入性（评论中位数）0.25、低评高销 0.15、**新进入者成功率 0.25**、品牌集中 0.10。新进入者 = `online_date` 在 18 个月内的 listing；成功 = 月销 `>=200`。没有上架日期数据时该项取中性 50 并打 `no listing-age data`。
 - 相邻形态（不是种子自身形态）样本 `>=3` 时也可以成为 `Shape opportunity`（`allow_adjacent_shape_opportunity`，`form_min_count_adjacent`）。
-- 必淘汰 flag：`brand-dependent accessory`（形态内 `>=50%` listing 是"compatible with / replacement for 其他品牌"）、`new entrants not selling`（近 18 个月新上架 `>=2` 个但没有一个达标）。
+- 必淘汰 flag：`brand-dependent accessory`（形态内 `>=50%` listing 是"compatible with / replacement for 其他品牌"）、`new entrants not selling`（近 18 个月新上架 `>=2` 个但没有一个达标）、`seasonal holiday products`（见下条）。
+- 节日季节性：标题主体或装饰名词前出现节日词（`config/seasonality_rules.json`）的商品记为节日主题；礼品定位（"Christmas gifts for…"）、顺带用途（"for Halloween" 后面没有装饰名词）和横跨 3 个及以上季节的通用款不算。形态内节日主题销量占比 `>=60%` 打 `seasonal holiday products`，未分类和类目代理也一样淘汰；`>=30%` 打 `partly seasonal holiday products`，最高 Watch。只读标题，不调用 Sorftime；取暖器、喷雾风扇这类天气季节性不在此列，仍靠单品研究的 24 个月趋势判断。
+- 类目代理确认：叶类目代理组的合格样本 `>=5` 个，且同一个具体亚马逊商品类型（原始报告 `product_category`）同时占销量和数量 `>=80%` 时，标为 `product_type_confirmed`，按正常形态规则评分和给结论，可能成为 Opportunity，也可能被淘汰。`OUTDOOR_LIVING`、`HOME`、`ABIS_*` 等部门级或占位类型不算（`config/product_taxonomy.json` 的 `broad_product_types`）。商品类型只证明同用途，结构和规格未核验：页面写明“规格待核”，Opportunity 的下一步先抽查参考 ASIN 的主图和规格。其余代理组仍最多 Watch。
 - 每个成功扫描的最小类目只读一次 Top100；`seed_limit=0`、`category_limit=0`、`category_ranking_limit=0` 都表示周扫不受种子或数量上限限制。
-- 类目健康度：对每个类目的完整 Top100 算 `category_health_score` 写入 `reports/discovered_categories.csv`，仅用于排序展示和周报，不代替形态验证。
+- 类目健康度：对每个类目的完整 Top100 算 `category_health_score` 写入 `reports/discovered_categories.csv`，仅用于排序展示和周报，不代替形态验证。节日主题商品的销量占比写入 `category_seasonal_sales_share`，健康分乘以 `(1 - 占比)`；占比 `>=30%` 打 `seasonal holiday products` 旗标。
+- 扫描轮换：每轮 100 个类目中 70 个新类目、30 个复扫（`config/workflow_rules.json` 的 `rotation`）。复扫名额先给机会池里 `stale_needs_rescan` 的类目，以及 `opportunity_rescan_days`（60 天）内没有新证据的有效机会类目；其次是上一轮 Watch 类目，再次是上次扫描失败的类目，其余按最久未扫；连续失败 3 次的排最后。待复扫机会复扫成功后会变成本轮有效、复扫未通过或规则失效，不会长期占用名额。
 - 每个形态输出 `form_reference_asins`（近 18 个月新上架、月销 `>=200`、评论 `<=300` 的前 5 个 `ASIN:月销/评论`），作为单品研究入口。
 - 只有 `Shape opportunity` 写入 `archive/shape_opportunity_library.csv`；`Watch shape` 和 `Needs category Top100` 只作为人工复核/补数据项。
 

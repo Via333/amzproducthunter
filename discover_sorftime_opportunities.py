@@ -5,7 +5,7 @@ import json
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from import_sorftime_candidates import (
@@ -293,6 +293,29 @@ def bootstrap_scan_state(scan_state, category_report_path):
                 "status": "scanned",
             }
     return scan_state
+
+
+def rescan_priorities(pool_path, previous_shapes_path, rescan_days, now=None):
+    """Category ids to rescan first: 0 for pool entries needing fresh evidence, 1 for last run's Watch rows."""
+    priorities = {}
+    pool_path, previous_shapes_path = Path(pool_path), Path(previous_shapes_path)
+    if pool_path.exists():
+        cutoff = ((now or datetime.now()) - timedelta(days=rescan_days)).isoformat()
+        with pool_path.open(encoding="utf-8-sig", newline="") as handle:
+            for row in csv.DictReader(handle):
+                # A pool entry already marked stale has no current evidence; waiting
+                # for the age cutoff would keep it unconfirmed for weeks.
+                if row.get("archive_status") == "stale_needs_rescan" or (
+                    row.get("archive_status") in {"active", "active_in_latest_run"}
+                    and (row.get("last_validated_at") or row.get("archive_last_seen") or "") < cutoff
+                ):
+                    priorities[str(row.get("source_category_id"))] = 0
+    if previous_shapes_path.exists():
+        with previous_shapes_path.open(encoding="utf-8-sig", newline="") as handle:
+            for row in csv.DictReader(handle):
+                if row.get("shape_recommendation") == "Watch shape":
+                    priorities.setdefault(str(row.get("source_category_id")), 1)
+    return priorities
 
 
 def select_categories(category_tree, rules, scan_state=None, exclusions=None):
@@ -802,20 +825,9 @@ def main():
         mcp_client = SorftimeMcpClient() if provider == "mcp" and not args.dry_run else None
         scan_state = read_category_scan_state(args.scan_state)
         scan_state = bootstrap_scan_state(scan_state, args.category_report)
-        pool = Path("archive/shape_opportunity_library.csv")
-        if pool.exists():
-            from datetime import timedelta
-            cutoff = (datetime.now() - timedelta(days=workflow_rules.get("rotation", {}).get("opportunity_rescan_days", 60))).isoformat()
-            with pool.open(encoding="utf-8-sig", newline="") as handle:
-                rules["_rescan_priorities"] = {str(r.get("source_category_id")): 0 for r in csv.DictReader(handle)
-                    if (r.get("last_validated_at") or r.get("archive_last_seen") or "") < cutoff
-                    and r.get("archive_status") in {"active", "active_in_latest_run", "stale_needs_rescan"}}
-        previous_shapes = Path("data/category_shape_validation.csv")
-        if previous_shapes.exists():
-            with previous_shapes.open(encoding="utf-8-sig", newline="") as handle:
-                for r in csv.DictReader(handle):
-                    if r.get("shape_recommendation") == "Watch shape":
-                        rules.setdefault("_rescan_priorities", {}).setdefault(str(r.get("source_category_id")), 1)
+        rules["_rescan_priorities"] = rescan_priorities(
+            "archive/shape_opportunity_library.csv", "data/category_shape_validation.csv",
+            workflow_rules.get("rotation", {}).get("opportunity_rescan_days", 60))
         exclusions = load_category_exclusions(args.category_exclusions)
         if args.replay_run_dir:
             replay_dir = Path(args.replay_run_dir)

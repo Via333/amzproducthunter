@@ -7,9 +7,11 @@ import csv
 import subprocess
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 
-from discover_sorftime_opportunities import balanced_candidate_sample, mark_category_scanned, select_categories
+from discover_sorftime_opportunities import (balanced_candidate_sample, mark_category_scanned, rescan_priorities,
+                                             select_categories)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,6 +98,34 @@ class CategoryRotationTest(unittest.TestCase):
         }
         selected = select_categories(category_tree(), rules(), scan_state, {"path_contains": [{"term": "furniture"}]})
         self.assertEqual([row["category_id"] for row in selected], ["b", "c"])
+
+    def test_stale_pool_entries_are_rescanned_without_waiting_for_age(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            pool = Path(temp) / "shape_opportunity_library.csv"
+            shapes = Path(temp) / "category_shape_validation.csv"
+            with pool.open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["source_category_id", "archive_status", "last_validated_at"])
+                writer.writeheader()
+                writer.writerows([
+                    {"source_category_id": "c", "archive_status": "stale_needs_rescan", "last_validated_at": "2026-09-01 22:36:37"},
+                    {"source_category_id": "d", "archive_status": "active", "last_validated_at": "2026-09-01 22:36:37"},
+                    {"source_category_id": "a", "archive_status": "invalidated_by_rule", "last_validated_at": "2026-06-01 08:00:00"},
+                ])
+            with shapes.open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["source_category_id", "shape_recommendation"])
+                writer.writeheader()
+                writer.writerow({"source_category_id": "b", "shape_recommendation": "Watch shape"})
+            priorities = rescan_priorities(pool, shapes, 60, now=datetime(2026, 10, 12))
+            # An active entry still waits for the rescan age; a stale one does not.
+            self.assertEqual(rescan_priorities(pool, shapes, 60, now=datetime(2026, 11, 15)), {"c": 0, "d": 0, "b": 1})
+        self.assertEqual(priorities, {"c": 0, "b": 1})
+        scan_state = {key: {"scan_count": "1", "last_scanned_at": f"2026-09-0{index + 1}T08:30:00"}
+                      for index, key in enumerate("abcd")}
+        selected = select_categories(
+            category_tree(),
+            {**rules(), "rotation": {"new_category_quota": 0, "rescan_quota": 100}, "_rescan_priorities": priorities},
+            scan_state, {"path_contains": [{"term": "furniture"}]})
+        self.assertEqual([row["category_id"] for row in selected], ["c", "b"])
 
 
 class KeywordSearchTest(unittest.TestCase):

@@ -72,6 +72,15 @@
     "sporting goods", "home organizers and storage", "home kitchen", "sports outdoors",
     "office products", "patio lawn garden", "tools home improvement"
   ],
+  "broad_product_types": [
+    "outdoor living", "home", "kitchen", "art supplies", "toys and games", "pet supplies", "tools", "hardware",
+    "home furniture and decor", "outdoor recreation product", "agricultural supplies", "health personal care",
+    "accessory or part or supply", "home parts", "mechanical components", "raw materials", "art and craft supply",
+    "party supplies", "home lighting and lamps", "home lighting accessory", "educational supplies",
+    "janitorial supply", "lab supply", "food service supply", "auto accessory", "auto part", "seeds and plants",
+    "building material", "major home appliances", "professional healthcare", "ce accessory", "hobbies", "beauty",
+    "apparel", "food", "item container", "item stand", "misc other"
+  ],
   "generic_product_terms": [
     "brush", "holder", "organizer", "rack", "bag", "box", "container", "cover", "tray",
     "dispenser", "splitter", "adapter", "connector", "grinder", "mill", "pump", "mat",
