@@ -108,6 +108,15 @@ def first_match(text: str, entries: list[dict]) -> str:
     return str(first_match_entry(text, entries).get("label") or "").strip()
 
 
+def is_broad_product_type(product_type: object, taxonomy_path: str = "config/product_taxonomy.json") -> bool:
+    """Department-level or placeholder Amazon types (OUTDOOR_LIVING, ABIS_*) say nothing about use."""
+    text = normalize(product_type)
+    taxonomy = load_taxonomy(taxonomy_path)
+    broad = {normalize(value) for key in ("generic_forms", "generic_product_types", "broad_product_types")
+             for value in taxonomy.get(key, [])}
+    return not text or text in broad | {"product", "unknown", "other"} or text.startswith("abis ")
+
+
 def category_leaf(category: object) -> str:
     parts = re.split(r"\s*(?:>|/|›)\s*", str(category or ""))
     return normalize(parts[-1] if parts else "")

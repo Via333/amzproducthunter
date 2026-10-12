@@ -1,0 +1,27 @@
+{
+  "holidays": {
+    "halloween": {"label": "万圣节", "season": "fall",
+                  "terms": ["halloween", "trick or treat", "jack o lantern", "jack o lanterns", "spooky", "haunted house"]},
+    "thanksgiving": {"label": "感恩节", "season": "fall", "terms": ["thanksgiving"]},
+    "fall_harvest": {"label": "秋季装饰", "season": "fall",
+                     "terms": ["autumn", "fall decor", "fall decorative", "fall decoration", "fall decorations", "fall themed",
+                               "fall wreath", "fall wreaths", "fall garland", "fall garlands", "harvest decor", "harvest decorations"]},
+    "day_of_the_dead": {"label": "亡灵节", "season": "fall", "terms": ["day of the dead", "dia de los muertos"]},
+    "christmas": {"label": "圣诞", "season": "winter",
+                  "terms": ["christmas", "xmas", "nativity", "advent calendar", "advent calendars"]},
+    "hanukkah": {"label": "光明节", "season": "winter", "terms": ["hanukkah", "chanukah"]},
+    "new_year": {"label": "新年", "season": "winter", "terms": ["new years eve", "happy new year"]},
+    "valentines_day": {"label": "情人节", "season": "spring", "terms": ["valentine", "valentines", "valentine s"]},
+    "mardi_gras": {"label": "狂欢节", "season": "spring", "terms": ["mardi gras"]},
+    "st_patricks_day": {"label": "圣帕特里克节", "season": "spring",
+                        "terms": ["st patrick", "st patricks", "st patrick s", "saint patrick", "saint patricks", "st paddy", "st paddys"]},
+    "easter": {"label": "复活节", "season": "spring", "terms": ["easter"]},
+    "independence_day": {"label": "美国独立日", "season": "summer",
+                         "terms": ["4th of july", "fourth of july", "july 4th", "independence day"]}
+  },
+  "themed_nouns": ["decor", "decoration", "decorations", "ornament", "ornaments", "light", "lights", "inflatable",
+                   "inflatables", "prop", "props", "tree", "wreath", "wreaths", "garland", "garlands", "village",
+                   "costume", "costumes", "party", "yard", "outdoor", "indoor", "porch", "lawn", "theme", "themed"],
+  "gift_words": ["gift", "gifts", "present", "presents", "stocking stuffer", "stocking stuffers"],
+  "all_season_min_seasons": 3
+}

@@ -15,6 +15,7 @@ from __future__ import annotations
 from category_shape_validation import (
     category_market_metrics,
     normalized_category_product,
+    seasonal_metrics,
     to_float,
 )
 
@@ -31,6 +32,7 @@ CATEGORY_HEALTH_FIELDS = [
     "category_cn_hk_seller_share",
     "category_fba_share",
     "category_price_median",
+    "category_seasonal_sales_share",
     "category_health_score",
     "category_health_flags",
     "category_health_rank",
@@ -47,6 +49,7 @@ DEFAULT_HEALTH_RULES = {
     "full_new_listing_share": 0.3,
     "full_low_review_high_sales": 6,
     "concentration_min_count": 20,
+    "seasonal_flag_share": 0.3,
 }
 
 
@@ -94,13 +97,19 @@ def category_health_from_records(records, category_path="", rules=None):
         clamp(100 - max(0.0, top10_sales_share - 0.4) / 0.4 * 100) if enough_for_concentration else 100.0
     )
     price_score = price_fit_score(price_median, rules["price_min"], rules["price_max"])
+    # Holiday-themed listings are counted at their seasonal peak; only the rest
+    # of the category's demand lasts beyond the holiday.
+    seasonal_share, _ = seasonal_metrics(products)
     health = round(
-        entrant_score * 0.25
-        + access_score * 0.20
-        + gap_score * 0.20
-        + brand_score * 0.15
-        + concentration_score * 0.10
-        + price_score * 0.10,
+        (
+            entrant_score * 0.25
+            + access_score * 0.20
+            + gap_score * 0.20
+            + brand_score * 0.15
+            + concentration_score * 0.10
+            + price_score * 0.10
+        )
+        * (1 - seasonal_share),
         1,
     )
 
@@ -117,6 +126,8 @@ def category_health_from_records(records, category_path="", rules=None):
         flags.append("sales concentration")
     if price_median and (price_median < rules["price_min"] or price_median > rules["price_max"]):
         flags.append("price band outside target")
+    if seasonal_share >= rules["seasonal_flag_share"]:
+        flags.append("seasonal holiday products")
 
     return {
         "category_total_sales": metrics.get("category_total_sales", 0),
@@ -130,6 +141,7 @@ def category_health_from_records(records, category_path="", rules=None):
         "category_cn_hk_seller_share": metrics.get("category_cn_hk_seller_share", 0),
         "category_fba_share": metrics.get("category_fba_share", 0),
         "category_price_median": metrics.get("category_price_median", 0),
+        "category_seasonal_sales_share": seasonal_share,
         "category_health_score": health,
         "category_health_flags": "; ".join(flags),
     }

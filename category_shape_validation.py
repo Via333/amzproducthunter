@@ -18,8 +18,9 @@ from statistics import mean, median
 from import_sorftime_candidates import to_float
 from product_risk import infer_compliance_risk, infer_fragile_risk, infer_oversize_risk
 from product_selection import amazon_listing_url, brand_moat_reason, hard_exclusion_reason
-from product_taxonomy import classify_product_form
+from product_taxonomy import classify_product_form, is_broad_product_type
 from product_family import product_identity, GENERIC
+from seasonality import holiday_label, holiday_theme
 from workflow_storage import atomic_write_csv, atomic_write_text, atomic_write_json, load_rules, run_quality
 from opportunity_feedback import feedback_state, PROTECTED
 
@@ -93,6 +94,10 @@ OUTPUT_FIELDS = [
     "form_brand_dependent_share",
     "form_excluded_share",
     "form_excluded_reasons",
+    "form_seasonal_sales_share",
+    "form_seasonal_holidays",
+    "form_dominant_product_type",
+    "form_dominant_product_type_share",
     "form_price_median",
     "form_reference_asins",
     "form_top_materials",
@@ -444,6 +449,8 @@ def normalized_category_product(product, category_path, category_brands=None):
         "online_date": str(product.get("online_date", "") or "").strip(),
         "seller_address": seller_code,
         "is_fba": delivery_type in {"fba", "amzfba"},
+        "product_type": str(product.get("product_category", "") or "").strip(),
+        "holiday_theme": holiday_theme(product.get("title", "")),
         **identity,
     }
 
@@ -615,6 +622,32 @@ def product_exclusion_reason(product, scoring_rules, *, require_valid_category=N
     return ""
 
 
+def seasonal_metrics(products):
+    """Sales share of listings themed for a holiday, and which holidays."""
+    themed = [product for product in products if product.get("holiday_theme")]
+    total = sum(max(0.0, to_float(product.get("monthly_sales"), 0)) for product in products)
+    seasonal = sum(max(0.0, to_float(product.get("monthly_sales"), 0)) for product in themed)
+    share = seasonal / total if total else (len(themed) / len(products) if products else 0.0)
+    return round(share, 3), top_counts([product["holiday_theme"] for product in themed])
+
+
+def dominant_product_type(products):
+    """Amazon product type carrying most of the sales, with its sales and count shares."""
+    sales, counts = Counter(), Counter()
+    for product in products:
+        key = normalize_text(product.get("product_type"))
+        sales[key] += max(0.0, to_float(product.get("monthly_sales"), 0))
+        counts[key] += 1
+    typed = [value for value in counts if value]
+    if not typed:
+        return "", 0.0, 0.0
+    # Untyped listings stay in the denominator: they are not evidence of the same use.
+    key = max(typed, key=lambda value: (sales[value], counts[value], value))
+    total_sales = sum(sales.values())
+    sales_share = sales[key] / total_sales if total_sales else counts[key] / len(products)
+    return key, round(sales_share, 3), round(counts[key] / len(products), 3)
+
+
 def form_summary_rows(rows, thresholds=None, now=None, scoring_rules=None):
     thresholds = thresholds or DEFAULT_NEW_ENTRANT_THRESHOLDS
     scoring_rules = scoring_rules or {}
@@ -659,13 +692,29 @@ def form_summary_rows(rows, thresholds=None, now=None, scoring_rules=None):
             status_order.get(p.get("classification_status"), 4),
             p.get("product_form_label", ""), p.get("asin", ""),
         ))
+        classification_status = identity.get("classification_status", "")
+        form_label = identity.get("product_form_label", "")
+        seasonal_share, seasonal_holidays = seasonal_metrics(eligible_products)
+        product_type, type_sales_share, type_count_share = dominant_product_type(eligible_products)
+        confirm_share = to_float(thresholds.get("product_type_confirm_share"), 0.8)
+        # A leaf-category proxy whose eligible listings are one specific Amazon
+        # product type sells one product use; structure and specs stay unverified.
+        if (classification_status == "category_proxy" and not is_broad_product_type(product_type)
+                and len(eligible_products) >= to_float(thresholds.get("product_type_confirm_min_count"), 5)
+                and type_sales_share >= confirm_share and type_count_share >= confirm_share):
+            classification_status = "product_type_confirmed"
+            form_label = f"{product_form} · 亚马逊商品类型一致，规格待核"
         summaries.append(
             {
                 "product_form": product_form,
                 "product_family": form_products[0].get("product_family", ""),
                 "product_family_label": form_products[0].get("product_family_label", ""),
-                "product_form_label": identity.get("product_form_label", ""),
-                "classification_status": identity.get("classification_status", ""),
+                "product_form_label": form_label,
+                "classification_status": classification_status,
+                "seasonal_sales_share": seasonal_share,
+                "seasonal_holidays": seasonal_holidays,
+                "dominant_product_type": product_type,
+                "dominant_product_type_share": type_sales_share,
                 "count": len(eligible_products),
                 "member_asins": "; ".join(p["asin"] for p in form_products),
                 "landed_cost_ceiling_median": round(med(ceilings), 2) if ceilings else "",
@@ -827,6 +876,10 @@ def build_rows_from_products(seeds, products, rules, run_id=""):
             "form_brand_dependent_share": form.get("brand_dependent_share", 0),
             "form_excluded_share": form.get("excluded_share", 0),
             "form_excluded_reasons": form.get("excluded_reasons", ""),
+            "form_seasonal_sales_share": form.get("seasonal_sales_share", 0),
+            "form_seasonal_holidays": form.get("seasonal_holidays", ""),
+            "form_dominant_product_type": form.get("dominant_product_type", ""),
+            "form_dominant_product_type_share": form.get("dominant_product_type_share", 0),
             "form_price_median": form.get("price_median", 0),
             "form_reference_asins": form.get("reference_asins", ""),
             "form_top_materials": form.get("top_materials", ""),
@@ -1050,6 +1103,12 @@ def evaluate_shape_row(row, rules):
     proxy = row.get("classification_status") == "category_proxy"
     if proxy:
         flags.append("category proxy requires classification")
+    # Holiday-themed listings are counted at their seasonal peak in an autumn snapshot.
+    seasonal_share = to_float(row.get("form_seasonal_sales_share"), 0)
+    if seasonal_share >= to_float(thresholds.get("seasonal_reject_share"), 0.6):
+        flags.append("seasonal holiday products")
+    elif seasonal_share >= to_float(thresholds.get("seasonal_watch_share"), 0.3):
+        flags.append("partly seasonal holiday products")
     ceiling = row.get("form_landed_cost_ceiling_median")
     thin_budget = ceiling not in (None, "") and to_float(ceiling, 0) < thresholds.get("landed_cost_ceiling_watch_below", 3)
     if thin_budget:
@@ -1087,11 +1146,16 @@ def evaluate_shape_row(row, rules):
         "brand-dependent accessory",
         "new entrants not selling",
         "excluded products",
+        "seasonal holiday products",
     }
     # Flags that always reject: an accessory market for someone else's brand is
-    # an IP / hijack trap, and a form where recent launches all failed is a
-    # closed market regardless of how good the aggregate numbers look.
-    always_reject_flags = {"brand-dependent accessory", "new entrants not selling", "excluded products"}
+    # an IP / hijack trap, a form where recent launches all failed is a closed
+    # market regardless of how good the aggregate numbers look, and a mostly
+    # holiday-themed form only sells this well for a few weeks a year.
+    always_reject_flags = {"brand-dependent accessory", "new entrants not selling", "excluded products",
+                           "seasonal holiday products"}
+    # These hold even when the products are not yet classified.
+    unclassified_reject_flags = {"excluded products", "brand-dependent accessory", "seasonal holiday products"}
     has_hard_flag = any(flag in hard_flags for flag in flags)
     has_always_reject = any(flag in always_reject_flags for flag in flags)
     has_thin_sample = "thin form sample" in flags
@@ -1109,9 +1173,9 @@ def evaluate_shape_row(row, rules):
         recommendation = "Reject category/form"
     elif not has_top100:
         recommendation = "Needs category Top100"
-    elif proxy and not {"excluded products", "brand-dependent accessory"}.intersection(flags):
+    elif proxy and not unclassified_reject_flags.intersection(flags):
         recommendation = "Watch shape"
-    elif has_generic_form and not {"excluded products", "brand-dependent accessory"}.intersection(flags):
+    elif has_generic_form and not unclassified_reject_flags.intersection(flags):
         recommendation = "Needs classification"
     elif has_always_reject:
         recommendation = "Reject category/form"
@@ -1133,11 +1197,14 @@ def evaluate_shape_row(row, rules):
         recommendation = "Watch shape"
     else:
         recommendation = "Reject category/form"
+    if recommendation == "Shape opportunity" and "partly seasonal holiday products" in flags:
+        recommendation = "Watch shape"
 
     decisive = ""
     if recommendation == "Reject category/form":
         if has_always_reject:
-            decisive = next(flag for flag in ("brand-dependent accessory", "excluded products", "new entrants not selling") if flag in flags)
+            decisive = next(flag for flag in ("brand-dependent accessory", "excluded products",
+                                              "seasonal holiday products", "new entrants not selling") if flag in flags)
         elif has_hard_flag and form_low_gap < thresholds["form_min_low_review_high_sales"]:
             decisive = next(flag for flag in flags if flag in hard_flags)
         else:
@@ -1168,13 +1235,29 @@ def entrant_sentence(row):
     return f"近 18 个月新上架 {entrant_count} 个，其中 {success} 个已达标（{rate * 100:.0f}%）。"
 
 
+def evidence_notes(row):
+    notes = []
+    if row.get("classification_status") == "product_type_confirmed":
+        share = to_float(row.get("form_dominant_product_type_share"), 0)
+        notes.append(f"同用途由亚马逊商品类型 {row.get('form_dominant_product_type', '')} 确认"
+                     f"（占合格样本销量 {share * 100:.0f}%），结构和规格未逐个核验。")
+    # Matches both "seasonal holiday products" and "partly seasonal holiday products".
+    if "seasonal holiday products" in str(row.get("validation_flags", "")):
+        holidays = "、".join(holiday_label(part.split(":")[0].strip())
+                            for part in str(row.get("form_seasonal_holidays", "")).split(";") if part.strip())
+        share = to_float(row.get("form_seasonal_sales_share"), 0)
+        notes.append(f"{holidays}主题商品占销量 {share * 100:.0f}%，当前月销含节日旺季。")
+    return " ".join(notes)
+
+
 def opportunity_thesis(row):
     rec = row.get("shape_recommendation", "")
     form = row.get("product_form", "")
     entrant = entrant_sentence(row)
+    notes = evidence_notes(row)
     if row.get("review_hold_status"):
         return f"人工复核拦截：{row['review_hold_status']}。来源：{row.get('review_hold_source', '')}；不自动恢复为有效机会。"
-    if row.get("classification_status") == "category_proxy":
+    if row.get("classification_status") == "category_proxy" and rec != "Reject category/form":
         return "类目代理统计，仅用于确定核验顺序；尚未证明样本为同用途、同结构产品，不作为形态机会或立项依据。"
     if rec == "Needs classification":
         if row.get("classification_status") == "needs_specification":
@@ -1188,31 +1271,32 @@ def opportunity_thesis(row):
         )
         if row.get("form_reference_asins"):
             text += f" 参考新进入者：{row.get('form_reference_asins')}"
-        return text
+        return f"{text} {notes}".strip()
     if rec == "Watch shape":
-        return f"{form} 有部分需求信号，但仍需确认评论墙、品牌集中或供应链差异化。{entrant}"
+        return f"{form} 有部分需求信号，但仍需确认评论墙、品牌集中或供应链差异化。{entrant}{notes}"
     if rec == "Needs category Top100":
         return f"{form} 目前只是种子入口，还不能判定机会；需要拉最小类目 Top100 后按形态复核。"
     flags = str(row.get("validation_flags", "") or "")
     reason = f"（{flags}）" if flags else ""
     scope = "同用途产品组/形态" if row.get("assessment_scope") == "product_family" else "类目/形态"
-    return f"{form} 当前{scope}未通过自动筛选{reason}。"
+    return f"{form} 当前{scope}未通过自动筛选{reason}。{notes}"
 
 
 def next_action(row):
     rec = row.get("shape_recommendation", "")
     if row.get("review_hold_status"):
         return "先复核具体 SKU、证据范围及人工拦截原因；分数提高不能解除拦截。"
-    if row.get("classification_status") == "category_proxy":
+    if row.get("classification_status") == "category_proxy" and rec != "Reject category/form":
         return "核对标题、图片、用途与规格，拆成确定的产品形态后重新验证；不进入供应商立项。"
     if rec == "Needs classification":
         if row.get("classification_status") == "needs_specification":
             return "补主图与详情中的材质、结构、关键尺寸和适配规格，在同用途组内细分形态后重算。"
         return "标题有明确品名的，补识别规则后重新归组；只有宽泛用途或型号的，补主图与详情后再确认。不能将宽泛类别标签视为一种产品。"
     if rec == "Shape opportunity":
+        check = "先抽查参考 ASIN 的主图和规格，确认是同一结构；再" if row.get("classification_status") == "product_type_confirmed" else ""
         if row.get("form_reference_asins"):
-            return "从参考新进入者 ASIN 里挑 1-2 个做单品研究，再进供应商验证"
-        return "进入单品研究/供应商验证"
+            return check + "从参考新进入者 ASIN 里挑 1-2 个做单品研究，再进供应商验证"
+        return check + "进入单品研究/供应商验证"
     if rec == "Watch shape":
         return "补评论和供应商报价后再判断"
     if rec == "Needs category Top100":
