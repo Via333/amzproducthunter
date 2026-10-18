@@ -158,7 +158,7 @@ python3 discover_sorftime_opportunities.py --strategy category
 1. 从本地缓存读取 US 站完整类目树
 2. 按 config/autodiscovery_rules.json 和 config/category_exclusions.json 永久跳过高合规、高物流、强专利/品牌垄断类目
 3. 优先扫描从未扫描的最小类目；全部覆盖后按最久未扫描轮换
-4. 对每个类目调用一次 MCP `category_report`，每类目最多查看 100 个 Top 产品
+4. 对每个类目调用一次 MCP `category_products`，每类目最多查看 100 个 Top 产品（2026-10-13 前是 `category_report`，见 `sorftime_category.py`）
 5. 对全部成功类目拆分形态、验证机会并生成网页
 ```
 

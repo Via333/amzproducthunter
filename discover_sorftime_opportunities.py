@@ -23,6 +23,7 @@ from import_sorftime_candidates import (
 from category_health import CATEGORY_HEALTH_FIELDS, category_health_from_records, rank_categories_by_health
 from product_risk import has_valid_category
 from product_exclusions import hard_exclusion_reason as configured_hard_exclusion_reason
+from sorftime_category import fetch_category_report
 from sorftime_mcp_client import SorftimeMcpClient
 from workflow_storage import atomic_write_csv, load_rules, run_quality
 
@@ -650,13 +651,8 @@ def collect_products_from_category_report(category, rules, defaults, report):
 
 
 def collect_products_for_category_mcp(category, rules, defaults, client, raw_dir):
-    report = client.call_tool(
-        "category_report",
-        {
-            "amz_site": str(rules.get("marketplace") or "US"),
-            "node_id": str(category["category_id"]),
-        },
-    )
+    # Top100 now comes from category_products (one call); see sorftime_category.py.
+    report = fetch_category_report(client, str(category["category_id"]), str(rules.get("marketplace") or "US"))
     write_json_atomic(Path(raw_dir) / f"{category['category_id']}.json", report)
     return collect_products_from_category_report(category, rules, defaults, report)
 

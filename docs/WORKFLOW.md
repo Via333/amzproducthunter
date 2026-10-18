@@ -80,7 +80,8 @@ Sorftime MCP 类目扫描（类目树缓存、每类目一次 Top100、逐类目
 MCP 运行口径：
 
 - 密钥仅从 `SORFTIME_MCP_URL` 或用户级 `~/.codex/config.toml` 读取，不写入仓库、日志或归档。
-- 每个类目调用一次 `category_report`，一次返回最多 100 个产品；100 类目的标准周扫约消耗 100 次调用。
+- 每个类目调用一次 `category_products`，一次返回最多 100 个产品；100 类目的标准周扫约消耗 100 次调用。
+- 2026-10-13 起 Sorftime 的 `category_report` 只返回类目统计，Top100 改由 `category_products` 提供，字段名也变了。`sorftime_category.py` 把新字段转成原来的名字，原始报告仍按 `data.top100_products` 保存。新接口不再返回 `product_category`（商品类型）和 `seller_origin`（卖家所在地），这两项现在为空：中国/香港卖家占比恒为 0，「商品类型确认」不会触发，形态只按标题分。单品研究需要类目统计时再单独调用一次 `category_report`。
 - 原始结果写入 `archive/discovery_runs/RUN_ID/raw_category_reports/`，规则调整优先回放这些数据，避免重复调用。
 - 回放命令：`python3 refresh_selection_workflow.py --replay-source-run archive/discovery_runs/RUN_ID --run-id NEW_RUN_ID`。
 - 单品研究使用 Sorftime MCP；周扫只产出候选，不自动消耗大量调用做所有候选的深挖。

@@ -36,6 +36,7 @@ from product_opportunity_research import (
     use_case,
     write_csv,
 )
+from sorftime_category import fetch_category_report, normalize_category_stats, report_has_products, report_has_stats
 from sorftime_mcp_client import SorftimeMcpClient
 from research_required_checks import checks_markdown, read_products, refresh_required_checks
 from product_family import product_identity
@@ -166,11 +167,19 @@ def latest_cached_category_report(node_id: str) -> Path | None:
 
 def category_report(client: SorftimeMcpClient, node_id: str, site: str) -> tuple[dict[str, Any], Path]:
     cached = latest_cached_category_report(node_id)
-    if cached:
-        return load_json(cached), cached
-    result = client.call_tool("category_report", {"node_id": node_id, "amz_site": site})
-    report = result if isinstance(result, dict) else {"data": result}
     cache_path = ROOT / "archive" / "cache" / "category_reports" / f"{node_id}.json"
+    if cached:
+        report = load_json(cached)
+        # Weekly scans store the Top100 without market statistics; fetch only the missing half.
+        if report_has_products(report) and not report_has_stats(report):
+            stats = normalize_category_stats(client.call_tool("category_report", {"node_id": node_id, "amz_site": site}))
+            report = {**report, "data": {**as_data(report), "category_stats_report": stats}}
+        elif report_has_products(report):
+            return report, cached
+        else:
+            report = fetch_category_report(client, node_id, site, with_stats=True)
+    else:
+        report = fetch_category_report(client, node_id, site, with_stats=True)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     cache_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return report, cache_path

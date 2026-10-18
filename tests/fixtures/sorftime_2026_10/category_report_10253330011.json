@@ -1,0 +1,207 @@
+{
+ "doc": {
+  "node_id": "Category NodeID.",
+  "top100_monthly_sales_volume": "Total estimated monthly sales volume of Top100 products in category.Value -1: no data for that period.",
+  "top100_monthly_sales_amount": "Total estimated monthly sales amount of Top100 products in category. (USD).Value -1: no data for that period.",
+  "top3_product_sales_volume_share": "Monthly sales volume share of top 3 products (%).",
+  "brands_list": "Brand list, two-dimensional array. Each item: brand name,brand product count,1m new product count,2m new product count,3m new product count,6m new product count,brand monthly sales volume,brand monthly sales share(%),1m new product sales share(%),2m new product sales share(%),3m new product sales share(%),6m new product sales share(%). Empty array if no data.",
+  "top3_brand_sales_volume_share": "Monthly sales volume share of top 3 brands (%).",
+  "sellers_list": "Seller list, two-dimensional array. Each item: seller name,seller product count,1m new product count,2m new product count,3m new product count,6m new product count,seller monthly sales volume,seller monthly sales share(%),1m new product sales share(%),2m new product sales share(%),3m new product sales share(%),6m new product sales share(%). Empty array if no data.",
+  "top3_seller_sales_volume_share": "Monthly sales volume share of top 3 sellers (%).",
+  "amazon_owned_sales_volume_share": "Monthly sales volume share of Amazon-owned products (%).",
+  "category_products_price": "Category product price statistics array: avg selling price, min selling price, max selling price, avg profit, max profit per listing, min profit per listing. All values in USD (main currency unit, not cents). Empty array if no data.",
+  "stars_list": "Product statistics grouped by star rating, two-dimensional array. Each item: star range,product count,monthly sales share(%). Empty array if no data.",
+  "ratings_list": "Product statistics grouped by review count, two-dimensional array. Each item: review count range,product count,monthly sales share(%). Empty array if no data.",
+  "return_rate": "Average category return rate (%). Null if unavailable.",
+  "category_product_number": "Total product quantity in this category. Null if unavailable.",
+  "order_rate": "Average order conversion rate for products in each price range. Group by 3 values: price start,price end,conversion rate(%). Null if unavailable. (Price range uses local currency; returns null in actual test)",
+  "product_age_avg_days": "Average product listing days of category. Null if unavailable.",
+  "available_product_count": "Quantity of in-stock available products in category. Null if unavailable.",
+  "conversion_rate": "Category order conversion rate (%). Null if unavailable.",
+  "avg_listing_days": "Average listing days of Top100 products. Null if unavailable."
+ },
+ "data": {
+  "node_id": "10253330011",
+  "top100_monthly_sales_volume": 55293,
+  "top100_monthly_sales_amount": 1601663.99,
+  "top3_product_sales_volume_share": 48.42,
+  "brands_list": [
+   [
+    "HGD",
+    2,
+    0,
+    0,
+    0,
+    0,
+    12930,
+    23.38,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    "Magical Flames",
+    1,
+    0,
+    0,
+    0,
+    0,
+    8881,
+    16.06,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    "Stanbroil",
+    9,
+    0,
+    0,
+    0,
+    0,
+    4960,
+    8.97,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    "NUPICK",
+    2,
+    0,
+    0,
+    1,
+    2,
+    1878,
+    3.4,
+    0.0,
+    0.0,
+    82.69,
+    100.0
+   ]
+  ],
+  "top3_brand_sales_volume_share": 48.42,
+  "sellers_list": [
+   [
+    "Aomidiya",
+    2,
+    0,
+    0,
+    0,
+    0,
+    12930,
+    23.38,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    "ER Distributers",
+    1,
+    0,
+    0,
+    0,
+    0,
+    8881,
+    16.06,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    "Stanbroil Outdoor LTD",
+    9,
+    0,
+    0,
+    0,
+    0,
+    4960,
+    8.97,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    "Sparki-US",
+    2,
+    0,
+    0,
+    1,
+    2,
+    1878,
+    3.4,
+    0.0,
+    0.0,
+    82.69,
+    100.0
+   ]
+  ],
+  "top3_seller_sales_volume_share": 48.42,
+  "amazon_owned_sales_volume_share": 3.08,
+  "category_products_price": [
+   43.48,
+   0.0,
+   232.18,
+   27.68,
+   176.79,
+   0.0
+  ],
+  "stars_list": [
+   [
+    "0-0.5",
+    1,
+    0.15
+   ],
+   [
+    "0.51-1",
+    0,
+    0.0
+   ],
+   [
+    "1.01-1.5",
+    0,
+    0.0
+   ],
+   [
+    "1.51-2",
+    0,
+    0.0
+   ]
+  ],
+  "ratings_list": [
+   [
+    "0-50",
+    25,
+    8.05
+   ],
+   [
+    "51-100",
+    16,
+    7.69
+   ],
+   [
+    "101-150",
+    7,
+    2.26
+   ],
+   [
+    "151-200",
+    4,
+    2.17
+   ]
+  ],
+  "return_rate": 4.53,
+  "category_product_number": 14397,
+  "order_rate": null,
+  "product_age_avg_days": 1509,
+  "available_product_count": 12713,
+  "conversion_rate": 11.0,
+  "avg_listing_days": 1509
+ }
+}

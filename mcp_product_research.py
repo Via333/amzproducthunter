@@ -24,6 +24,7 @@ from product_opportunity_research import (
     REVIEW_FIELDS,
     REVIEW_TARGET_FIELDS,
 )
+from sorftime_category import report_has_products
 from sorftime_mcp_client import SorftimeMcpClient
 
 
@@ -329,7 +330,14 @@ def locate_category_report(node_id: str, explicit: str) -> Path | None:
         path = Path(explicit)
         return path if path.exists() else None
     matches = sorted(DEFAULT_CATEGORY_REPORT_ROOT.glob(f"*/raw_category_reports/{node_id}.json"), reverse=True)
-    return matches[0] if matches else None
+    # Runs from 2026-10-13 to the adapter fix saved statistics without a Top100; skip those.
+    for path in matches:
+        try:
+            if report_has_products(read_json(path)):
+                return path
+        except (OSError, ValueError):
+            continue
+    return None
 
 
 def category_context(node_id: str, explicit: str) -> tuple[dict[str, Any], list[dict[str, Any]], str]:

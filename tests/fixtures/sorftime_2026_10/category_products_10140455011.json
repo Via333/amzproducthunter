@@ -1,0 +1,315 @@
+{
+ "doc": {
+  "asin": "Product ASIN.",
+  "parent_asin": "Parent ASIN; null if no variation parent.",
+  "title": "Product title.",
+  "sub_title": "Product subtitle; null if not exists.",
+  "brand": "Brand name.",
+  "main_image": "Main image url array.",
+  "price": "Current selling price after coupon deduction. (USD).Value -1: no data for that period.",
+  "list_price": "Original list price(strikethrough price). (USD).Value -1: no data for that period.",
+  "coupon": "Coupon discount amount. Positive value = amount(USD), negative = percentage discount.Value -1: no data for that period.",
+  "monthly_sales_volume": "Estimated monthly sales volume.Value -1: no data for that period.",
+  "monthly_sales_amount": "Estimated monthly sales amount. (USD).Value -1: no data for that period.",
+  "yearly_sales_volume": "Estimated yearly sales volume.Value -1: no data for that period.",
+  "delivery_type": "Fulfillment method. One of FBA (seller-shipped via Amazon FBA), AmzFBA (third-party seller, e.g. 1688, shipping via Amazon FBA), or FBM (seller-fulfilled).",
+  "fba_fee": "FBA fee (in USD). Returns 0 when fulfillment is not FBA.Value -1: no data for that period.",
+  "fbm_delivery_fee": "FBM delivery fee (in USD). Returns 0 when fulfillment is not FBM.Value -1: no data for that period.",
+  "ratings": "Product rating, range 0~5.",
+  "rating_count": "Total review count.",
+  "a_plus": "Whether the product has A+ content.",
+  "has_video": "Whether the product has main image video.",
+  "has_brand_store": "Whether the brand has brand store.",
+  "variation_count": "Number of child variations.",
+  "seller_count": "Total seller count for this listing.",
+  "buybox_seller": "Buybox seller name.",
+  "online_date": "Product launch date, format yyyy-MM-dd.",
+  "category": "Primary category object {name, node_id}. (Array: [category name, node_id])",
+  "sub_category": "Sub category object {name, node_id, rank}. (2D array: [[category name, node_id, rank]])",
+  "subcategory_rank": "Sales rank in subcategory.",
+  "peak_season": "Peak season months, e.g. \"11月\"; null if no obvious peak season. (Return \"--\" if there is no obvious peak season)"
+ },
+ "data": [
+  {
+   "asin": "B003P2UOCO",
+   "parent_asin": "B0H4GFT5LH",
+   "title": "Akro-Mils 44-Drawer Plastic Storage Cabinet, 20“W x 6“D x 16“H, Black ",
+   "sub_title": "Plastic Cabinet w/ Drawers for Garage Organization, Beads, Building Bricks Storage, Teacher Toolbox, Makeup, 10144",
+   "brand": "Akro-Mils",
+   "main_image": [
+    "https://m.media-amazon.com/images/I/71g+DvjbYgL.jpg",
+    "https://m.media-amazon.com/images/I/71dJKSAu7bL.jpg",
+    "https://m.media-amazon.com/images/I/81Wks4vudWL.jpg",
+    "https://m.media-amazon.com/images/I/81ETXZXWd-L.jpg",
+    "https://m.media-amazon.com/images/I/81r7NQTM9NL.jpg",
+    "https://m.media-amazon.com/images/I/818y5xKmowL.jpg"
+   ],
+   "price": 44.59,
+   "list_price": 0.0,
+   "coupon": 0.0,
+   "monthly_sales_volume": 9940,
+   "monthly_sales_amount": 443224.6,
+   "yearly_sales_volume": 130452,
+   "delivery_type": null,
+   "fba_fee": 17.47,
+   "fbm_delivery_fee": 0.0,
+   "ratings": 4.5,
+   "rating_count": 55320,
+   "a_plus": true,
+   "has_video": true,
+   "has_brand_store": true,
+   "variation_count": 36,
+   "seller_count": 29,
+   "buybox_seller": "Amazon",
+   "online_date": "2022-02-04",
+   "category": [
+    "Tools & Home Improvement",
+    "hi"
+   ],
+   "sub_category": [
+    [
+     "Craft Cabinets",
+     "10140455011",
+     1
+    ]
+   ],
+   "subcategory_rank": 575,
+   "peak_season": "--"
+  },
+  {
+   "asin": "B0CV4XRWKR",
+   "parent_asin": "B0CV4ZWJV5",
+   "title": "Blue Ginkgo 20-Drawer Storage Cabinet Organizer, Grey, Made in Korea ",
+   "sub_title": "Stackable. Adjustable. Easy Visibility.",
+   "brand": "BLUE GINKGO",
+   "main_image": [
+    "https://m.media-amazon.com/images/I/71vUqh6BkjL.jpg",
+    "https://m.media-amazon.com/images/I/81hbZRET4-L.jpg",
+    "https://m.media-amazon.com/images/I/813MGl5Z6tL.jpg",
+    "https://m.media-amazon.com/images/I/61gmhAqespL.jpg",
+    "https://m.media-amazon.com/images/I/81YMTyUs3IL.jpg",
+    "https://m.media-amazon.com/images/I/81t0eytuoKL.jpg",
+    "https://m.media-amazon.com/images/I/81utv51QuLL.jpg"
+   ],
+   "price": 57.99,
+   "list_price": 0.0,
+   "coupon": 0.0,
+   "monthly_sales_volume": 1320,
+   "monthly_sales_amount": 76546.8,
+   "yearly_sales_volume": 11080,
+   "delivery_type": null,
+   "fba_fee": 10.41,
+   "fbm_delivery_fee": 0.0,
+   "ratings": 4.5,
+   "rating_count": 434,
+   "a_plus": true,
+   "has_video": false,
+   "has_brand_store": true,
+   "variation_count": 11,
+   "seller_count": 5,
+   "buybox_seller": "BLUE GINKGO",
+   "online_date": "2024-05-23",
+   "category": [
+    "Tools & Home Improvement",
+    "hi"
+   ],
+   "sub_category": [
+    [
+     "Craft Cabinets",
+     "10140455011",
+     2
+    ]
+   ],
+   "subcategory_rank": 16462,
+   "peak_season": "--"
+  },
+  {
+   "asin": "B000VTSOKS",
+   "parent_asin": "B0DK61NVBN",
+   "title": "Akro-Mils 10764 Drawer Plastic Parts Storage Hardware and Craft Cabinet, 20-Inch W x 6-Inch D x 16-Inch H, Black",
+   "sub_title": "",
+   "brand": "Akro-Mils",
+   "main_image": [
+    "https://m.media-amazon.com/images/I/71ESKhRnxjL.jpg",
+    "https://m.media-amazon.com/images/I/81WB2gstyaL.jpg",
+    "https://m.media-amazon.com/images/I/7188VvcX5TL.jpg"
+   ],
+   "price": 50.99,
+   "list_price": 60.0,
+   "coupon": 0.0,
+   "monthly_sales_volume": 487,
+   "monthly_sales_amount": 24832.13,
+   "yearly_sales_volume": 8326,
+   "delivery_type": null,
+   "fba_fee": 19.06,
+   "fbm_delivery_fee": 0.0,
+   "ratings": 4.6,
+   "rating_count": 1450,
+   "a_plus": true,
+   "has_video": true,
+   "has_brand_store": true,
+   "variation_count": 2,
+   "seller_count": 2,
+   "buybox_seller": "Amazon",
+   "online_date": "2014-10-15",
+   "category": [
+    "Tools & Home Improvement",
+    "hi"
+   ],
+   "sub_category": [
+    [
+     "Craft Cabinets",
+     "10140455011",
+     3
+    ]
+   ],
+   "subcategory_rank": 17390,
+   "peak_season": "--"
+  },
+  {
+   "asin": "B00JC8KSI0",
+   "parent_asin": "B0FYPK7RH8",
+   "title": "Storage Bin with Drawers - 41-Drawer Plastic Tool Organizer - Hardware or Craft Cabinet for Storing Beads, Toys, or Nuts and Bolts by Stalwart (Black)",
+   "sub_title": "",
+   "brand": "Stalwart",
+   "main_image": [
+    "https://m.media-amazon.com/images/I/81YbHyKd0ML.jpg",
+    "https://m.media-amazon.com/images/I/81mPDpm304L.jpg",
+    "https://m.media-amazon.com/images/I/919FGjdEoWL.jpg",
+    "https://m.media-amazon.com/images/I/810QPlULB5L.jpg",
+    "https://m.media-amazon.com/images/I/5103LIEYDiL.jpg",
+    "https://m.media-amazon.com/images/I/81oAc3waX2L.jpg",
+    "https://m.media-amazon.com/images/I/816p+y3IlXL.jpg"
+   ],
+   "price": 29.97,
+   "list_price": 69.99,
+   "coupon": 0.0,
+   "monthly_sales_volume": 285,
+   "monthly_sales_amount": 8541.45,
+   "yearly_sales_volume": 6327,
+   "delivery_type": null,
+   "fba_fee": 10.7,
+   "fbm_delivery_fee": 0.0,
+   "ratings": 4.0,
+   "rating_count": 462,
+   "a_plus": true,
+   "has_video": true,
+   "has_brand_store": true,
+   "variation_count": 6,
+   "seller_count": 1,
+   "buybox_seller": "Amazon",
+   "online_date": "2014-04-11",
+   "category": [
+    "Tools & Home Improvement",
+    "hi"
+   ],
+   "sub_category": [
+    [
+     "Craft Cabinets",
+     "10140455011",
+     6
+    ]
+   ],
+   "subcategory_rank": 41901,
+   "peak_season": "--"
+  },
+  {
+   "asin": "B00012FQEM",
+   "parent_asin": "B0DK5Z3THP",
+   "title": "Akro-Mils 24 Cabinet 10724, Plastic Parts Storage Hardware and Craft Cabinet, (20-Inch W x 6-Inch D x 16-Inch H), Black",
+   "sub_title": "",
+   "brand": "Akro-Mils",
+   "main_image": [
+    "https://m.media-amazon.com/images/I/61vFYN1QysL.jpg",
+    "https://m.media-amazon.com/images/I/81Iwd3bDfeL.jpg",
+    "https://m.media-amazon.com/images/I/81qDNCafQ+L.jpg",
+    "https://m.media-amazon.com/images/I/812Q3Ym9VYL.jpg",
+    "https://m.media-amazon.com/images/I/81r7NQTM9NL.jpg",
+    "https://m.media-amazon.com/images/I/818y5xKmowL.jpg",
+    "https://m.media-amazon.com/images/I/71irVFlIVrL.jpg",
+    "https://m.media-amazon.com/images/I/71ZWcuAgqmL.jpg",
+    "https://m.media-amazon.com/images/I/71BGudjHCAL.jpg",
+    "https://m.media-amazon.com/images/I/71dJQ5TmQtL.jpg",
+    "https://m.media-amazon.com/images/I/71dMOEpEHzL.jpg",
+    "https://m.media-amazon.com/images/I/61wGKM3GQPL.jpg"
+   ],
+   "price": 53.43,
+   "list_price": 0.0,
+   "coupon": 0.0,
+   "monthly_sales_volume": 254,
+   "monthly_sales_amount": 13571.22,
+   "yearly_sales_volume": 6411,
+   "delivery_type": null,
+   "fba_fee": 18.13,
+   "fbm_delivery_fee": 0.0,
+   "ratings": 4.6,
+   "rating_count": 1711,
+   "a_plus": true,
+   "has_video": true,
+   "has_brand_store": true,
+   "variation_count": 2,
+   "seller_count": 12,
+   "buybox_seller": "Amazon",
+   "online_date": "2011-03-25",
+   "category": [
+    "Tools & Home Improvement",
+    "hi"
+   ],
+   "sub_category": [
+    [
+     "Craft Cabinets",
+     "10140455011",
+     4
+    ]
+   ],
+   "subcategory_rank": 35037,
+   "peak_season": "--"
+  },
+  {
+   "asin": "B0DQ74FRBZ",
+   "parent_asin": "B0DQ74FRBZ",
+   "title": "Amazon Basics 24-Drawer Plastic Storage Organizer with Dividers for Office/Craft/Tools, Wall Mountable, Sturdy, 6.3 x 21.3 x 15.8 inch, Black",
+   "sub_title": "",
+   "brand": "Amazon Basics",
+   "main_image": [
+    "https://m.media-amazon.com/images/I/713DdsszvwL.jpg",
+    "https://m.media-amazon.com/images/I/71rf6kEadrL.jpg",
+    "https://m.media-amazon.com/images/I/71XAx9+y82L.jpg",
+    "https://m.media-amazon.com/images/I/71jy3e6a2-L.jpg",
+    "https://m.media-amazon.com/images/I/51Rf7-+1T3L.jpg",
+    "https://m.media-amazon.com/images/I/51i+wDSCoNL.PKplay-button-mb-image-grid-small_.jpg"
+   ],
+   "price": -1,
+   "list_price": 0.0,
+   "coupon": 0.0,
+   "monthly_sales_volume": -1,
+   "monthly_sales_amount": 6337.5,
+   "yearly_sales_volume": 3337,
+   "delivery_type": null,
+   "fba_fee": 18.31,
+   "fbm_delivery_fee": 0.0,
+   "ratings": 4.3,
+   "rating_count": 410,
+   "a_plus": true,
+   "has_video": true,
+   "has_brand_store": true,
+   "variation_count": 0,
+   "seller_count": 3,
+   "buybox_seller": "Amazon",
+   "online_date": "2025-09-13",
+   "category": [
+    "Tools & Home Improvement",
+    "hi"
+   ],
+   "sub_category": [
+    [
+     "Craft Cabinets",
+     "10140455011",
+     5
+    ]
+   ],
+   "subcategory_rank": 55449,
+   "peak_season": "--"
+  }
+ ]
+}
