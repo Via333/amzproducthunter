@@ -58,57 +58,80 @@
     }).filter(Boolean);
   }
 
+  const L = () => window.AmzLabels;
+  const shapeName = row => String(row.product_form_label || row.product_form || "未识别形态").replace(/\s*·\s*类目代理待核验$/, "");
+  const scopeTag = row => ({
+    category_proxy: "整类目统计",
+    product_type_confirmed: "商品类型一致，规格待核",
+    title_rule: "按标题初分",
+    needs_specification: "规格待确认",
+    unresolved: "分组未确定",
+  }[row.classification_status] || "");
+  const money = value => value === "" || value == null || !Number(value) ? "-" : "$" + Number(value).toFixed(2);
+  const sources = row => row.family_sources?.length ? row.family_sources : row.source_categories || [];
+
+  function context(row) {
+    const name = shapeName(row).toLowerCase();
+    const list = sources(row);
+    const market = row.market_label || row.source_category_name || "";
+    const parts = [];
+    if (market && market.toLowerCase() !== name) parts.push(market);
+    if (list.length > 1) parts.push(`${list.length} 个类目：${list.slice(0, 3).map(s => s.name).join(" / ")}${list.length > 3 ? " 等" : ""}`);
+    else if (!parts.length && row.category_path) parts.push(L().parentPath(row.category_path, 2));
+    return parts.join(" · ");
+  }
+
+  function reasonChips(row) {
+    const items = L().flags(row.validation_flags);
+    if (!items.length) return '<span class="wb-reason ok">没有发现硬伤</span>';
+    return items.map(item => `<span class="wb-reason ${item.tone}">${esc(item.text)}</span>`).join("");
+  }
+
+  function reasonLine(row, state) {
+    if (state === "opportunity" || state === "pending") return "";
+    const text = L().mainReason(row.validation_flags, state);
+    return text ? `<em class="wb-row-reason ${state}">${state === "reject" ? "排除：" : ""}${esc(text)}</em>` : "";
+  }
+
   function shape(row, key, forceOpen = false) {
     const refs = references(row);
-    return `<details class="wb-shape" data-detail="${esc(key)}" ${forceOpen ? "open" : ""}><summary>
-      ${esc(row.product_form_label || row.product_form)} <span class="wb-status ${decision(row)}">${decisionLabel(row)}</span>
-      <span class="wb-counts">${decision(row) === "pending" || row.shape_score == null ? "暂不评分 · 分组待核验" : `${fmt(row.shape_score)} 分 · ${fmt(row.form_count)} 个有效样本 · 价格中位 $${Number(row.form_price_median || 0).toFixed(2)}`}</span>
-      ${discardButton("shape", row.decision_keys?.shape, row.product_form_label || row.product_form)}
+    const state = decision(row);
+    const scored = state !== "pending" && row.shape_score != null && row.shape_score !== "";
+    const tag = scopeTag(row);
+    const list = sources(row);
+    const nextAction = String(row.next_action || "").trim();
+    return `<details class="wb-shape wb-row ${state}" data-detail="${esc(key)}" ${forceOpen ? "open" : ""}><summary>
+      <span class="wb-row-name"><b>${esc(shapeName(row))}</b>${tag ? `<span class="wb-tag">${esc(tag)}</span>` : ""}<small>${esc(context(row))}${reasonLine(row, state)}</small></span>
+      <span class="wb-row-num score" data-label="分数">${scored ? fmt(row.shape_score) : "—"}</span>
+      <span class="wb-row-num" data-label="平均月销">${scored ? fmt(row.form_avg_sales) : "—"}</span>
+      <span class="wb-row-num" data-label="评论中位">${scored ? fmt(row.form_median_reviews) : "—"}</span>
+      <span class="wb-row-num" data-label="价格中位">${scored ? money(row.form_price_median) : "—"}</span>
+      <span class="wb-row-num" data-label="样本">${fmt(row.form_count || row.family_sample_count)}</span>
+      ${discardButton("shape", row.decision_keys?.shape, shapeName(row))}
       </summary><div class="wb-shape-content">
-      ${decision(row) !== "pending" ? `<div class="wb-metrics"><span>平均月销 <b>${fmt(row.form_avg_sales)}</b></span><span>评论中位 <b>${fmt(row.form_median_reviews)}</b></span><span>低评高销 <b>${fmt(row.form_low_review_high_sales_count)}</b></span><span>新进入者达标 <b>${fmt(row.form_new_entrant_success_count)} / ${fmt(row.form_new_entrant_count)}</b></span></div>` : ""}
-      ${row.assessment_scope === "product_family" && decision(row) !== "pending" ? `<div class="wb-path">${row.classification_status === "category_proxy" ? "类目代理统计" : "竞争评估范围"}：${esc(row.product_family_label || row.product_form)} · ${fmt(row.family_sample_count)} 个样本</div>` : ""}
-      ${row.source_categories?.length ? `<div class="wb-path">来源：${row.source_categories.map(s => esc(s.name)).join(" / ")}</div>` : ""}
-      <p>${esc(row.opportunity_thesis)}</p><p>${esc(row.validation_flags)}${row.next_action ? "；" + esc(row.next_action) : ""}</p>
-      <div class="wb-path">倒推到仓预算（非报价/利润）：${row.form_landed_cost_ceiling_median !== "" && row.form_landed_cost_ceiling_median != null ? "$" + Number(row.form_landed_cost_ceiling_median).toFixed(2) : "待核实 FBA 费用"} · 数据商费用覆盖 ${Math.round(Number(row.form_fee_coverage || 0) * 100)}%</div>
-      ${row.classification_status === "title_rule" ? '<span class="wb-status">按标题初分，图片与规格待核验</span>' : ""}
+      <div class="wb-reasons">${reasonChips(row)}</div>
+      ${row.opportunity_thesis ? `<p>${esc(L().prose(row.opportunity_thesis))}</p>` : ""}
+      ${nextAction ? `<p class="wb-next"><b>下一步</b>${esc(nextAction)}</p>` : ""}
+      ${scored ? `<div class="wb-metrics"><span>近 18 个月新品达标 <b>${fmt(row.form_new_entrant_success_count)} / ${fmt(row.form_new_entrant_count)}</b></span><span>低评高销 <b>${fmt(row.form_low_review_high_sales_count)}</b></span><span>倒推到仓预算 <b>${row.form_landed_cost_ceiling_median !== "" && row.form_landed_cost_ceiling_median != null ? money(row.form_landed_cost_ceiling_median) : "待核实 FBA 费用"}</b></span>${row.form_top_materials ? `<span>主要材质 <b>${esc(row.form_top_materials)}</b></span>` : ""}</div>` : ""}
+      ${list.length ? `<div class="wb-path">来源类目：${list.map(s => esc(s.name)).join(" / ")}${row.snapshot_id ? ` · 扫描批次 ${esc(row.snapshot_id)}` : ""}</div>` : row.category_path ? `<div class="wb-path" title="${esc(row.category_path)}">来源类目：${esc(L().shortPath(row.category_path, 3))}</div>` : ""}
       <div class="wb-products">${refs.map(ref => productCard(ref.asin, row.product_family_label || row.product_form, `月销 ${fmt(ref.sales)} · 评论 ${fmt(ref.reviews)}`)).join("") || '<span class="wb-empty">暂无通过基础筛选的参考产品</span>'}</div>
       </div></details>`;
   }
 
-  function groupCounts(rows) {
-    const n = state => rows.filter(x => decision(x) === state).length;
-    return `${n("opportunity")} 机会 · ${n("watch") + n("pending")} 待判断 · ${n("reject")} 排除`;
+  const TIERS = [
+    {id: "opportunity", title: "可以进入单品研究", note: "需求、竞争、风险和价格带都通过了。", empty: "这一批没有通过验证的形态。先看下面「值得人工核对」排在前面的几项。"},
+    {id: "watch", title: "值得人工核对", note: "有需求信号，但还差一步证据。按分数从高到低排，点开看原因和下一步。"},
+    {id: "pending", title: "用途待确认", note: "样本的用途或结构不一致，先拆清形态再评分。"},
+    {id: "reject", title: "已排除", note: ""},
+  ];
+
+  function topReasons(rows) {
+    const counts = new Map();
+    rows.forEach(row => L().flags(row.validation_flags).filter(item => item.tone === "hard").slice(0, 1).forEach(item => counts.set(item.text, (counts.get(item.text) || 0) + 1)));
+    return [...counts].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([text, n]) => `${esc(text)} ${n}`).join(" · ");
   }
 
-  function marketMarkup(group, query, selected) {
-    const first = group.rows[0];
-    const byFamily = new Map();
-    group.rows.forEach(row => {
-      const key = row.product_family || `legacy:${row.product_form}`;
-      if (!byFamily.has(key)) byFamily.set(key, []);
-      byFamily.get(key).push(row);
-    });
-    const familyMarkup = ([familyKey, rows]) => {
-      const key = `${group.key}/${familyKey}`;
-      const active = rows.filter(x => decision(x) !== "reject");
-      const rejects = rows.filter(x => decision(x) === "reject");
-      const visibleRejected = query || selected === "Reject category/form";
-      return `<details class="wb-family" data-detail="${esc(key)}" ${query || selected || active.length ? "open" : ""}><summary>${esc(rows[0].product_family_label || rows[0].product_form)} <span class="wb-counts">${groupCounts(rows)} · ${rows.length} 个形态</span>${discardButton("family", rows[0].decision_keys?.family, rows[0].product_family_label || rows[0].product_form)}</summary>
-        ${rows[0].family_sources?.length ? `<div class="wb-path">${rows[0].family_sources.map(s => esc(s.name)).join(" / ")} · 去重后 ${fmt(rows[0].family_sample_count)} 个 ASIN · 跨来源重复 ${fmt(rows[0].family_duplicate_count)} 条${rows[0].family_conflict_count ? ` · ${fmt(rows[0].family_conflict_count)} 个 ASIN 来源数值不一致，按固定来源优先级取一份` : ""}</div>` : ""}
-        ${active.map((row, i) => shape(row, `${key}/active/${i}`, Boolean(query))).join("")}
-        ${rejects.length ? `<details class="wb-rejected" data-detail="${esc(key)}/rejected" ${visibleRejected ? "open" : ""}><summary>已排除形态 ${rejects.length}</summary>${rejects.map((row, i) => shape(row, `${key}/reject/${i}`, Boolean(query))).join("")}</details>` : ""}</details>`;
-    };
-    const families = [...byFamily];
-    const activeFamilies = families.filter(([, rows]) => rows.some(r => decision(r) !== "reject"));
-    const rejectedFamilies = families.filter(([, rows]) => rows.every(r => decision(r) === "reject"));
-    const sources = new Map(group.rows.flatMap(row => (row.family_sources || []).map(s => [s.id, s])));
-    const sampleCount = families.reduce((total, [, rows]) => total + Number(rows[0].family_sample_count || 0), 0);
-    return `<details class="wb-category" data-detail="${esc(group.key)}" ${query || selected || group.rows.some(x => decision(x) !== "reject") ? "open" : ""}>
-      <summary>${esc(first.market_label || first.source_category_name || first.category_path)} <span class="wb-counts">${byFamily.size} 组产品 · ${groupCounts(group.rows)}</span>${discardButton("market", first.decision_keys?.market, first.market_label || first.source_category_name || first.category_path)}</summary>
-      ${sources.size ? `<div class="wb-path">${sources.size} 个来源类目 · ${fmt(sampleCount)} 个去重 ASIN · 扫描批次 ${esc(first.snapshot_id)}<br>来源：${[...sources.values()].map(s => esc(s.name)).join(" / ")}</div>` : `<div class="wb-path">${esc(first.category_path)} · 来源证据未合并</div>`}
-      ${activeFamilies.map(familyMarkup).join("")}
-      ${rejectedFamilies.length ? `<details class="wb-rejected" data-detail="${esc(group.key)}/rejected-families" ${query || selected ? "open" : ""}><summary>已排除产品组 ${rejectedFamilies.length}</summary>${rejectedFamilies.map(familyMarkup).join("")}</details>` : ""}</details>`;
-  }
+  const header = '<div class="wb-row-head" aria-hidden="true"><span>形态</span><span>分数</span><span>平均月销</span><span>评论中位</span><span>价格中位</span><span>样本</span></div>';
 
   function renderShapes(input) {
     data = input;
@@ -117,25 +140,38 @@
     const opened = new Map([...target.querySelectorAll("details[data-detail]")].map(x => [x.dataset.detail, x.open]));
     const query = document.getElementById("shapeSearch").value.trim().toLowerCase();
     const selected = document.getElementById("shapeRecommendation").value;
-    const grouped = new Map();
-    (data.shapeValidation || []).forEach(row => {
-      if (isDiscarded(row)) return;
-      if (selected && row.shape_recommendation !== selected) return;
+    const rows = (data.shapeValidation || []).filter(row => {
+      if (isDiscarded(row)) return false;
+      if (selected && row.shape_recommendation !== selected) return false;
+      if (!query) return true;
       const titleText = references(row).map(ref => known(ref.asin).title).join(" ");
-      const sourceText = (row.source_categories || []).map(s => `${s.name} ${s.path} ${s.id}`).join(" ");
-      if (query && ![row.market_label,row.product_form,row.product_form_label,row.product_family_label,row.source_category_name,row.category_path,row.reference_asins,titleText,sourceText].join(" ").toLowerCase().includes(query)) return;
-      const key = row.market_id || row.source_category_id || row.category_path;
-      if (!grouped.has(key)) grouped.set(key, {key, rows: []});
-      grouped.get(key).rows.push(row);
+      const sourceText = sources(row).map(s => `${s.name} ${s.path} ${s.id}`).join(" ");
+      return [row.market_label,row.product_form,row.product_form_label,row.product_family_label,row.source_category_name,row.category_path,row.reference_asins,titleText,sourceText].join(" ").toLowerCase().includes(query);
     });
-    const groups = [...grouped.values()].sort((a,b) => Number(a.rows[0].category_health_rank || 9999) - Number(b.rows[0].category_health_rank || 9999));
-    const active = groups.filter(group => group.rows.some(row => decision(row) !== "reject"));
-    const rejected = groups.filter(group => group.rows.every(row => decision(row) === "reject"));
-    target.innerHTML = active.map(group => marketMarkup(group, query, selected)).join("") +
-      (rejected.length ? `<details class="wb-rejected" data-detail="all-rejected" ${query || selected ? "open" : ""}><summary>全部形态已排除的产品组 ${rejected.length}</summary>${rejected.map(group => marketMarkup(group, query, selected)).join("")}</details>` : "") || '<div class="wb-empty">没有匹配的产品或形态</div>';
-    if (!query && !selected) target.querySelectorAll("details[data-detail]").forEach(node => { if (opened.has(node.dataset.detail)) node.open = opened.get(node.dataset.detail); });
+    const byTier = new Map(TIERS.map(t => [t.id, []]));
+    rows.forEach(row => byTier.get(decision(row)).push(row));
+    byTier.forEach((list, id) => list.sort((a, b) => id === "pending"
+      ? Number(b.form_count || b.family_sample_count || 0) - Number(a.form_count || a.family_sample_count || 0)
+      : Number(b.shape_score || 0) - Number(a.shape_score || 0)));
+    const filtered = Boolean(query || selected);
+    target.innerHTML = TIERS.map(tier => {
+      const list = byTier.get(tier.id);
+      if (!list.length && (filtered || tier.id !== "opportunity")) return "";
+      const open = filtered || tier.id === "opportunity" || tier.id === "watch";
+      const note = tier.id === "reject" && list.length ? `主要原因：${topReasons(list)}` : tier.note;
+      const body = list.length
+        ? header + list.map((row, i) => shape(row, `shape:${row.decision_keys?.shape || tier.id + i}`, false)).join("")
+        : `<div class="wb-empty">${esc(tier.empty || "暂无")}</div>`;
+      return `<details class="wb-tier ${tier.id}" data-detail="tier:${tier.id}" ${open ? "open" : ""}>
+        <summary><span class="wb-tier-title">${esc(tier.title)}</span><span class="wb-tier-count">${list.length}</span><span class="wb-tier-note">${note}</span></summary>
+        ${body}</details>`;
+    }).join("") || '<div class="wb-empty">没有匹配的形态</div>';
+    if (!filtered) target.querySelectorAll("details[data-detail]").forEach(node => { if (opened.has(node.dataset.detail)) node.open = opened.get(node.dataset.detail); });
+    const visible = state => (data.shapeValidation || []).filter(r => !isDiscarded(r) && decision(r) === state).length;
     const opportunityCount = document.getElementById("visibleShapeOpportunityCount");
-    if (opportunityCount) opportunityCount.textContent = fmt((data.shapeValidation || []).filter(r => !isDiscarded(r) && decision(r) === "opportunity").length);
+    if (opportunityCount) opportunityCount.textContent = fmt(visible("opportunity"));
+    const watchCount = document.getElementById("visibleShapeWatchCount");
+    if (watchCount) watchCount.textContent = fmt(visible("watch"));
     window.dispatchEvent(new Event("amz-dismissals-changed"));
     icons();
   }

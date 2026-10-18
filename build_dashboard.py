@@ -1683,6 +1683,26 @@ def render_options(values: list[str], all_label: str) -> str:
     return "\n".join(options)
 
 
+VERDICT_LABELS = {
+    "Shape opportunity": "可以研究",
+    "Watch shape": "待核对",
+    "Needs classification": "用途待确认",
+    "Needs category Top100": "缺类目 Top100",
+    "Reject category/form": "已排除",
+}
+
+
+def render_verdict_options(values: list[str]) -> str:
+    """Filter options keep the pipeline value but show the Chinese label."""
+    order = list(VERDICT_LABELS)
+    ranked = sorted(values, key=lambda value: order.index(value) if value in order else len(order))
+    options = ['<option value="">全部结论</option>']
+    options.extend(
+        f'<option value="{escape(value)}">{escape(VERDICT_LABELS.get(value, value))}</option>' for value in ranked
+    )
+    return "\n".join(options)
+
+
 def build_html() -> str:
     scoring_cfg = read_json("config/scoring_rules.json")
     discovery_cfg = read_json("config/autodiscovery_rules.json")
@@ -1701,7 +1721,6 @@ def build_html() -> str:
         latest_index_row.sort(key=lambda row: row.get("searched_at", ""), reverse=True)
         if latest_index_row:
             latest_keyword_ranked_rows = normalize_selection(read_csv_reference(latest_index_row[0].get("ranked_csv", "")))
-    seed_archive_rows = normalize_archive(read_csv("archive/opportunity_library.csv"))
     source_shape_rows = read_csv("data/category_shape_validation.csv")
     source_run_ids = {row.get("validation_run_id") for row in source_shape_rows if row.get("validation_run_id")}
     batch_status = ""
@@ -1711,9 +1730,22 @@ def build_html() -> str:
         if manifest and "selected_categories" in manifest:
             quality = run_quality(manifest, load_rules(ROOT))
             label = "历史回放" if manifest.get("data_provider") == "mcp_replay" else "数据批次"
-            batch_status = f'<p class="subtle">{label} {escape(source_run)} · 成功 {manifest.get("successful_categories", 0)}/{manifest.get("selected_categories", 0)} 类目 · 采集时间 {escape(str(manifest.get("finished_at", "")))}</p>'
+            finished_at = str(manifest.get("finished_at", ""))
+            succeeded = manifest.get("successful_categories", 0)
+            selected = manifest.get("selected_categories", 0)
+            batch_status = (
+                f'<div class="batch-line"><span>{label} {escape(source_run)}</span>'
+                f'<span>成功 {succeeded}/{selected} 个类目</span>'
+                f'<span>采集于 {escape(finished_at[:16].replace("T", " "))}</span>'
+                f'<span id="batchFreshness" class="freshness" data-finished="{escape(finished_at)}" data-limit="8"></span></div>'
+                '<div class="audit-warning" id="staleBanner" role="status" hidden><b></b> 每周扫描可能停了或一直失败，'
+                '请看本机日志 <code>logs/weekly_category_scan.latest.log</code>。</div>'
+            )
             if not quality["publishable"]:
-                batch_status += '<p role="status" class="callout">历史批次覆盖不完整，未达到当前发布门槛；不代表完整市场结论。</p>'
+                batch_status += (
+                    f'<div class="audit-warning" role="status"><b>这一批只成功扫描了 {succeeded}/{selected} 个类目，'
+                    '没达到发布门槛。</b>下面的结论只覆盖成功的类目，不代表完整市场。</div>'
+                )
     shape_validation_rows = normalize_shape_validation(build_current_product_groups(ROOT, source_shape_rows))
     archive_source_rows = read_csv("archive/shape_opportunity_library.csv")
     for row in archive_source_rows:
@@ -1725,65 +1757,15 @@ def build_html() -> str:
     product_research_index = read_csv("archive/product_research_index.csv")
     product_research_archive = normalize_product_research_archive(product_research_index, selection_lookup)
     category_research_archive = read_csv("archive/category_research_index.csv")
-    current_research = product_research_archive[0] if product_research_archive else {}
-    current_research_asin = str(current_research.get("asin") or "")
-    current_research_title = str(current_research.get("title") or current_research_asin or "尚无单品研究")
-    current_research_listing_url = str(current_research.get("listing_url") or "")
-    current_research_decision = str(current_research.get("decision") or "历史研究")
-    current_research_reason = str(current_research.get("notes") or current_research.get("decision_reason") or "请结合研究页复核。")
-    current_research_base = f"research/{current_research_asin}" if current_research_asin else ""
-    form_rows = normalize_forms(read_csv(f"{current_research_base}/product_forms.csv")) if current_research_base else []
-    research_keyword_rows = normalize_keywords(read_csv(f"{current_research_base}/keywords.csv")) if current_research_base else []
-    top_product_rows = normalize_top_products(read_csv(f"{current_research_base}/top_products.csv")) if current_research_base else []
-    visual_rows = read_csv(f"{current_research_base}/visual_labels.csv") if current_research_base else []
-    review_rows = read_csv(f"{current_research_base}/reviews.csv") if current_research_base else []
-    review_target_rows = read_csv(f"{current_research_base}/review_targets.csv") if current_research_base else []
-    current_research_business = (
-        read_json(f"{current_research_base}/business_feasibility.json") if current_research_base else {}
-    )
-    current_seed_product = next(
-        (row for row in top_product_rows if row.get("competitor_type") == "seed"),
-        top_product_rows[0] if top_product_rows else {},
-    )
-    current_research_form = str(
-        current_seed_product.get("product_form") or current_research_title or "当前产品形态"
-    )
-    research_report = read_text(f"reports/product_opportunity_research_{current_research_asin}.md") if current_research_asin else ""
-    contact_sheet = WEB_DIR / "research" / "assets" / current_research_asin / "image_contact_sheet.jpg" if current_research_asin else None
-    contact_sheet_html = (
-        f'<img class="contact-sheet" src="research/assets/{escape(current_research_asin)}/image_contact_sheet.jpg" alt="{escape(current_research_asin)} image contact sheet">'
-        if contact_sheet and contact_sheet.is_file()
-        else '<div class="empty">当前研究没有生成主图总览；可在上方按形态查看代表图片。</div>'
-    )
+    # The newest research only seeds the ASIN example; each research has its own page.
+    current_research_asin = str((product_research_archive[0] if product_research_archive else {}).get("asin") or "")
 
-    selection_strategies = tag_list(
-        [{"source_strategy": str(row.get("strategy", ""))} for row in selection_rows], "source_strategy"
-    )
-    selection_category_count = len(
-        {
-            str(
-                row.get("source_category_id")
-                or row.get("source_category_path")
-                or row.get("strategy")
-                or row.get("category")
-                or "ungrouped"
-            )
-            for row in selection_rows
-        }
-    )
-    selection_recommendations = tag_list(
-        [{"recommendation": str(row.get("recommendation", ""))} for row in selection_rows], "recommendation"
-    )
     shape_recommendations = tag_list(
         [{"shape_recommendation": str(row.get("shape_recommendation", ""))} for row in shape_validation_rows],
         "shape_recommendation",
     )
-    gallery_forms = tag_list(
-        [{"visual_product_form": str(row.get("visual_product_form", ""))} for row in top_product_rows],
-        "visual_product_form",
-    )
 
-    shape_archive_active_count = sum(1 for row in shape_archive_rows if row.get("archive_status") in {"active_in_latest_run", "active"})
+    shape_archive_stale_count = sum(1 for row in shape_archive_rows if row.get("archive_status") == "stale_needs_rescan")
     shape_opportunity_count = sum(1 for row in shape_validation_rows if row.get("shape_recommendation") == "Shape opportunity")
     watch_shape_count = sum(1 for row in shape_validation_rows if row.get("shape_recommendation") == "Watch shape")
     validated_category_count = len(
@@ -1801,48 +1783,7 @@ def build_html() -> str:
     if category_report_has_metrics and current_scanned_category_count == 0:
         current_scanned_category_count = len(current_category_rows)
     current_products_examined_label = f"{current_products_examined:,}" if category_report_has_metrics else "未记录"
-    current_products_examined_note = (
-        f"每类目最多 {weekly_products_per_category} 个 Top 产品"
-        if category_report_has_metrics
-        else "历史结果作为轮换基线；下一轮开始记录实际查看数"
-    )
-    visual_label_count = sum(1 for row in visual_rows if row.get("visual_product_form", "").strip())
 
-    pain_points = extract_report_section(research_report, "初步痛点")
-    recommendations = extract_report_section(research_report, "切入建议")
-    next_steps = extract_report_section(research_report, "下一步")
-    single_product_insights = build_single_product_insights(
-        top_product_rows,
-        form_rows,
-        review_rows,
-        review_target_rows,
-        current_research_business,
-    )
-    if not pain_points:
-        pain_points = [
-            str(card.get("headline") or card.get("opportunity") or "")
-            for card in single_product_insights.get("rating_summary", [])
-            if card.get("headline") or card.get("opportunity")
-        ]
-    if not recommendations:
-        recommendations = [
-            f'{card.get("headline")}：{card.get("action")}'
-            for card in single_product_insights.get("conclusions", [])[1:3]
-            if card.get("headline") and card.get("action")
-        ]
-    if not next_steps:
-        next_steps = [
-            str(card.get("action") or "")
-            for card in single_product_insights.get("conclusions", [])
-            if card.get("action")
-        ][:3]
-    form_analysis_cards = build_form_analysis_cards(top_product_rows, form_rows, review_rows)
-    review_text_rows = [row for row in review_rows if str(row.get("review_text", "")).strip()]
-    review_low_count = sum(1 for row in review_text_rows if to_float(row.get("rating")) <= 3)
-    review_high_count = sum(1 for row in review_text_rows if to_float(row.get("rating")) >= 4)
-    review_covered_count = sum(1 for row in review_target_rows if to_float(row.get("review_rows_collected")) > 0)
-    review_form_note = review_form_coverage_note(review_target_rows)
-    review_coverage_table = render_review_coverage(review_target_rows)
     category_research_rows = "\n".join(
         """
         <tr>
@@ -1869,8 +1810,6 @@ def build_html() -> str:
         for row in sorted(category_research_archive, key=lambda item: item.get("researched_at", ""), reverse=True)
     )
     weights = scoring_cfg.get("weights", {})
-    thresholds = scoring_cfg.get("recommendation_thresholds", {})
-    brand_cfg = scoring_cfg.get("brand_moat", {})
     score_formula = " + ".join(
         [
             f"需求 {weights.get('demand', 0) * 100:.0f}%",
@@ -1886,36 +1825,20 @@ def build_html() -> str:
     risk_cfg = scoring_cfg.get("risk", {})
 
     dashboard_data = {
-        "selection": selection_rows,
-        "categoryScanState": category_scan_rows,
         "currentCategoryScan": current_category_rows,
-        "categoryExclusions": exclusion_rows,
         "keywordSearchHistory": keyword_search_rows,
         "latestKeywordResults": latest_keyword_ranked_rows,
-        "seedArchive": seed_archive_rows,
         "shapeValidation": shape_validation_rows,
         "productCatalog": build_catalog(ROOT, source_shape_rows, manual_root=ROOT if os.environ.get("AMZ_WORKFLOW_ROOT") else SOURCE_ROOT),
         "archive": shape_archive_rows,
         "productResearchArchive": product_research_archive,
-        "forms": form_rows,
-        "researchKeywords": research_keyword_rows,
-        "topProducts": top_product_rows,
-        "visualCounts": {
-            "forms": top_counts(visual_rows, "visual_product_form", 8),
-            "materials": top_counts(visual_rows, "visual_material_signal", 8),
-            "packs": top_counts(visual_rows, "visual_pack_count", 8),
-            "closures": top_counts(visual_rows, "visual_closure", 8),
-            "styles": top_counts(visual_rows, "visual_style", 8),
-        },
-        "painPoints": pain_points,
-        "recommendations": recommendations,
-        "nextSteps": next_steps,
     }
 
     data_json = json.dumps(dashboard_data, ensure_ascii=False)
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M")
     workbench_version = hashlib.sha256((WEB_DIR / "workbench.js").read_bytes()).hexdigest()[:12]
     keyword_version = hashlib.sha256((WEB_DIR / "keyword-search.js").read_bytes()).hexdigest()[:12]
+    labels_version = hashlib.sha256((WEB_DIR / "labels.js").read_bytes()).hexdigest()[:12]
     exclusion_table_rows = "\n".join(
         '<tr><td data-label="类目路径匹配"><strong>{term}</strong></td>'
         '<td data-label="风险类型"><span class="pill gray">{kind}</span></td>'
@@ -3233,6 +3156,65 @@ def build_html() -> str:
       input[type="search"] {{ min-width: 100%; }}
     }}
     .legacy-scoring {{ display: none; }}
+    /* Readability pass: decision order, one shared visual rhythm. */
+    .kpi-grid {{ grid-template-columns: repeat(4, minmax(0, 1fr)); }}
+    .kpi-link {{ display: block; color: inherit; border-top: 3px solid var(--line); }}
+    .kpi-link:hover {{ text-decoration: none; border-color: var(--blue); }}
+    .kpi-link.good {{ border-top-color: var(--green); }}
+    .kpi-link.warn {{ border-top-color: #e0a12e; }}
+    .kpi .value small {{ font-size: 14px; font-weight: 500; color: var(--muted); }}
+    .nav a {{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }}
+    .nav-count {{ font-size: 12px; font-weight: 600; color: var(--muted); background: #f1f3f6; border-radius: 999px; padding: 0 8px; }}
+    .nav-foot {{ margin-top: 20px; font-size: 12px; color: var(--muted); }}
+    .batch-line {{ display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin: -6px 0 14px; font-size: 13px; color: var(--muted); }}
+    .freshness {{ font-weight: 700; padding: 1px 8px; border-radius: 999px; }}
+    .freshness.fresh {{ background: #e8f6ef; color: var(--green); }}
+    .freshness.stale {{ background: #ffe9e6; color: var(--red); }}
+    .audit-warning b {{ margin-right: 4px; }}
+    .audit-warning code {{ font-size: 12px; background: rgba(0,0,0,.05); padding: 1px 4px; border-radius: 3px; }}
+    .subsection {{ padding: 6px 0 18px; }}
+    .subsection + .subsection {{ border-top: 1px solid var(--line); padding-top: 16px; }}
+    .subsection-head {{ display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }}
+    .scan-summary {{ display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0 0 14px; font-size: 13px; color: var(--muted); }}
+    .scan-summary b {{ color: var(--text); font-size: 15px; }}
+    .health-table .title-cell {{ min-width: 220px; }}
+    .health-table .rank {{ display: inline-block; min-width: 34px; color: var(--muted); font-size: 12px; }}
+    .health-table tr.failed td {{ color: var(--muted); }}
+    .issues {{ min-width: 160px; }}
+    .issue {{ display: inline-block; font-size: 12px; margin: 0 4px 4px 0; padding: 1px 6px; border-radius: 3px; background: #eef0f3; color: #4b5563; }}
+    .issue.hard {{ background: #ffe9e6; color: var(--red); }}
+    .issue.ok {{ background: transparent; color: var(--muted); padding: 0; }}
+    .table-more {{ text-align: center; margin: 10px 0 4px; }}
+    .fold {{ border-top: 1px solid var(--line); padding: 4px 0; }}
+    .fold > summary {{ cursor: pointer; font-weight: 600; padding: 10px 2px; }}
+    .fold[open] > summary {{ margin-bottom: 6px; }}
+    .fold .formula-grid {{ margin-top: 6px; }}
+    .verdict-list {{ list-style: none; padding: 0; margin: 14px 0 6px; display: grid; gap: 8px; }}
+    .verdict-list .pill {{ margin-right: 8px; min-width: 76px; text-align: center; }}
+    .pool-group {{ border-top: 1px solid var(--line); padding: 12px 0 4px; }}
+    .pool-group:first-child {{ border-top: 0; }}
+    .pool-group-head strong {{ display: block; font-size: 15px; }}
+    .pool-group-head .muted-small {{ margin-top: 0; }}
+    .pool-row {{ display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px 18px; align-items: start; padding: 12px 0; border-bottom: 1px solid #eef1f5; }}
+    .pool-row:last-child {{ border-bottom: 0; }}
+    .pool-row-title {{ display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }}
+    .pool-row-title b {{ font-size: 14px; }}
+    .pool-row-main p {{ margin: 6px 0 2px; font-size: 13px; line-height: 1.6; }}
+    .pool-note {{ color: var(--orange); }}
+    .muted-inline {{ font-size: 12px; color: var(--muted); }}
+    .pool-row-stats {{ display: flex; gap: 18px; }}
+    .pool-row-stats span {{ display: grid; text-align: right; }}
+    .pool-row-stats small {{ font-size: 11px; color: var(--muted); }}
+    .pool-row-stats b {{ font-variant-numeric: tabular-nums; }}
+    .decision-cell {{ min-width: 220px; }}
+    .clamp {{ display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }}
+    @media (max-width: 1100px) {{
+      .kpi-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+    }}
+    @media (max-width: 760px) {{
+      .pool-row {{ grid-template-columns: minmax(0, 1fr); }}
+      .pool-row-stats span {{ text-align: left; }}
+    }}
   </style>
 </head>
 <body>
@@ -3240,203 +3222,80 @@ def build_html() -> str:
     <aside class="sidebar">
       <div class="brand">
         <strong>AMZ 选品自动化</strong>
-        <span>从挖掘到单品机会研究</span>
+        <span>类目扫描 → 形态验证 → 单品研究</span>
       </div>
       <nav class="nav">
         <a href="#overview">总览</a>
-        <a href="#discovery">本周类目</a>
-        <a href="#category-coverage">扫描覆盖</a>
+        <a href="#shape-validation">形态机会<span class="nav-count">{shape_opportunity_count} · {watch_shape_count}</span></a>
+        <a href="#archive">机会池<span class="nav-count">{len(shape_archive_rows)}</span></a>
+        <a href="#research-archive">研究档案<span class="nav-count">{len(product_research_archive)}</span></a>
         <a href="#keyword-search">关键词选品</a>
-        <a href="#shape-validation">候选验证</a>
-        <a href="#research-workbench">收藏与研究</a>
-        <a href="#archive">机会池</a>
-        <a href="#category-research-archive">类目研究档案</a>
-        <a href="#research-archive">单品研究档案</a>
-        <a href="#research">当前单品研究</a>
-        <a href="#logic">生成逻辑</a>
-        <a href="#weekly-scan">每周扫描</a>
-        <a href="#next">下一步</a>
+        <a href="#discovery">扫描明细</a>
+        <a href="#logic">规则说明</a>
       </nav>
+      <p class="nav-foot">页面生成于 {escape(generated_at)}</p>
     </aside>
 
     <main class="main">
       <div class="topbar" id="overview">
         <div>
           <h1>Amazon US 选品工作台</h1>
-          <div class="subtle">候选品、竞品结构、图片识别、材质判断、切入建议集中展示</div>
+          <div class="subtle">每周扫描最小类目，把 Top100 拆成产品形态，只留下个人卖家能做的形态。</div>
         </div>
-        <div class="timestamp">生成时间：{escape(generated_at)}</div>
       </div>
 
       {batch_status}
       {coverage_warning_html}
 
       <div class="kpi-grid">
-        <div class="kpi">
-          <div class="label">成功扫描类目</div>
-          <div class="value">{current_scanned_category_count}</div>
-          <div class="note">计划每周约 {weekly_category_target} 个最小类目</div>
-        </div>
-        <div class="kpi">
-          <div class="label">已完成形态验证</div>
-          <div class="value">{validated_category_count}</div>
-          <div class="note">共拆出 {len(shape_validation_rows)} 个产品形态</div>
-        </div>
-        <div class="kpi">
-          <div class="label">继续观察形态</div>
-          <div class="value">{watch_shape_count}</div>
-          <div class="note">有信号但证据、竞争或价格带尚不充分</div>
-        </div>
-        <div class="kpi">
-          <div class="label">通过验证机会</div>
+        <a class="kpi kpi-link good" href="#shape-validation">
+          <div class="label">可以进入单品研究</div>
           <div class="value" id="visibleShapeOpportunityCount">{shape_opportunity_count}</div>
-          <div class="note">当前跨来源归组重算结果</div>
-        </div>
-        <div class="kpi">
-          <div class="label">机会池档案</div>
-          <div class="value">{len(shape_archive_rows)}</div>
-          <div class="note">最近归档时有效 {shape_archive_active_count} 个，历史快照</div>
-        </div>
+          <div class="note">需求、竞争、风险、价格带全部通过的形态</div>
+        </a>
+        <a class="kpi kpi-link warn" href="#shape-validation">
+          <div class="label">值得人工核对</div>
+          <div class="value" id="visibleShapeWatchCount">{watch_shape_count}</div>
+          <div class="note">有需求信号，还差一步证据</div>
+        </a>
+        <a class="kpi kpi-link" href="#archive">
+          <div class="label">机会池待复扫</div>
+          <div class="value">{shape_archive_stale_count}<small> / {len(shape_archive_rows)}</small></div>
+          <div class="note">历史机会，需要新一轮数据确认</div>
+        </a>
+        <a class="kpi kpi-link" href="#discovery">
+          <div class="label">本批成功扫描</div>
+          <div class="value">{current_scanned_category_count}<small> / {len(current_category_rows) or weekly_category_target} 类目</small></div>
+          <div class="note">拆出 {len(shape_validation_rows)} 个形态，验证 {validated_category_count} 个类目</div>
+        </a>
       </div>
-
-      <section id="discovery">
-        <div class="section-head">
-          <div>
-            <h2>本周类目健康度</h2>
-            <p>这里直接展示本轮所有成功扫描的最小类目。健康度只负责决定验证顺序；每个类目仍会拆成全部产品形态，只有通过需求、竞争、产品风险和价格带检查的形态才进入机会池。</p>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>排名 / 最小类目</th>
-                <th class="num">健康度</th>
-                <th class="num">Top 产品</th>
-                <th class="num">类目月销</th>
-                <th class="num">评论中位</th>
-                <th class="num">Top10 评论</th>
-                <th>头部品牌</th>
-                <th class="num">低评高销</th>
-                <th class="num">新进入者</th>
-                <th>主要问题</th>
-              </tr>
-            </thead>
-            <tbody id="categoryHealthBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="category-coverage">
-        <div class="section-head">
-          <div>
-            <h2>类目扫描覆盖</h2>
-            <p>每周优先选择从未扫描的最小类目；全部覆盖后，再按最久未扫描排序复查。明确属于大件、强合规、强专利/品牌垄断或高责任风险的类目永久跳过，不占每周配额。</p>
-          </div>
-        </div>
-        <div class="next-grid">
-          <div class="next-block">
-            <h3>累计已扫描</h3>
-            <div class="metric-summary"><strong>{len(category_scan_rows)}</strong><span>按 Category ID 去重并长期保留状态</span></div>
-          </div>
-          <div class="next-block">
-            <h3>当前轮次</h3>
-            <div class="metric-summary"><strong>{len(current_category_rows)}</strong><span>新类目 {current_new_category_count} · 到期复扫 {current_rescan_count}</span></div>
-          </div>
-          <div class="next-block">
-            <h3>本轮查看产品</h3>
-            <div class="metric-summary"><strong>{current_products_examined_label}</strong><span>{current_products_examined_note}</span></div>
-          </div>
-        </div>
-        <h3 style="margin-top: 18px;">当前轮次类目</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>最小类目</th><th>轮换原因</th><th class="num">查看产品</th><th class="num">初筛候选</th><th>上次扫描</th></tr></thead>
-            <tbody id="currentCategoryScanBody"></tbody>
-          </table>
-        </div>
-        <h3 id="category-review-rules" style="margin-top: 18px;">逐产品验证的类目</h3>
-        <div class="table-wrap">
-          <table class="policy-table">
-            <thead><tr><th>类目范围</th><th>保留评估</th><th>仍需排除</th></tr></thead>
-            <tbody>{review_category_table_rows}</tbody>
-          </table>
-        </div>
-        <h3 style="margin-top: 18px;">类目预筛排除规则</h3>
-        <div class="table-wrap">
-          <table class="policy-table">
-            <thead><tr><th>类目路径匹配</th><th>风险类型</th><th>不再重复扫描的原因</th></tr></thead>
-            <tbody>{exclusion_table_rows or '<tr><td colspan="3"><div class="empty">还没有类目预筛排除规则。</div></td></tr>'}</tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="keyword-search">
-        <details><summary>待确认排除类目（{len(proposals)}）</summary><div class="table-wrap"><table><thead><tr><th>类目</th><th>排除比例</th><th>产品级原因</th></tr></thead><tbody>{proposal_rows}</tbody></table></div></details>
-        <div class="section-head">
-          <div>
-            <h2>关键词选品</h2>
-            <p>输入你关心的关键词后，通过 Sorftime 搜索最多 100 个相关产品并按同一套个人卖家标准初筛。关键词结果只是候选入口，仍需通过最小类目和产品形态验证后才能进入正式机会池。</p>
-          </div>
-        </div>
-        <form id="keywordSearchForm" class="controls">
-          <input id="keywordSearchInput" type="search" required maxlength="200" aria-label="搜索关键词" placeholder="输入关键词，例如 bread storage bag">
-          <button id="keywordSearchSubmit" type="submit" disabled title="通过 Sorftime 搜索，最多 5 次数据调用"><i data-lucide="search" aria-hidden="true"></i><span>开始搜索</span></button>
-        </form>
-        <div id="keywordSearchStatus" role="status" aria-live="polite"></div>
-        <div id="keywordSearchJobs"></div>
-        <h3>搜索档案</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>关键词</th><th>搜索时间</th><th class="num">相关产品</th><th class="num">通过基础过滤</th><th class="num">Go / Watch</th><th class="num">最高分</th><th>档案</th></tr></thead>
-            <tbody id="keywordSearchHistoryBody"></tbody>
-          </table>
-        </div>
-        <h3 id="keywordResultsHeading" style="margin-top: 18px;">最近一次关键词结果</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>产品</th><th class="num">分数</th><th>结论</th><th class="num">月销</th><th class="num">评论</th><th class="num">售价</th><th>风险</th></tr></thead>
-            <tbody id="keywordResultBody"></tbody>
-          </table>
-        </div>
-      </section>
 
       <section id="shape-validation">
         <div class="section-head">
           <div>
-            <h2>产品与形态验证</h2>
+            <h2>形态机会</h2>
+            <p>机会对象是「某个类目里的某种产品形态」，不是单个 listing。先看第一组；没有的话，看第二组排在前面的几项。点开一行看原因、下一步和参考 ASIN。</p>
           </div>
         </div>
         <div class="controls">
           <input id="shapeSearch" type="search" placeholder="搜索形态 / 类目 / 参考 ASIN">
-          <select id="shapeRecommendation">{render_options(shape_recommendations, "全部结论")}</select>
+          <select id="shapeRecommendation">{render_verdict_options(shape_recommendations)}</select>
         </div>
         <div class="shape-list" id="shapeValidationList"></div>
-      </section>
-
-      <section id="research-workbench">
-        <div class="section-head"><h2>收藏与研究</h2><span id="workbenchConnection" role="status">连接中</span></div>
-        <div class="workbench-tabs" role="tablist" aria-label="收藏与研究">
-          <button type="button" role="tab" aria-selected="true" data-workbench-tab="favorites">收藏 <span id="favoriteCount">0</span></button>
-          <button type="button" role="tab" aria-selected="false" data-workbench-tab="jobs">研究队列 <span id="jobCount">0</span></button>
-          <button type="button" role="tab" aria-selected="false" data-workbench-tab="dismissals">已舍弃 <span id="dismissalCount">0</span></button>
-        </div>
-        <div id="workbenchNotice" role="status" aria-live="polite"></div>
-        <div id="workbenchBody"></div>
       </section>
 
       <section id="archive">
         <div class="section-head">
           <div>
-            <h2>机会池历史档案</h2>
-            <p>来源类目验证快照；保留归档时的结论与参考 ASIN。当前跨来源重算结果见产品与形态验证。</p>
+            <h2>机会池</h2>
+            <p>曾经通过验证的形态都留在这里，不会被每周更新覆盖。默认只看还有效和待复扫的；失效、舍弃和拦截的可以从右侧筛选里找回。</p>
           </div>
         </div>
         <div class="controls">
-          <input id="archiveSearch" type="search" placeholder="搜索机会 / ASIN / 类目">
+          <input id="archiveSearch" type="search" placeholder="搜索形态 / ASIN / 类目">
           <select id="archiveStatus">
-            <option value="">全部状态</option>
             <option value="current" selected>有效与待复扫</option>
+            <option value="">全部状态</option>
             <option value="active">历史验证有效</option>
             <option value="active_in_latest_run">本轮验证有效</option>
             <option value="stale_needs_rescan">待复扫</option>
@@ -3445,564 +3304,309 @@ def build_html() -> str:
             <option value="suppressed_by_user">人工舍弃</option>
             <option value="rejected_by_research">研究拦截</option>
             <option value="seasonal_confirmed">季节风险待复核</option>
-            <option value="not_in_latest_run">未在最近归档轮次出现</option>
-            <option value="invalidated_by_rule">已被新规则判定失效</option>
+            <option value="not_in_latest_run">最近一轮未出现</option>
+            <option value="invalidated_by_rule">新规则判定失效</option>
           </select>
         </div>
         <div class="opportunity-pool" id="archiveBody"></div>
       </section>
 
-      <section id="category-research-archive">
-        <div class="section-head">
-          <div>
-            <h2>类目深度研究档案</h2>
-            <p>把最小类目 Top100、形态结构、关键词趋势和多 ASIN 评论合并分析。类目结论不会直接改写机会池，仍需从通过验证的具体形态中选择单品。</p>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>类目</th><th>整体判断</th><th>优先形态</th><th class="num">Top 产品</th><th class="num">原始评论</th><th>研究时间</th><th>入口</th></tr></thead>
-            <tbody>{category_research_rows or '<tr><td colspan="7"><div class="empty">还没有类目深度研究档案。</div></td></tr>'}</tbody>
-          </table>
-        </div>
-      </section>
-
       <section id="research-archive">
         <div class="section-head">
           <div>
-            <h2>单品研究入口和档案</h2>
-            <p>这里保留所有做过的研究，包括已淘汰产品；它是历史档案，不等于当前推荐。请先看“结论”和原因，再决定是否打开研究页。</p>
-          </div>
-        </div>
-        <div class="controls">
-          <input id="productResearchAsin" type="search" placeholder="输入 ASIN，例如 {escape(current_research_asin or 'B0FXG8J58Q')}">
-          <button id="productResearchOpen" type="button">打开已有研究</button>
-          <button id="productResearchCommand" type="button">生成研究命令</button>
-        </div>
-        <div id="productResearchHint" class="empty" style="display: none; margin-bottom: 12px;"></div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>研究产品</th>
-                <th>主形态</th>
-                <th>结论</th>
-                <th class="num">产品池</th>
-                <th class="num">形态</th>
-                <th class="num">评论</th>
-                <th>最近研究</th>
-                <th>入口</th>
-              </tr>
-            </thead>
-            <tbody id="productResearchArchiveBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="research">
-        <div class="section-head">
-          <div>
-            <h2>当前单品研究：{escape(short_title(current_research_title, 90))}</h2>
-            <p><strong>当前结论：{escape(current_research_decision)}。</strong> {escape(current_research_reason)}</p>
-            <p>后续你可以指定任意 ASIN 开同样的研究页；系统会优先补它所在最小类目 Top100，再把形态、材质、套装、图片、评论痛点和切入方向一起存档。</p>
-          </div>
-          <a class="pill green" href="{escape(current_research_listing_url)}" target="_blank" rel="noreferrer">打开目标 Listing</a>
-        </div>
-
-        <div class="insight-section">
-          <h3>评论覆盖</h3>
-          <p>{escape(str(single_product_insights["review_source_note"]))}</p>
-          <div class="review-strip">
-            <div class="review-stat"><span>已跑 ASIN</span><strong>{len(review_target_rows)}</strong></div>
-            <div class="review-stat"><span>有评论返回</span><strong>{review_covered_count}</strong></div>
-            <div class="review-stat"><span>已读评论正文</span><strong>{len(review_text_rows)}</strong></div>
-            <div class="review-stat"><span>低星 / 高星</span><strong>{review_low_count} / {review_high_count}</strong></div>
-          </div>
-          {review_coverage_table}
-        </div>
-
-        <div class="form-photo-overview">
-          <h3>产品形态照片总览</h3>
-          <p>先用图片建立类目地图：每个形态展示 1-2 个代表 listing，下面再看销量、评论和切入判断。</p>
-          {render_form_photo_overview(form_analysis_cards)}
-        </div>
-
-        <div class="research-layout">
-          <div>
-            <h3>产品形态拆分</h3>
-            <div class="table-wrap" style="margin-top: 10px;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>形态</th>
-                    <th class="num">数量</th>
-                    <th class="num">直接/关键词</th>
-                    <th class="num">均价</th>
-                    <th class="num">月销均值</th>
-                    <th class="num">评论中位数</th>
-                    <th>材质 / 套装</th>
-                    <th>机会备注</th>
-                  </tr>
-                </thead>
-                <tbody id="formsBody"></tbody>
-              </table>
-            </div>
-          </div>
-          <div>
-            <h3>视觉识别摘要</h3>
-            <div class="count-grid" id="visualCounts" style="margin-top: 10px;"></div>
+            <h2>研究档案</h2>
+            <p>做过的单品研究和类目研究都在这里，包括已淘汰的。先看结论和原因，再决定要不要打开研究页。</p>
           </div>
         </div>
 
-        <div class="form-analysis-section">
-          <h3>按产品形态拆解：特征 / 评论 / 切入</h3>
-          <p>每个形态下面直接合并产品维度、评论信号和可执行切入方向。{escape(review_form_note)}</p>
-          {render_form_analysis_cards(form_analysis_cards)}
-        </div>
-
-        <div class="insight-section">
-          <h3>整体机会结论</h3>
-          <p>先看各形态卡片里的切入判断，再用这里做总体决策。机会不是“{escape(current_research_form)} 这个词能卖”，而是从材质、规格、配件、视觉和用户痛点里找到更具体的切入点。</p>
-          <div class="insight-grid">
-            {render_insight_cards(single_product_insights["conclusions"])}
+        <div id="research-workbench" class="subsection">
+          <div class="subsection-head"><h3>收藏与研究队列</h3><span id="workbenchConnection" role="status">连接中</span></div>
+          <div class="workbench-tabs" role="tablist" aria-label="收藏与研究">
+            <button type="button" role="tab" aria-selected="true" data-workbench-tab="favorites">收藏 <span id="favoriteCount">0</span></button>
+            <button type="button" role="tab" aria-selected="false" data-workbench-tab="jobs">研究队列 <span id="jobCount">0</span></button>
+            <button type="button" role="tab" aria-selected="false" data-workbench-tab="dismissals">已舍弃 <span id="dismissalCount">0</span></button>
           </div>
+          <div id="workbenchNotice" role="status" aria-live="polite"></div>
+          <div id="workbenchBody"></div>
         </div>
 
-        <div style="margin-top: 18px;">
-          <h3>关键词与需求入口</h3>
-          <div class="table-wrap" style="margin-top: 10px;">
+        <div class="subsection">
+          <div class="subsection-head"><h3>单品研究</h3><span class="subtle">{len(product_research_archive)} 个</span></div>
+          <div class="controls">
+            <input id="productResearchAsin" type="search" placeholder="输入 ASIN 查找，例如 {escape(current_research_asin or 'B0FXG8J58Q')}">
+            <button id="productResearchOpen" type="button">打开已有研究</button>
+            <button id="productResearchCommand" type="button">生成研究命令</button>
+          </div>
+          <div id="productResearchHint" class="empty" style="display: none; margin-bottom: 12px;"></div>
+          <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>关键词</th>
-                  <th class="num">搜索量</th>
-                  <th class="num">90天点击</th>
-                  <th class="num">展示份额</th>
-                  <th>Top3 ASIN</th>
+                  <th>研究产品</th>
+                  <th>主形态</th>
+                  <th>结论</th>
+                  <th class="num">形态</th>
+                  <th class="num">评论</th>
+                  <th>最近研究</th>
+                  <th>入口</th>
                 </tr>
               </thead>
-              <tbody id="researchKeywordBody"></tbody>
+              <tbody id="productResearchArchiveBody"></tbody>
             </table>
           </div>
         </div>
 
-        <div style="margin-top: 18px;">
-          <div class="section-head" style="margin-bottom: 0;">
-            <div>
-              <h3>图片识别产品池</h3>
-              <p>材质由标题、属性、描述和详情文本综合判断；视觉标签来自主图识别。</p>
-            </div>
+        <div class="subsection" id="category-research-archive">
+          <div class="subsection-head"><h3>类目深度研究</h3><span class="subtle">{len(category_research_archive)} 个</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>类目</th><th>整体判断</th><th>优先形态</th><th class="num">Top 产品</th><th class="num">原始评论</th><th>研究时间</th><th>入口</th></tr></thead>
+              <tbody>{category_research_rows or '<tr><td colspan="7"><div class="empty">还没有类目深度研究档案。</div></td></tr>'}</tbody>
+            </table>
           </div>
-          <div class="gallery-controls">
-            <select id="galleryForm">{render_options(gallery_forms, "全部视觉形态")}</select>
-            <input id="gallerySearch" type="search" placeholder="搜索 ASIN / 标题 / 材质 / 风格">
-          </div>
-          <div class="gallery" id="productGallery"></div>
         </div>
+      </section>
 
-        <div style="margin-top: 18px;">
-          <h3>主图总览</h3>
-          {contact_sheet_html}
+      <section id="keyword-search">
+        <div class="section-head">
+          <div>
+            <h2>关键词选品</h2>
+            <p>已经有方向时用这里：通过 Sorftime 搜最多 100 个相关产品，按同一套个人卖家标准初筛。结果只是候选，仍要过类目和形态验证才能进机会池。</p>
+          </div>
         </div>
+        <form id="keywordSearchForm" class="controls">
+          <input id="keywordSearchInput" type="search" required maxlength="200" aria-label="搜索关键词" placeholder="输入关键词，例如 bread storage bag">
+          <button id="keywordSearchSubmit" type="submit" disabled title="通过 Sorftime 搜索，最多 5 次数据调用"><i data-lucide="search" aria-hidden="true"></i><span>开始搜索</span></button>
+        </form>
+        <div id="keywordSearchStatus" role="status" aria-live="polite"></div>
+        <div id="keywordSearchJobs"></div>
+        <h3>搜索记录</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>关键词</th><th>搜索时间</th><th class="num">相关产品</th><th class="num">通过基础过滤</th><th class="num">可研究 / 待核对</th><th class="num">最高分</th><th>档案</th></tr></thead>
+            <tbody id="keywordSearchHistoryBody"></tbody>
+          </table>
+        </div>
+        <h3 id="keywordResultsHeading" style="margin-top: 18px;">最近一次关键词结果</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>产品</th><th class="num">分数</th><th>结论</th><th class="num">月销</th><th class="num">评论</th><th class="num">售价</th><th>原因</th></tr></thead>
+            <tbody id="keywordResultBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="discovery">
+        <div class="section-head">
+          <div>
+            <h2>扫描明细</h2>
+            <p>本批扫描的类目按健康度排序。健康度只决定验证顺序，不决定能不能做；能不能做看上面的形态结论。</p>
+          </div>
+        </div>
+        <div class="scan-summary" id="category-coverage">
+          <span>累计已扫描 <b>{len(category_scan_rows)}</b> 个类目</span>
+          <span>本批 <b>{len(current_category_rows)}</b> 个（新类目 {current_new_category_count} · 到期复扫 {current_rescan_count}）</span>
+          <span>成功 <b>{current_scanned_category_count}</b> 个</span>
+          <span>查看产品 <b>{current_products_examined_label}</b></span>
+          <span>永久跳过规则 <b>{len(exclusion_rows)}</b> 条</span>
+        </div>
+        <div class="table-wrap">
+          <table class="health-table">
+            <thead>
+              <tr>
+                <th>类目</th>
+                <th class="num">健康度</th>
+                <th class="num">类目月销</th>
+                <th class="num">评论中位</th>
+                <th class="num">Top10 评论</th>
+                <th>头部品牌</th>
+                <th class="num">低评高销</th>
+                <th class="num">新进入者</th>
+                <th>问题</th>
+              </tr>
+            </thead>
+            <tbody id="categoryHealthBody"></tbody>
+          </table>
+        </div>
+        <div class="table-more"><button type="button" id="categoryHealthMore" hidden></button></div>
+
+        <details class="fold">
+          <summary>永久跳过的类目规则（{len(exclusion_rows)}）</summary>
+          <p class="subtle">明确属于大件、强合规、强专利 / 品牌垄断或高责任风险的类目，以后不再占每周配额。</p>
+          <div class="table-wrap">
+            <table class="policy-table">
+              <thead><tr><th>类目路径匹配</th><th>风险类型</th><th>原因</th></tr></thead>
+              <tbody>{exclusion_table_rows or '<tr><td colspan="3"><div class="empty">还没有类目预筛排除规则。</div></td></tr>'}</tbody>
+            </table>
+          </div>
+        </details>
+        <details class="fold" id="category-review-rules">
+          <summary>逐个产品检查的类目</summary>
+          <p class="subtle">这些类目不整体跳过，但其中的高风险产品会在形态验证时逐个排除。</p>
+          <div class="table-wrap">
+            <table class="policy-table">
+              <thead><tr><th>类目范围</th><th>保留评估</th><th>仍需排除</th></tr></thead>
+              <tbody>{review_category_table_rows}</tbody>
+            </table>
+          </div>
+        </details>
+        <details class="fold">
+          <summary>待确认的排除类目建议（{len(proposals)}）</summary>
+          <div class="table-wrap"><table><thead><tr><th>类目</th><th>排除比例</th><th>产品级原因</th></tr></thead><tbody>{proposal_rows or '<tr><td colspan="3"><div class="empty">没有待确认的建议。</div></td></tr>'}</tbody></table></div>
+        </details>
       </section>
 
       <section id="logic">
         <div class="section-head">
           <div>
-            <h2>生成逻辑和筛选标准</h2>
-            <p>这部分对应整个流程背后的判断口径，避免只看到分数看不到原因。</p>
+            <h2>规则说明</h2>
+            <p>判断口径都在这里，平时不用展开；对某个结论有疑问时再来查。</p>
           </div>
         </div>
-        <div class="logic-grid">
-          <div class="logic-block scoring-wide">
-            <h3>新版判断链路</h3>
-            <p class="subtle" style="margin: 6px 0 0;">现在不再把“某个 listing 看起来不错”直接当机会。完整判断对象是：一个最小类目里的某个产品形态。</p>
-            <div class="formula-grid">
-              <div class="formula-card">
-                <strong>1</strong>
-                <span><b>类目扫描：</b>每周轮换约 {weekly_category_target} 个最小类目，每类目读取完整 Top 产品数据；失败类目单独记录，不伪装成零机会。</span>
-              </div>
-              <div class="formula-card">
-                <strong>2</strong>
-                <span><b>类目健康度：</b>用评论墙、头部集中、新进入者、低评高销、需求与数据完整性排序，健康度只决定验证顺序。</span>
-              </div>
-              <div class="formula-card">
-                <strong>3</strong>
-                <span><b>产品形态验证：</b>类目内全部形态独立检查需求、竞争、价格带，并剔除大件、易碎、合规、品牌和标题硬排除产品。</span>
-              </div>
-              <div class="formula-card">
-                <strong>4</strong>
-                <span><b>机会池：</b>只有形态通过才入档，并保存 1-3 个参考 ASIN。旧机会不会被周更覆盖，会保留历史。</span>
-              </div>
-              <div class="formula-card">
-                <strong>5</strong>
-                <span><b>单品研究：</b>通过后的形态才继续读评论、看图片、拆材质规格和切入方向。</span>
-              </div>
-            </div>
-            <ul>
-              <li><b>Shape opportunity：</b>有完整最小类目 Top 产品数据，形态通过需求、评论、低评高销、产品排除和价格带检查，才进入机会池。</li>
-              <li><b>Watch shape：</b>相邻形态或数据不错但还不够确定，只保留观察，不当作当前主机会。</li>
-              <li><b>Needs category Top100：</b>只用于手动 ASIN 或历史兼容入口缺少类目数据的情况，不属于每周自动主链路。</li>
-              <li><b>Reject category/form：</b>类目或形态存在评论墙、头部品牌集中、低评高销缺口不足、大件/高风险等问题。</li>
-            </ul>
+        <details class="fold" open>
+          <summary>判断链路：从类目到单品</summary>
+          <div class="formula-grid">
+            <div class="formula-card"><strong>1</strong><span><b>类目扫描：</b>每周轮换约 {weekly_category_target} 个最小类目，每个类目读 Top {weekly_products_per_category}；失败的类目单独记录，不当成「没机会」。</span></div>
+            <div class="formula-card"><strong>2</strong><span><b>类目健康度：</b>评论墙、头部集中、新进入者、低评高销、需求和数据完整性，只决定验证顺序。</span></div>
+            <div class="formula-card"><strong>3</strong><span><b>形态验证：</b>类目里每个形态单独检查需求、竞争、价格带，先剔除大件、易碎、合规、品牌和标题排除品。</span></div>
+            <div class="formula-card"><strong>4</strong><span><b>机会池：</b>只有通过的形态才入档，带 1–3 个参考 ASIN；历史机会不会被覆盖。</span></div>
+            <div class="formula-card"><strong>5</strong><span><b>单品研究：</b>从通过的形态里挑 ASIN，读评论、看图片、拆材质规格、找切入方向。</span></div>
           </div>
-          <div class="logic-block scoring-wide legacy-scoring">
-            <h3>种子粗筛分怎么算</h3>
-            <p class="subtle" style="margin: 6px 0 0;">当前公式：{escape(score_formula)}。这个分数只负责找入口，不是最终机会分。所有子项先转成 0-100 分，再按权重合并。</p>
-            <p class="subtle" style="margin: 6px 0 0;">正向指标按“低于下限=0，高于上限=100，中间线性换算”；反向指标按“好值以下=100，坏值以上=0，中间线性扣分”。</p>
-            <div class="formula-grid">
-              <div class="formula-card">
-                <strong>{weights.get('demand', 0) * 100:.0f}%</strong>
-                <span>需求：月销量 {demand_cfg.get('est_monthly_sales', {}).get('min', 0)}-{demand_cfg.get('est_monthly_sales', {}).get('max', 0)}、关键词搜索量 {demand_cfg.get('keyword_search_volume', {}).get('min', 0)}-{demand_cfg.get('keyword_search_volume', {}).get('max', 0)}</span>
-              </div>
-              <div class="formula-card">
-                <strong>{weights.get('competition', 0) * 100:.0f}%</strong>
-                <span>竞争：评论数越低越好，{competition_cfg.get('avg_review_count', {}).get('good', 0)} 以下好，{competition_cfg.get('avg_review_count', {}).get('bad', 0)} 以上差；Top10 集中度和 CPC 越低越好</span>
-              </div>
-              <div class="formula-card">
-                <strong>{weights.get('profitability', 0) * 100:.0f}%</strong>
-                <span>利润：毛利率 {profit_cfg.get('gross_margin', {}).get('min', 0) * 100:.0f}%-{profit_cfg.get('gross_margin', {}).get('max', 0) * 100:.0f}%、单件毛利 ${profit_cfg.get('gross_profit_per_unit', {}).get('min', 0):,.0f}-${profit_cfg.get('gross_profit_per_unit', {}).get('max', 0):,.0f}、月毛利 ${profit_cfg.get('monthly_gross_profit', {}).get('min', 0):,.0f}-${profit_cfg.get('monthly_gross_profit', {}).get('max', 0):,.0f}</span>
-              </div>
-              <div class="formula-card">
-                <strong>{weights.get('differentiation', 0) * 100:.0f}%</strong>
-                <span>差异化：早期默认给基础分，后续靠竞品形态、评论痛点、图片识别和供应商方案修正</span>
-              </div>
-              <div class="formula-card">
-                <strong>{weights.get('risk_control', 0) * 100:.0f}%</strong>
-                <span>风险控制：合规 {risk_cfg.get('compliance_risk', 0) * 100:.0f}%、易碎 {risk_cfg.get('fragile_risk', 0) * 100:.0f}%、大件 {risk_cfg.get('oversize_risk', 0) * 100:.0f}%、季节性 {risk_cfg.get('seasonality_score', 0) * 100:.0f}%</span>
-              </div>
-            </div>
-            <div class="table-wrap" style="margin-top: 14px;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>字段</th>
-                    <th>在总分里</th>
-                    <th>当前阈值</th>
-                    <th>怎么理解</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><b>月销量</b></td>
-                    <td>需求分的 75%，总分约 11.25%</td>
-                    <td>50 以下=0 分；100 约 11 分；200 约 33 分；300 约 56 分；500 以上=100 分</td>
-                    <td>个人卖家口径里，100+ 算有基础需求，300+ 已经值得看，500+ 就给满分。高于 500 不继续加分，避免只追高销量红海。</td>
-                  </tr>
-                  <tr>
-                    <td><b>关键词搜索量</b></td>
-                    <td>需求分的 25%，总分约 3.75%</td>
-                    <td>300 以下=0 分；1,000 约 4 分；5,000 约 24 分；10,000 约 49 分；20,000 以上=100 分</td>
-                    <td>搜索量只做辅助，不让大词绑架决策。对个人卖家来说，精准小词比泛大词更重要。</td>
-                  </tr>
-                  <tr>
-                    <td><b>平均评论数</b></td>
-                    <td>竞争分的 50%，总分约 15%</td>
-                    <td>20 以下=100 分；21-50=90 分；51-100=80 分；101-200=65 分；201-400=45 分；401-800=20 分；800 以上=0 分</td>
-                    <td>评论门槛现在按个人卖家重设。100评以内是重点区间；200评以上开始谨慎；400评以上偏重；800评以上基本不适合冷启动。</td>
-                  </tr>
-                  <tr>
-                    <td><b>Top10 评论集中度</b></td>
-                    <td>竞争分的 25%，总分约 5%</td>
-                    <td>20% 以下=100 分；40% 约 56 分；65% 以上=0 分</td>
-                    <td>头部卖家评论占比越高，说明市场越被头部吃掉。超过 65% 会打“头部集中”风险标。</td>
-                  </tr>
-                  <tr>
-                    <td><b>关键词 CPC</b></td>
-                    <td>竞争分的 15%，总分约 4.5%</td>
-                    <td>$0.3 以下=100 分；$0.9 约 50 分；$1.5 以上=0 分</td>
-                    <td>CPC 越高，冷启动广告成本越重。个人卖家优先找低广告成本入口。</td>
-                  </tr>
-                  <tr>
-                    <td><b>评分缺口</b></td>
-                    <td>竞争分的 10%，总分约 3%</td>
-                    <td>3.7-4.2=85 分；4.2-4.5=65 分；4.5 以上=25 分；低于 3.7=35 分</td>
-                    <td>评分 3.7-4.2 代表有改良空间；4.5+ 说明用户已经满意，靠质量改良的空间小；低于 3.7 可能是产品本身难做。</td>
-                  </tr>
-                  <tr>
-                    <td><b>毛利率</b></td>
-                    <td>利润分的 40%，总分约 14%</td>
-                    <td>25% 以下=0 分；35% 约 33 分；45% 约 67 分；55% 以上=100 分</td>
-                    <td>进入供应商验证要求至少 35%。这里目前是估算成本，拿到真实报价后必须复算。</td>
-                  </tr>
-                  <tr>
-                    <td><b>单件毛利</b></td>
-                    <td>利润分的 40%，总分约 14%</td>
-                    <td>$5 以下=0 分；$8 约 15 分；$15 约 50 分；$25 以上=100 分</td>
-                    <td>这是个人卖家版本新增的核心指标。进入供应商验证要求单件毛利至少 $8，优先找 $15+ 的产品。</td>
-                  </tr>
-                  <tr>
-                    <td><b>月毛利</b></td>
-                    <td>利润分的 20%，总分约 7%</td>
-                    <td>$1,000 以下=0 分；$3,000 约 29 分；$5,000 约 57 分；$8,000 以上=100 分</td>
-                    <td>月毛利只是辅助，不再鼓励追很高销量。超过 $8,000 不继续加分。</td>
-                  </tr>
-                  <tr>
-                    <td><b>风险控制</b></td>
-                    <td>总分 15%</td>
-                    <td>合规风险占风险分 40%；易碎 20%；大件 20%；季节性 20%</td>
-                    <td>风险分越高，风险控制分越低。合规 80+ 直接淘汰；大件/易碎/强季节会明显压分。</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <ul class="verdict-list">
+            <li><span class="pill green">可以研究</span>有完整类目 Top 数据，形态通过需求、评论、低评高销、排除品和价格带检查。</li>
+            <li><span class="pill orange">待核对</span>数据不错但还不够确定，比如按整类目统计、样本少或利润只是粗估。</li>
+            <li><span class="pill gray">用途待确认</span>样本用途或结构不一致，要先拆成确定的形态。</li>
+            <li><span class="pill red">已排除</span>评论墙、头部集中、新品卖不起来、大件 / 高风险等硬伤。</li>
+          </ul>
+        </details>
+        <details class="fold">
+          <summary>形态机会的判定标准</summary>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>检查项</th><th>当前口径</th><th>为什么这么设</th></tr></thead>
+              <tbody>
+                <tr><td><b>数据层</b></td><td>每周自动链路只用最小类目完整 Top 产品数据；手动 ASIN 缺类目数据时最多到「缺类目 Top100」。</td><td>单个 listing 容易误判，类目 Top 结构更能反映真实竞争。</td></tr>
+                <tr><td><b>新进入者</b></td><td>近 18 个月上架的 listing 里有多少已经卖起来。</td><td>直接回答「新品能不能进」，权重和需求、可进入性并列最高。</td></tr>
+                <tr><td><b>类目评论墙</b></td><td>类目评论中位数 ≥ 1000，或 Top10 评论中位数 ≥ 1500，强烈压分。</td><td>冷启动最怕整个类目被老链接占住。</td></tr>
+                <tr><td><b>头部品牌集中</b></td><td>Top10 里同一品牌占比 ≥ 35% 视为集中。</td><td>这类往往是品牌 / 渠道护城河问题，不是产品问题。</td></tr>
+                <tr><td><b>形态样本量</b></td><td>同一形态至少 2 个样本；太少只观察。</td><td>避免被单个异常 listing 误导。</td></tr>
+                <tr><td><b>形态需求</b></td><td>同时看总月销、单品中位月销和销量集中度。</td><td>不追极高销量，但要有可验证的稳定需求。</td></tr>
+                <tr><td><b>形态竞争</b></td><td>评论中位数 ≤ 300 更友好，或至少 3 个低评高销样本。</td><td>低评论还能卖，说明还有进入空间。</td></tr>
+                <tr><td><b>排除品</b></td><td>大件、易碎、强合规、品牌护城河和标题排除品占比 ≥ 50%，直接排除。</td><td>类目健康不代表具体产品适合个人卖家。</td></tr>
+                <tr><td><b>价格带</b></td><td>有效样本价格中位数 $12–$80；超出时最多「待核对」。</td><td>太低覆盖不了履约成本，太高验证成本太重。</td></tr>
+                <tr><td><b>利润</b></td><td>没拿到供应商报价前，默认成本只用于粗排，不单独触发淘汰。</td><td>估算成本不能当报价用；拿到报价后恢复完整利润门槛。</td></tr>
+              </tbody>
+            </table>
           </div>
-          <div class="logic-block scoring-wide">
-            <h3>形态机会怎么判定</h3>
-            <div class="table-wrap" style="margin-top: 10px;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>检查项</th>
-                    <th>当前口径</th>
-                    <th>为什么这么设</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><b>数据层</b></td>
-                    <td>每周自动链路只使用最小类目完整 Top 产品数据；手动 ASIN 缺类目数据时最多进入 Needs category Top100。</td>
-                    <td>单个 listing 容易误判，最小类目的 Top 产品结构更能反映真实竞争。</td>
-                  </tr>
-                  <tr>
-                    <td><b>类目评论墙</b></td>
-                    <td>类目评论中位数 >= 1000，或 Top10 评论中位数 >= 1500，会强烈压分。</td>
-                    <td>个人卖家冷启动最怕整个类目都被老链接占住。</td>
-                  </tr>
-                  <tr>
-                    <td><b>头部品牌集中</b></td>
-                    <td>Top10 里同一头部品牌占比 >= 35% 视为集中风险。</td>
-                    <td>这类类目往往不是“产品问题”，而是品牌/渠道护城河问题。</td>
-                  </tr>
-                  <tr>
-                    <td><b>形态样本量</b></td>
-                    <td>同一产品形态至少 2 个样本；样本太少只观察，不直接进机会档案。</td>
-                    <td>避免被单个异常 listing 误导。</td>
-                  </tr>
-                  <tr>
-                    <td><b>形态需求</b></td>
-                    <td>形态平均月销至少 500；低于这个值通常先观察。</td>
-                    <td>你的目标不是追极高销量，但也要有可验证的稳定需求。</td>
-                  </tr>
-                  <tr>
-                    <td><b>形态竞争</b></td>
-                    <td>形态评论中位数 <= 300 更友好；或至少有 3 个低评高销样本。</td>
-                    <td>低评论还能卖，说明这个形态可能仍有进入空间。</td>
-                  </tr>
-                  <tr>
-                    <td><b>产品级排除</b></td>
-                    <td>形态内大件、易碎、强合规、品牌护城河和标题硬排除产品占比达到 50%，直接拒绝。</td>
-                    <td>类目健康不代表具体产品适合个人卖家，必须在形态层再次清理风险样本。</td>
-                  </tr>
-                  <tr>
-                    <td><b>价格带</b></td>
-                    <td>有效样本价格中位数以 $12-$80 为主；超出时最多进入 Watch。</td>
-                    <td>过滤客单过低难覆盖履约成本、或客单过高导致验证成本过重的形态。</td>
-                  </tr>
-                  <tr>
-                    <td><b>主动机会</b></td>
-                    <td>任一类目形态分 >= 65、样本足够且无硬伤即可记为 Shape opportunity，并保存参考 ASIN。</td>
-                    <td>机会对象是“类目中的形态”，不再要求它必须先由某个高分种子触发。</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        </details>
+        <details class="fold">
+          <summary>关键词入口的粗筛分（{escape(score_formula)}）</summary>
+          <p class="subtle">只用于关键词选品的候选排序，不是形态机会分。所有子项先转成 0–100 分，再按权重合并。</p>
+          <div class="formula-grid">
+            <div class="formula-card"><strong>{weights.get('demand', 0) * 100:.0f}%</strong><span>需求：月销量 {demand_cfg.get('est_monthly_sales', {}).get('min', 0)}–{demand_cfg.get('est_monthly_sales', {}).get('max', 0)}、关键词搜索量 {demand_cfg.get('keyword_search_volume', {}).get('min', 0)}–{demand_cfg.get('keyword_search_volume', {}).get('max', 0)}</span></div>
+            <div class="formula-card"><strong>{weights.get('competition', 0) * 100:.0f}%</strong><span>竞争：评论 {competition_cfg.get('avg_review_count', {}).get('good', 0)} 以下好，{competition_cfg.get('avg_review_count', {}).get('bad', 0)} 以上差；Top10 集中度和 CPC 越低越好</span></div>
+            <div class="formula-card"><strong>{weights.get('profitability', 0) * 100:.0f}%</strong><span>利润：毛利率 {profit_cfg.get('gross_margin', {}).get('min', 0) * 100:.0f}%–{profit_cfg.get('gross_margin', {}).get('max', 0) * 100:.0f}%、单件毛利 ${profit_cfg.get('gross_profit_per_unit', {}).get('min', 0):,.0f}–${profit_cfg.get('gross_profit_per_unit', {}).get('max', 0):,.0f}</span></div>
+            <div class="formula-card"><strong>{weights.get('differentiation', 0) * 100:.0f}%</strong><span>差异化：先给基础分，之后靠形态、评论痛点、图片和供应商方案修正</span></div>
+            <div class="formula-card"><strong>{weights.get('risk_control', 0) * 100:.0f}%</strong><span>风险：合规 {risk_cfg.get('compliance_risk', 0) * 100:.0f}%、易碎 {risk_cfg.get('fragile_risk', 0) * 100:.0f}%、大件 {risk_cfg.get('oversize_risk', 0) * 100:.0f}%、季节性 {risk_cfg.get('seasonality_score', 0) * 100:.0f}%</span></div>
           </div>
-          <div class="logic-block">
-            <h3>1. 类目扫描与健康度</h3>
-            <ul>
-              <li>每周优先扫描从未覆盖的最小类目，全部覆盖后按最久未扫描轮换。</li>
-              <li>明确大件、强合规、强专利/品牌垄断和高责任风险的类目永久跳过，不占周配额。</li>
-              <li>健康度综合需求、评论墙、头部集中、新进入者和低评高销，只用于安排形态验证顺序。</li>
-              <li>关键词和手动 ASIN 保留为补充入口，但不会绕过类目 Top 数据。</li>
-            </ul>
-          </div>
-          <div class="logic-block">
-            <h3>2. 类目形态验证</h3>
-            <ul>
-              <li>每个成功类目的 Top 产品都会按形态聚类，不只验证事先选中的种子产品。</li>
-              <li>先按产品剔除大件、易碎、强合规、品牌护城河和标题硬排除，再计算形态证据。</li>
-              <li>重点看类目评论墙、头部品牌占比、形态评论中位数、低评高销数量、CN/HK 卖家占比、FBA 占比和变体数量。</li>
-              <li>通过形态会携带参考 ASIN 进入机会池；同类目下其他形态各自保留结论，避免重复查看。</li>
-            </ul>
-          </div>
-          <div class="logic-block">
-            <h3>3. 单品研究</h3>
-            <ul>
-              <li>只围绕已经通过形态验证、或你手动指定的 ASIN 展开。</li>
-              <li>拆关键词、Top 产品形态、材质、套装、尺寸、配件、功能、闭合方式和视觉风格。</li>
-              <li>图片识别和标题/详情材质判断合并，减少只靠标题造成的误判。</li>
-              <li>评论分析直接放到每个产品形态下面，输出消费者在意点、不满意点和可执行切入方向。</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section id="weekly-scan">
-        <div class="section-head">
-          <div>
-            <h2>每周类目扫描</h2>
-            <p>周更不再只靠关键词或单个爆品触发，而是每周扫描约 {weekly_category_target} 个最小类目，每个类目取约 {weekly_products_per_category} 个 Top 产品，先找候选，再做类目/形态验证。</p>
-          </div>
-        </div>
-        <div class="next-grid">
-          <div class="next-block">
-            <h3>扫描对象</h3>
-            <ul>
-              <li>优先 Home、Kitchen、Storage、Garden、Office、Tools、Craft 等适合个人卖家的小类目。</li>
-              <li>跳过成人、食品/保健、强合规、电子核心件、大件、易破损、强品牌护城河类目。</li>
-              <li>每周对新扫描或到期复扫的最小类目重新聚类形态，历史机会和失效原因都会保留。</li>
-            </ul>
-          </div>
-          <div class="next-block">
-            <h3>入池规则</h3>
-            <ul>
-              <li>种子和关键词只是补充入口，不能绕过最小类目 Top 数据验证。</li>
-              <li>对类目中所有有效产品做形态聚类，每个形态独立计算证据和结论。</li>
-              <li>只有 Shape opportunity 形态携带参考 ASIN 进入机会池，Watch 和 Reject 仅存档追踪。</li>
-            </ul>
-          </div>
-          <div class="next-block">
-            <h3>后续研究</h3>
-            <ul>
-              <li>你从机会池选择产品后，进入单品深度研究。</li>
-              <li>深度研究继续按形态、材质、颜色、套装、尺寸、配件、功能、图片和评论痛点拆解。</li>
-              <li>研究结果单独存档，下一次可以直接打开。</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section id="next">
-        <div class="section-head">
-          <div>
-            <h2>当前单品下一步</h2>
-            <p>针对 {escape(current_research_form)}，从“有没有需求”继续验证“做什么规格、能否获客、利润是否成立”。</p>
-          </div>
-        </div>
-        <div class="next-grid">
-          <div class="next-block">
-            <h3>用户痛点验证</h3>
-            <ul id="painPointList"></ul>
-          </div>
-          <div class="next-block">
-            <h3>切入方向</h3>
-            <ul id="recommendationList"></ul>
-          </div>
-          <div class="next-block">
-            <h3>执行顺序</h3>
-            <ul id="nextStepList"></ul>
-          </div>
-        </div>
+        </details>
+        <details class="fold">
+          <summary>每周扫描怎么轮换</summary>
+          <ul>
+            <li>每周扫描约 {weekly_category_target} 个最小类目，每个类目取约 {weekly_products_per_category} 个 Top 产品。</li>
+            <li>优先从未扫过的类目；全部覆盖后，按最久未扫的顺序复扫。机会池里待复扫的类目排在复扫名额最前。</li>
+            <li>成人、食品 / 保健、强合规、电子核心件、大件、易碎、强品牌护城河类目永久跳过。</li>
+            <li>扫描失败的类目单独记录；覆盖不完整的批次不会替换线上结果。</li>
+          </ul>
+        </details>
       </section>
     </main>
   </div>
 
   <script src="vendor/lucide.min.js"></script>
+  <script src="labels.js?v={labels_version}"></script>
   <script src="keyword-search.js?v={keyword_version}"></script>
   <script src="workbench.js?v={workbench_version}"></script>
   <script>
     const DATA = {data_json};
+    const L = window.AmzLabels;
 
     const fmtMoney = (value) => {{
       const number = Number(value || 0);
       return number ? "$" + number.toLocaleString(undefined, {{ maximumFractionDigits: 2 }}) : "-";
     }};
-
     const fmtInt = (value) => {{
       const number = Number(value || 0);
       return number ? number.toLocaleString(undefined, {{ maximumFractionDigits: 0 }}) : "-";
     }};
-
     const fmtOne = (value) => {{
       const number = Number(value || 0);
       return number ? number.toLocaleString(undefined, {{ maximumFractionDigits: 1 }}) : "-";
     }};
-
     const fmtPct = (value) => {{
       const number = Number(value || 0);
       return number ? number.toLocaleString(undefined, {{ maximumFractionDigits: 1 }}) + "%" : "-";
     }};
-
     const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({{
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
     }}[char]));
-
-    const pillClass = (text) => {{
-      const value = String(text || "").toLowerCase();
-      if (value.includes("supplier") || value.includes("direct") || value.includes("validation") || value.includes("opportunity")) return "green";
-      if (value.includes("watch") || value.includes("keyword")) return "orange";
-      if (value.includes("noise") || value.includes("risk") || value.includes("wall") || value.includes("reject")) return "red";
-      return "gray";
-    }};
-
+    const pill = ([text, tone]) => `<span class="pill ${{tone}}">${{esc(text)}}</span>`;
     const scoreBar = (score) => {{
       const width = Math.max(0, Math.min(100, Number(score || 0)));
       return `<div class="score"><b>${{fmtOne(score)}}</b><div class="bar"><span style="--w:${{width}}%"></span></div></div>`;
     }};
-
     const researchHref = (path) => {{
       const text = String(path || "");
       if (!text) return "";
-      if (text.startsWith("web/")) return text.slice(4);
-      return text;
+      return text.startsWith("web/") ? text.slice(4) : text;
     }};
+    const categoryCell = (name, path) => `<strong title="${{esc(path)}}">${{esc(name || L.shortPath(path, 1) || "-")}}</strong><span class="muted-small" title="${{esc(path)}}">${{esc(L.parentPath(path, 3))}}</span>`;
 
-    const referenceAsinLinks = (value) => {{
-      const references = String(value || "")
-        .split(";")
-        .map(item => item.trim())
-        .filter(Boolean);
-      if (!references.length) return `<span class="muted-small">暂无该形态的参考 ASIN</span>`;
+    // Data freshness is judged when the page is opened, not when it was built.
+    function renderFreshness() {{
+      const node = document.getElementById("batchFreshness");
+      if (!node) return;
+      const finished = new Date(node.dataset.finished);
+      if (Number.isNaN(finished.getTime())) return;
+      const days = Math.floor((Date.now() - finished.getTime()) / 86400000);
+      const limit = Number(node.dataset.limit || 8);
+      node.textContent = days <= 0 ? "今天的数据" : `${{days}} 天前的数据`;
+      node.className = "freshness " + (days > limit ? "stale" : "fresh");
+      const banner = document.getElementById("staleBanner");
+      if (banner && days > limit) {{
+        banner.hidden = false;
+        banner.querySelector("b").textContent = `已经 ${{days}} 天没有新数据。`;
+      }}
+    }}
 
-      return `<div class="reference-asins">${{references.map(reference => {{
-        const match = reference.match(/^([A-Z0-9]{{10}})(?::([^/]*)(?:\\/(.*))?)?$/i);
-        if (!match) return `<span class="pill gray">${{esc(reference)}}</span>`;
-        const asin = match[1].toUpperCase();
-        const metadata = [];
-        if (match[2]) metadata.push(`月销 ${{fmtInt(match[2])}}`);
-        if (match[3]) metadata.push(`评论 ${{fmtInt(match[3])}}`);
-        const detail = metadata.length ? `<span>${{metadata.join(" · ")}}</span>` : `<span>打开 Amazon 商品页</span>`;
-        return `<a class="reference-asin" href="https://www.amazon.com/dp/${{encodeURIComponent(asin)}}" target="_blank" rel="noopener noreferrer"><strong>${{esc(asin)}}</strong>${{detail}}</a>`;
-      }}).join("")}}</div>`;
-    }};
-
+    const HEALTH_PREVIEW = 15;
+    let showAllCategories = false;
     function renderCategoryHealth() {{
-      const rows = DATA.currentCategoryScan || [];
-      document.getElementById("categoryHealthBody").innerHTML = rows.map(row => `
-        <tr>
-          <td class="title-cell">
-            <strong>#${{fmtInt(row.category_health_rank)}} · ${{esc(row.name || "-")}}</strong>
-            <span class="muted-small">${{esc(row.path || row.category_id || "-")}}</span>
-          </td>
-          <td class="num">${{scoreBar(row.category_health_score)}}</td>
-          <td class="num">${{fmtInt(row.category_sample_count || row.products_examined)}}</td>
+      const rows = [...(DATA.currentCategoryScan || [])].sort((a, b) =>
+        Number(a.category_health_rank || 999999) - Number(b.category_health_rank || 999999));
+      const visible = showAllCategories ? rows : rows.slice(0, HEALTH_PREVIEW);
+      document.getElementById("categoryHealthBody").innerHTML = visible.map(row => {{
+        const failed = String(row.scan_status || "").toLowerCase() === "failed" || (row.scan_error && !row.category_health_rank);
+        const issues = failed
+          ? '<span class="pill red">扫描失败</span>'
+          : (L.flags(row.category_health_flags).map(item => `<span class="issue ${{item.tone}}">${{esc(item.text)}}</span>`).join("") || '<span class="issue ok">无明显硬伤</span>');
+        const rotation = row.rotation_bucket ? `<span class="issue">${{esc(L.rotation(row.rotation_bucket)[0])}}</span>` : "";
+        return `
+        <tr class="${{failed ? "failed" : ""}}">
+          <td class="title-cell"><span class="rank">${{row.category_health_rank ? "#" + fmtInt(row.category_health_rank) : "—"}}</span>${{categoryCell(row.name, row.path || row.category_id)}}</td>
+          <td class="num">${{failed ? "—" : scoreBar(row.category_health_score)}}</td>
           <td class="num">${{fmtInt(row.category_total_sales)}}</td>
           <td class="num">${{fmtInt(row.category_median_reviews)}}</td>
           <td class="num">${{fmtInt(row.category_top10_median_reviews)}}</td>
-          <td>${{esc(row.category_top_brand || "-")}}<span class="muted-small">占比 ${{fmtPct(row.category_top_brand_share)}}</span></td>
+          <td>${{esc(row.category_top_brand || "-")}}${{row.category_top_brand_share ? `<span class="muted-small">占比 ${{fmtPct(row.category_top_brand_share)}}</span>` : ""}}</td>
           <td class="num">${{fmtInt(row.category_low_review_high_sales_count)}}</td>
-          <td class="num">${{fmtInt(row.category_new_entrant_count)}}<span class="muted-small">月销 ${{fmtInt(row.category_new_entrant_sales)}}</span></td>
-          <td>${{esc(row.category_health_flags || row.scan_error || "无明显类目硬伤")}}</td>
-        </tr>
-      `).join("") || `<tr><td colspan="10"><div class="empty">还没有本周类目健康度结果。</div></td></tr>`;
-    }}
-
-    function renderCurrentCategoryScan() {{
-      const rows = DATA.currentCategoryScan || [];
-      document.getElementById("currentCategoryScanBody").innerHTML = rows.map(row => `
-        <tr>
-          <td class="title-cell">${{esc(row.name || "-")}}<span class="muted-small">${{esc(row.path || row.category_id || "-")}}${{row.scan_error ? " · " + esc(row.scan_error) : ""}}</span></td>
-          <td><span class="pill ${{row.rotation_bucket === "never_scanned" ? "green" : "gray"}}">${{row.rotation_bucket === "never_scanned" ? "首次扫描" : row.rotation_bucket === "oldest_rescan" ? "最久未扫" : row.rotation_bucket === "manual_seed" ? "手动指定" : "历史基线"}}</span></td>
-          <td class="num">${{fmtInt(row.products_examined)}}</td>
-          <td class="num">${{fmtInt(row.candidate_count)}}${{row.scan_status === "failed" ? '<span class="pill red">失败</span>' : ''}}</td>
-          <td>${{esc(row.previous_last_scanned_at || (row.rotation_bucket ? "从未扫描" : "迁移前已扫描"))}}</td>
-        </tr>
-      `).join("") || `<tr><td colspan="5"><div class="empty">还没有类目轮换记录；下次周更后自动生成。</div></td></tr>`;
+          <td class="num">${{fmtInt(row.category_new_entrant_count)}}</td>
+          <td class="issues">${{issues}} ${{rotation}}</td>
+        </tr>`;
+      }}).join("") || `<tr><td colspan="9"><div class="empty">还没有本批类目扫描结果。</div></td></tr>`;
+      const more = document.getElementById("categoryHealthMore");
+      more.hidden = rows.length <= HEALTH_PREVIEW;
+      more.textContent = showAllCategories ? `只看前 ${{HEALTH_PREVIEW}} 个` : `显示全部 ${{rows.length}} 个类目`;
     }}
 
     function renderKeywordSearchHistory() {{
@@ -4011,29 +3615,29 @@ def build_html() -> str:
       document.getElementById("keywordSearchHistoryBody").innerHTML = rows.map(row => `
         <tr>
           <td class="title-cell">${{esc(row.keyword || "-")}}<span class="muted-small">${{esc(row.top_title || row.top_asin || "尚无通过候选")}}</span></td>
-          <td>${{esc(row.searched_at || "-")}}</td>
+          <td>${{esc(String(row.searched_at || "-").replace("T", " ").slice(0, 16))}}</td>
           <td class="num">${{fmtInt(row.raw_result_count)}}</td>
           <td class="num">${{fmtInt(row.eligible_candidate_count)}}</td>
           <td class="num">${{fmtInt(row.go_count)}} / ${{fmtInt(row.watch_count)}}</td>
           <td class="num">${{fmtOne(row.top_score)}}</td>
           <td><a class="pill green" href="${{esc(row.report_md)}}" target="_blank" rel="noreferrer">报告</a> <a class="pill gray" href="${{esc(row.ranked_csv)}}" target="_blank" rel="noreferrer">数据</a></td>
         </tr>
-      `).join("") || `<tr><td colspan="7"><div class="empty">还没有匹配的关键词搜索档案。</div></td></tr>`;
+      `).join("") || `<tr><td colspan="7"><div class="empty">还没有匹配的关键词搜索记录。</div></td></tr>`;
     }}
 
     function renderLatestKeywordResults() {{
       const rows = DATA.latestKeywordResults || [];
       document.getElementById("keywordResultBody").innerHTML = rows.slice(0, 30).map(row => `
         <tr>
-          <td class="title-cell"><a href="${{esc(row.listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.title_short || row.title || "-")}}</a><span class="muted-small">${{esc(row.asin || "-")}} · ${{esc(row.category || "-")}}</span></td>
+          <td class="title-cell"><a href="${{esc(row.listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.title_short || row.title || "-")}}</a><span class="muted-small">${{esc(row.asin || "-")}} · ${{esc(L.shortPath(row.category, 2) || "-")}}</span></td>
           <td class="num">${{scoreBar(row.score)}}</td>
-          <td><span class="pill ${{pillClass(row.recommendation)}}">${{esc(row.recommendation || "-")}}</span></td>
+          <td>${{pill(L.verdict(row.recommendation))}}</td>
           <td class="num">${{fmtInt(row.monthly_sales)}}</td>
           <td class="num">${{fmtInt(row.reviews)}}</td>
           <td class="num">${{fmtMoney(row.price)}}</td>
-          <td>${{esc(row.flags || "待复核")}}</td>
+          <td>${{esc(L.flagsText(row.flags, "待复核"))}}</td>
         </tr>
-      `).join("") || `<tr><td colspan="7"><div class="empty">${{DATA.keywordSearchHistory?.length ? "本次搜索没有通过基础过滤的候选。" : "尚未执行关键词搜索。"}}</div></td></tr>`;
+      `).join("") || `<tr><td colspan="7"><div class="empty">${{DATA.keywordSearchHistory?.length ? "最近一次搜索没有通过基础过滤的候选。" : "还没有做过关键词搜索。"}}</div></td></tr>`;
     }}
 
     window.addEventListener("amz-keyword-results", event => {{
@@ -4045,126 +3649,9 @@ def build_html() -> str:
       renderLatestKeywordResults();
     }});
 
-    function validationGroups() {{
-      const grouped = new Map();
-      (DATA.shapeValidation || []).forEach(row => {{
-        const key = row.category_path || row.source_category_id || row.seed_asin || String(row.rank || "");
-        if (!grouped.has(key)) grouped.set(key, []);
-        grouped.get(key).push(row);
-      }});
-      const verdictWeight = (text) => {{
-        if (text === "Shape opportunity") return 0;
-        if (text === "Watch shape") return 1;
-        if (text === "Needs category Top100") return 2;
-        return 3;
-      }};
-      return Array.from(grouped.values()).map(rows => {{
-        const sortedRows = [...rows].sort((a, b) => verdictWeight(a.shape_recommendation) - verdictWeight(b.shape_recommendation) || Number(b.shape_score || 0) - Number(a.shape_score || 0));
-        return {{ category: sortedRows[0], rows: sortedRows }};
-      }}).sort((a, b) => Number(a.category.category_health_rank || 999999) - Number(b.category.category_health_rank || 999999));
-    }}
-
-    function validationAction(row) {{
-      if (!row.research_page) return "";
-      const href = esc(researchHref(row.research_page));
-      const rec = row.shape_recommendation || "";
-      if (rec === "Shape opportunity") {{
-        return `<a class="pill green" href="${{href}}" target="_blank" rel="noreferrer">进入深度研究</a>`;
-      }}
-      if (rec === "Watch shape") {{
-        return `<a class="pill orange" href="${{href}}" target="_blank" rel="noreferrer">查看观察资料</a>`;
-      }}
-      if (rec === "Needs category Top100") {{
-        return "";
-      }}
-      return `<a class="pill gray" href="${{href}}" target="_blank" rel="noreferrer">查看淘汰依据</a>`;
-    }}
-
     function renderShapeValidation() {{
       if (window.AmzWorkbench) window.AmzWorkbench.renderShapes(DATA);
-      else renderLegacyShapeValidation();
-    }}
-
-    function renderLegacyShapeValidation() {{
-      const q = document.getElementById("shapeSearch").value.trim().toLowerCase();
-      const recommendation = document.getElementById("shapeRecommendation").value;
-      const groups = validationGroups()
-        .map(group => {{
-          const categoryMatches = q && [group.category.source_category_name, group.category.category_path, group.category.source_category_id].join(" ").toLowerCase().includes(q);
-          const visibleRows = group.rows.filter(row => {{
-            if (recommendation && row.shape_recommendation !== recommendation) return false;
-            if (!q || categoryMatches) return true;
-            return [row.seed_asin, row.seed_title, row.product_form, row.category_path, row.reference_asins, row.validation_flags, row.opportunity_thesis, row.next_action].join(" ").toLowerCase().includes(q);
-          }});
-          return {{ ...group, visibleRows }};
-        }})
-        .filter(group => group.visibleRows.length);
-
-      document.getElementById("shapeValidationList").innerHTML = groups.map(group => {{
-        const row = group.category;
-        const opportunityCount = group.rows.filter(item => item.shape_recommendation === "Shape opportunity").length;
-        const watchCount = group.rows.filter(item => item.shape_recommendation === "Watch shape").length;
-        const rejectCount = group.rows.filter(item => item.shape_recommendation === "Reject category/form").length;
-        return `
-          <section class="shape-category-group">
-            <header class="shape-category-head">
-              <div>
-                <h3>${{esc(row.source_category_name || row.category_path || "未识别类目")}}</h3>
-                <span class="muted-small">${{esc(row.category_path || row.source_category_id || "-")}}</span>
-                <div class="validation-status">
-                  <span class="pill green">机会 ${{fmtInt(opportunityCount)}}</span>
-                  <span class="pill orange">观察 ${{fmtInt(watchCount)}}</span>
-                  <span class="pill red">排除 ${{fmtInt(rejectCount)}}</span>
-                  <span class="pill gray">共 ${{fmtInt(group.rows.length)}} 个形态</span>
-                  ${{group.visibleRows.length !== group.rows.length ? `<span class="pill gray">当前显示 ${{fmtInt(group.visibleRows.length)}}</span>` : ""}}
-                </div>
-              </div>
-              <div class="shape-category-summary">
-                <div class="validation-metric"><span class="shape-cell-label">类目健康度</span><strong>#${{fmtInt(row.category_health_rank)}} · ${{fmtOne(row.category_health_score)}}</strong></div>
-                <div class="validation-metric"><span class="shape-cell-label">Top100 样本</span><strong>${{fmtInt(row.category_sample_count)}}</strong></div>
-                <div class="validation-metric"><span class="shape-cell-label">Top10 评论中位</span><strong>${{fmtInt(row.category_top10_median_reviews)}}</strong></div>
-                <div class="validation-metric"><span class="shape-cell-label">Top 品牌</span><strong>${{esc(row.category_top_brand || "-")}}</strong><span class="shape-note">占比 ${{fmtPct(row.category_top_brand_share)}}</span></div>
-              </div>
-            </header>
-            <div class="shape-card-grid">
-              ${{group.visibleRows.map(item => `
-                <article class="shape-validation-card">
-                  <div class="shape-card-head">
-                    <div>
-                      <h4>${{esc(item.product_form || "未识别形态")}}</h4>
-                      <div class="validation-status">
-                        <span class="pill ${{pillClass(item.shape_recommendation)}}">${{esc(item.shape_recommendation || "-")}}</span>
-                        <span class="pill gray">${{esc(item.data_quality || "-")}}</span>
-                      </div>
-                    </div>
-                    ${{scoreBar(item.shape_score)}}
-                  </div>
-                  <div class="shape-card-metrics">
-                    <div><span class="shape-cell-label">平均月销</span><strong>${{fmtInt(item.form_avg_sales)}}</strong></div>
-                    <div><span class="shape-cell-label">评论中位</span><strong>${{fmtInt(item.form_median_reviews)}}</strong></div>
-                    <div><span class="shape-cell-label">低评高销</span><strong>${{fmtInt(item.form_low_review_high_sales_count)}}</strong></div>
-                    <div><span class="shape-cell-label">形态样本</span><strong>${{fmtInt(item.form_count)}}</strong></div>
-                  </div>
-                  <p class="validation-note">${{esc(item.opportunity_thesis || "等待形态验证结论。")}}</p>
-                  <p class="validation-note">${{esc(item.validation_flags || "无明显硬伤")}}；${{esc(item.next_action || "-")}}</p>
-                  <div class="shape-card-details">
-                    <span>价格中位 ${{fmtMoney(item.form_price_median)}} · 排除比例 ${{fmtPct(item.form_excluded_share)}} · 新进入者 ${{fmtInt(item.form_new_entrant_success_count)}} / ${{fmtInt(item.form_new_entrant_count)}}</span>
-                    <span>主要材质：${{esc(item.form_top_materials || "-")}} · 包装数量：${{esc(item.form_top_packs || "-")}}</span>
-                  </div>
-                  <div>
-                    <span class="shape-cell-label">参考 ASIN（点击查看商品）</span>
-                    ${{referenceAsinLinks(item.reference_asins)}}
-                  </div>
-                  <div class="pool-actions">
-                    ${{validationAction(item)}}
-                    ${{item.seed_listing_url ? `<a class="pill gray" href="${{esc(item.seed_listing_url)}}" target="_blank" rel="noopener noreferrer">种子 Listing</a>` : ""}}
-                  </div>
-                </article>
-              `).join("")}}
-            </div>
-          </section>
-        `;
-      }}).join("") || `<div class="empty">还没有候选产品验证数据。</div>`;
+      else document.getElementById("shapeValidationList").innerHTML = '<div class="empty">形态列表脚本没有加载，请刷新页面。</div>';
     }}
 
     function renderArchive() {{
@@ -4173,10 +3660,7 @@ def build_html() -> str:
       const rows = (DATA.archive || [])
         .filter(row => !window.AmzWorkbench?.isDiscarded(row))
         .filter(row => !status || (status === "current" ? ["active", "active_in_latest_run", "stale_needs_rescan"].includes(row.archive_status) : row.archive_status === status))
-        .filter(row => {{
-          if (!q) return true;
-          return [row.seed_asin, row.seed_title, row.product_form, row.category_path, row.opportunity_thesis, row.research_status].join(" ").toLowerCase().includes(q);
-        }});
+        .filter(row => !q || [row.seed_asin, row.seed_title, row.product_form, row.category_path, row.opportunity_thesis].join(" ").toLowerCase().includes(q));
 
       const grouped = new Map();
       rows.forEach(row => {{
@@ -4184,91 +3668,79 @@ def build_html() -> str:
         if (!grouped.has(key)) grouped.set(key, []);
         grouped.get(key).push(row);
       }});
+      const best = list => Math.max(...list.map(row => Number(row.archive_best_score || row.shape_score || 0)));
+      const groups = [...grouped.entries()].sort((a, b) => best(b[1]) - best(a[1]));
 
-      const html = Array.from(grouped.entries()).map(([category, groupRows]) => {{
+      const html = groups.map(([category, groupRows]) => {{
         groupRows.sort((a, b) => Number(b.archive_best_score || b.shape_score || 0) - Number(a.archive_best_score || a.shape_score || 0));
-        const activeCount = groupRows.filter(row => ["active_in_latest_run", "active"].includes(row.archive_status)).length;
         return `
-          <article class="category-group">
-            <div class="category-group-head">
-              <div>
-                <h3>${{esc(category)}}</h3>
-                <span class="muted-small">${{groupRows.length}} 个历史形态，${{activeCount}} 个验证有效</span>
-              </div>
-              <div class="validation-metrics">
-                <div class="validation-metric"><span class="shape-cell-label">最高分</span><strong>${{fmtOne(Math.max(...groupRows.map(row => Number(row.archive_best_score || row.shape_score || 0))))}}</strong></div>
-                <div class="validation-metric"><span class="shape-cell-label">最高月销</span><strong>${{fmtInt(Math.max(...groupRows.map(row => Number(row.form_avg_sales || 0))))}}</strong></div>
-                <div class="validation-metric"><span class="shape-cell-label">最低评论中位</span><strong>${{fmtInt(Math.min(...groupRows.map(row => Number(row.form_median_reviews || 0)).filter(Boolean)))}}</strong></div>
-                <div class="validation-metric"><span class="shape-cell-label">低评高销</span><strong>${{fmtInt(groupRows.reduce((sum, row) => sum + Number(row.form_low_review_high_sales_count || 0), 0))}}</strong></div>
-              </div>
-            </div>
-            <div class="pool-list">
-              ${{groupRows.map(row => `
-                <div class="pool-item">
-                  <div class="pool-item-title">
-                    <a href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.product_form || "-")}}</a>
-                    <span class="muted-small">${{esc(row.seed_asin)}} · ${{esc(row.seed_title_short || "-")}}</span>
-                    <div class="pool-actions">
-                      ${{window.AmzWorkbench?.discardButton("shape", row.decision_keys?.shape, row.product_form || "形态") || ""}}
-                      <span class="pill ${{["active", "active_in_latest_run"].includes(row.archive_status) ? "green" : "gray"}}">${{({{active:"历史验证有效",active_in_latest_run:"本轮验证有效",stale_needs_rescan:"待复扫",failed_on_rescan:"复扫未通过",invalidated_by_rule:"已失效",ip_review_required:"知识产权风险拦截",suppressed_by_user:"人工舍弃",rejected_by_research:"研究拦截",seasonal_confirmed:"季节风险待复核"}})[row.archive_status] || "历史机会"}}</span>
-                      ${{row.research_page ? `<a class="pill green" href="${{esc(researchHref(row.research_page))}}" target="_blank" rel="noreferrer">单品研究</a>` : ""}}
-                      <a class="pill gray" href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">Listing</a>
-                    </div>
+          <article class="pool-group">
+            <header class="pool-group-head">
+              ${{categoryCell(L.shortPath(category, 1), category)}}
+            </header>
+            ${{groupRows.map(row => {{
+              const note = L.archiveNote(row.archive_notes);
+              return `
+              <div class="pool-row">
+                <div class="pool-row-main">
+                  <div class="pool-row-title">
+                    <b>${{esc(row.product_form || "-")}}</b>
+                    ${{pill(L.archiveStatus(row.archive_status))}}
                   </div>
-                  <div><span class="shape-cell-label">历史最高</span><strong>${{fmtOne(row.archive_best_score)}}</strong></div>
-                  <div><span class="shape-cell-label">最近归档分</span><strong>${{fmtOne(row.archive_latest_score)}}</strong></div>
-                  <div><span class="shape-cell-label">月销</span><strong>${{fmtInt(row.form_avg_sales)}}</strong></div>
-                  <div><span class="shape-cell-label">评论中位</span><strong>${{fmtInt(row.form_median_reviews)}}</strong></div>
-                  <div>
-                    <span class="shape-cell-label">机会依据</span>
-                    <span class="shape-note">${{esc(row.opportunity_thesis || "-")}}</span>
-                    <span class="muted-small">首次 ${{esc(row.archive_first_seen || "-")}} · 最近 ${{esc(row.archive_last_seen || "-")}} · 出现 ${{fmtInt(row.archive_seen_count)}} 次 · ${{esc(row.research_status || "-")}}</span>
-                    ${{row.archive_notes ? `<span class="muted-small">${{esc(row.archive_notes)}}</span>` : ""}}
-                  </div>
+                  <p>${{esc(L.prose(row.opportunity_thesis) || "-")}}</p>
+                  ${{note ? `<p class="pool-note">${{esc(note)}}</p>` : ""}}
+                  <span class="muted-small">${{row.seed_asin ? `参考 <a href="${{esc(row.seed_listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.seed_asin)}}</a> ${{esc(row.seed_title_short || "")}} · ` : ""}}首次入池 ${{esc(String(row.archive_first_seen || "-").slice(0, 10))}} · 最近 ${{esc(String(row.archive_last_seen || "-").slice(0, 10))}} · 出现 ${{fmtInt(row.archive_seen_count)}} 次</span>
                 </div>
-              `).join("")}}
-            </div>
+                <div class="pool-row-stats">
+                  <span><small>历史最高分</small><b>${{fmtOne(row.archive_best_score)}}</b></span>
+                  <span><small>平均月销</small><b>${{fmtInt(row.form_avg_sales)}}</b></span>
+                  <span><small>评论中位</small><b>${{fmtInt(row.form_median_reviews)}}</b></span>
+                </div>
+                <div class="pool-actions">
+                  ${{row.research_page ? `<a class="pill green" href="${{esc(researchHref(row.research_page))}}" target="_blank" rel="noreferrer">单品研究</a>` : ""}}
+                  ${{window.AmzWorkbench?.discardButton("shape", row.decision_keys?.shape, row.product_form || "形态") || ""}}
+                </div>
+              </div>`;
+            }}).join("")}}
           </article>
         `;
       }}).join("");
 
-      document.getElementById("archiveBody").innerHTML = html || `<div class="empty">机会池还没有匹配结果。只有通过候选产品验证的机会才会进入这里。</div>`;
+      document.getElementById("archiveBody").innerHTML = html || `<div class="empty">没有匹配的机会。只有通过形态验证的才会进入机会池。</div>`;
       window.lucide?.createIcons();
     }}
 
     function renderProductResearchArchive() {{
       const rows = DATA.productResearchArchive || [];
+      const tone = decision => decision === "可继续" ? "green" : ["待复核", "利润未验证"].includes(decision) ? "orange" : "gray";
       document.getElementById("productResearchArchiveBody").innerHTML = rows.map(row => `
         <tr>
           <td class="title-cell">
             ${{row.web_page_available ? `<a href="${{esc(row.web_page)}}" target="_blank" rel="noreferrer">${{esc(row.title_short || row.asin)}}</a>` : `<strong>${{esc(row.title_short || row.asin)}}</strong>`}}
-            <span class="muted-small">${{esc(row.asin)}} · 首次 ${{esc(row.first_researched || "-")}} · 研究 ${{fmtInt(row.research_count)}} 次</span>
+            <span class="muted-small">${{esc(row.asin)}} · 研究 ${{fmtInt(row.research_count)}} 次</span>
           </td>
           <td>${{esc(row.top_form || "-")}}</td>
-          <td><span class="pill ${{row.decision === "可继续" ? "green" : ["待复核", "利润未验证"].includes(row.decision) ? "orange" : "gray"}}">${{esc(row.decision)}}</span><span class="muted-small">${{esc(row.decision_reason)}}</span></td>
-          <td class="num">${{fmtInt(row.products_count)}}</td>
+          <td class="decision-cell"><span class="pill ${{tone(row.decision)}}">${{esc(row.decision)}}</span><span class="muted-small clamp" title="${{esc(row.decision_reason)}}">${{esc(row.decision_reason)}}</span></td>
           <td class="num">${{fmtInt(row.forms_count)}}</td>
           <td class="num">${{fmtInt(row.reviews_count)}}</td>
-          <td>${{esc(row.last_researched || "-")}}</td>
+          <td>${{esc(String(row.last_researched || "-").slice(0, 10))}}</td>
           <td>
             ${{row.web_page_available ? `<a class="pill green" href="${{esc(row.web_page)}}" target="_blank" rel="noreferrer">研究页</a>` : `<span class="pill gray">页面未生成</span>`}}
             ${{row.report_available ? `<a class="pill gray" href="${{esc(row.report_path)}}" target="_blank" rel="noreferrer">报告</a>` : ""}}
           </td>
         </tr>
-      `).join("") || `<tr><td colspan="8"><div class="empty">还没有单品研究档案。用上方输入 ASIN 后生成研究命令。</div></td></tr>`;
+      `).join("") || `<tr><td colspan="7"><div class="empty">还没有单品研究档案。上方输入 ASIN 后生成研究命令。</div></td></tr>`;
     }}
 
     function findResearchByAsin(asin) {{
       const target = String(asin || "").trim().toUpperCase();
       return (DATA.productResearchArchive || []).find(row => String(row.asin || "").toUpperCase() === target);
     }}
-
     function showResearchHint(text) {{
       const node = document.getElementById("productResearchHint");
       node.style.display = "block";
       node.textContent = text;
     }}
-
     function openExistingResearch() {{
       const asin = document.getElementById("productResearchAsin").value;
       const row = findResearchByAsin(asin);
@@ -4276,104 +3748,11 @@ def build_html() -> str:
         window.open(row.web_page, "_blank", "noreferrer");
         return;
       }}
-      showResearchHint(`还没有找到 ${{String(asin || "").trim().toUpperCase() || "这个 ASIN"}} 的研究档案。需要先运行：python3 refresh_product_research.py --asin ${{String(asin || "").trim().toUpperCase() || "ASIN"}}`);
+      showResearchHint(`还没有 ${{String(asin || "").trim().toUpperCase() || "这个 ASIN"}} 的研究档案。需要先运行：python3 refresh_product_research.py --asin ${{String(asin || "").trim().toUpperCase() || "ASIN"}}`);
     }}
-
     function showResearchCommand() {{
       const asin = String(document.getElementById("productResearchAsin").value || "").trim().toUpperCase();
-      showResearchHint(`新增或刷新单品研究：python3 refresh_product_research.py --asin ${{asin || "ASIN"}}。这个命令会拉 Sorftime、写入研究档案，并生成独立研究页。`);
-    }}
-
-    function renderForms() {{
-      document.getElementById("formsBody").innerHTML = DATA.forms.map(row => `
-        <tr>
-          <td class="title-cell">${{esc(row.form)}}</td>
-          <td class="num">${{fmtInt(row.count)}}</td>
-          <td class="num">${{fmtInt(row.direct_count)}} / ${{fmtInt(row.keyword_count)}}</td>
-          <td class="num">${{fmtMoney(row.avg_price)}}</td>
-          <td class="num">${{fmtInt(row.avg_monthly_sales)}}</td>
-          <td class="num">${{fmtInt(row.median_reviews)}}</td>
-          <td>
-            ${{esc(row.materials || "-")}}
-            <span class="muted-small">${{esc(row.pack_counts || "")}}</span>
-          </td>
-          <td>${{esc(row.note || "-")}}</td>
-        </tr>
-      `).join("");
-    }}
-
-    function renderVisualCounts() {{
-      const groups = [
-        ["视觉形态", DATA.visualCounts.forms],
-        ["材质信号", DATA.visualCounts.materials],
-        ["套装数量", DATA.visualCounts.packs],
-        ["闭合方式", DATA.visualCounts.closures],
-        ["视觉风格", DATA.visualCounts.styles],
-      ];
-      document.getElementById("visualCounts").innerHTML = groups.map(([title, rows]) => `
-        <div class="count-box">
-          <h3>${{esc(title)}}</h3>
-          ${{rows.map(row => `
-            <div class="count-row"><span>${{esc(row.name)}}</span><strong>${{fmtInt(row.count)}}</strong></div>
-          `).join("") || `<div class="muted-small">暂无数据</div>`}}
-        </div>
-      `).join("");
-    }}
-
-    function renderResearchKeywords() {{
-      document.getElementById("researchKeywordBody").innerHTML = DATA.researchKeywords.slice(0, 12).map(row => `
-        <tr>
-          <td class="title-cell">${{esc(row.keyword)}}</td>
-          <td class="num">${{fmtInt(row.search_volume)}}</td>
-          <td class="num">${{fmtInt(row.clicks_90d)}}</td>
-          <td class="num">${{fmtPct(row.show_share)}}</td>
-          <td>${{esc(row.top3_asins || "-")}}</td>
-        </tr>
-      `).join("");
-    }}
-
-    function renderGallery() {{
-      const form = document.getElementById("galleryForm").value;
-      const q = document.getElementById("gallerySearch").value.trim().toLowerCase();
-      const rows = DATA.topProducts
-        .filter(row => !form || row.visual_product_form === form)
-        .filter(row => {{
-          if (!q) return true;
-          return [
-            row.asin,
-            row.title,
-            row.material,
-            row.material_evidence,
-            row.visual_product_form,
-            row.visual_material_signal,
-            row.visual_style,
-            row.visual_notes
-          ].join(" ").toLowerCase().includes(q);
-        }})
-        .slice(0, 40);
-
-      document.getElementById("productGallery").innerHTML = rows.map(row => `
-        <article class="product-tile">
-          ${{row.image ? `<img src="${{esc(row.image)}}" alt="${{esc(row.asin)}}">` : `<div class="empty">无图</div>`}}
-          <div class="tile-body">
-            <a class="tile-title" href="${{esc(row.listing_url)}}" target="_blank" rel="noreferrer">${{esc(row.title_short)}}</a>
-            <span class="muted-small">${{esc(row.asin)}} · ${{fmtMoney(row.price)}} · 月销 ${{fmtInt(row.monthly_sales)}} · 评论 ${{fmtInt(row.reviews)}}</span>
-            <div class="tile-meta">
-              <span class="pill green">${{esc(row.visual_product_form || row.product_form || "-")}}</span>
-              <span class="pill gray">${{esc(row.material || row.visual_material_signal || "-")}}</span>
-              <span class="pill orange">${{esc(row.visual_pack_count || row.pack_count || "-")}} pack</span>
-              <span class="pill gray">${{esc(row.visual_closure || row.closure || "-")}}</span>
-            </div>
-            <span class="muted-small">${{esc(row.material_evidence || row.detail_evidence || row.visual_notes || "")}}</span>
-          </div>
-        </article>
-      `).join("") || `<div class="empty">没有匹配图片</div>`;
-    }}
-
-    function renderBullets(id, items, fallback) {{
-      const list = document.getElementById(id);
-      const rows = items && items.length ? items : fallback;
-      list.innerHTML = rows.map(item => `<li>${{esc(item)}}</li>`).join("");
+      showResearchHint(`新增或刷新单品研究：python3 refresh_product_research.py --asin ${{asin || "ASIN"}}。这个命令会调用 Sorftime、写入研究档案，并生成独立研究页。`);
     }}
 
     function bind(id, event, handler) {{
@@ -4381,34 +3760,16 @@ def build_html() -> str:
       if (node) node.addEventListener(event, handler);
     }}
 
+    renderFreshness();
     renderCategoryHealth();
-    renderCurrentCategoryScan();
     renderKeywordSearchHistory();
     renderLatestKeywordResults();
     renderShapeValidation();
     renderArchive();
     renderProductResearchArchive();
-    renderForms();
-    renderVisualCounts();
-    renderResearchKeywords();
-    renderGallery();
     if (window.AmzWorkbench) window.AmzWorkbench.attach(DATA);
-    renderBullets("painPointList", DATA.painPoints, [
-      "确认当前形态的真实评论痛点",
-      "区分主流配置、必须达标项和可感知差异",
-      "把高频需求转成样品测试指标"
-    ]);
-    renderBullets("recommendationList", DATA.recommendations, [
-      "不直接复制主流产品，先确认差异化能否解决真实痛点",
-      "按一个 Amazon 可售单元对齐材质、尺寸、数量、配件和包装",
-      "只在需求、获客、风险和利润同时通过后立项"
-    ]);
-    renderBullets("nextStepList", DATA.nextSteps, [
-      "补齐目标形态评论并确认优先级",
-      "获取至少 3 条 1688 同款同规格 SKU 价并取中位数",
-      "样品、获客和贡献利润率验证通过后再进入机会池"
-    ]);
 
+    bind("categoryHealthMore", "click", () => {{ showAllCategories = !showAllCategories; renderCategoryHealth(); }});
     bind("keywordSearchInput", "input", renderKeywordSearchHistory);
     bind("shapeSearch", "input", renderShapeValidation);
     bind("shapeRecommendation", "change", renderShapeValidation);
@@ -4419,10 +3780,6 @@ def build_html() -> str:
     window.addEventListener("amz-dismissals-changed", renderArchive);
     bind("productResearchOpen", "click", openExistingResearch);
     bind("productResearchCommand", "click", showResearchCommand);
-    ["galleryForm", "gallerySearch"].forEach(id => {{
-      bind(id, "input", renderGallery);
-      bind(id, "change", renderGallery);
-    }});
   </script>
 </body>
 </html>
